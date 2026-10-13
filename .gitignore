@@ -1,0 +1,13 @@
+.env
+*.db
+*.db-*
+backups/
+
+*.key
+/monitor
+coverage.out
+
+# v2 interface (ui/): dependencies and build output
+ui/node_modules/
+ui/dist/*
+!ui/dist/.gitkeep

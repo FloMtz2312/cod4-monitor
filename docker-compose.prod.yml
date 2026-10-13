@@ -1,0 +1,52 @@
+# Production (VPS): the monitor behind Caddy, which serves HTTPS with an automatic Let's Encrypt certificate.
+#   DOMAIN=my-server.duckdns.org in .env, then: docker compose -f docker-compose.prod.yml up -d --build
+services:
+  monitor:
+    build: .
+    restart: always
+    env_file: .env
+    environment:
+      TZ: ${TZ:-Europe/Paris}
+      TRUSTED_PROXIES: 172.30.94.2/32
+    networks:
+      monitor_net:
+        ipv4_address: 172.30.94.3
+    expose:
+      - "${HTTP_PORT:-8080}"   # only reachable by Caddy, not from the internet
+    volumes:
+      - data:/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:$${HTTP_PORT:-8080}/api/health || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  caddy:
+    image: caddy:2-alpine
+    restart: always
+    depends_on: [monitor]
+    networks:
+      monitor_net:
+        ipv4_address: 172.30.94.2
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?mets DOMAIN=ton-nom.duckdns.org dans le .env}
+      UPSTREAM: monitor:${HTTP_PORT:-8080}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data        # certificates
+      - caddy_config:/config
+
+volumes:
+  data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  monitor_net:
+    ipam:
+      config:
+        - subnet: 172.30.94.0/28

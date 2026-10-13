@@ -1,0 +1,63 @@
+name: Go CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      # B3 kept in MySQL: the B3 tests also run against a real MySQL 8 (reserved words, strict GROUP BY)
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: b3
+          MYSQL_USER: b3
+          MYSQL_PASSWORD: b3pass
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go mod verify
+      - run: go vet ./...
+      - name: Unit and integration tests, including race detection
+        run: go test -race -count=1 -coverprofile=coverage.out ./...
+        env:
+          B3_TEST_MYSQL: mysql://b3:b3pass@127.0.0.1:3306/b3
+      - name: Build production binary
+        run: CGO_ENABLED=0 go build -trimpath -o /tmp/monitor ./cmd/monitor
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.out
+  ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Svelte check (types and accessibility warnings)
+        run: npm run check
+      - run: npm run build

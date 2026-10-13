@@ -1,0 +1,12 @@
+{$DOMAIN} {
+	# flush immediately: the live updates (Server-Sent Events) must not be buffered
+	reverse_proxy {$UPSTREAM} {
+		flush_interval -1
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		-Server
+	}
+}

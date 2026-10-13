@@ -1,0 +1,50 @@
+# Déploiement automatique sur le VPS à chaque push sur main (fusion d'une PR) :
+# connexion SSH au VPS, qui lance /opt/cod4-monitor/deploy.sh (imposé par authorized_keys).
+# Les tests tournent pendant le build Docker sur le VPS : s'ils échouent, le build s'arrête et l'ancien monitor reste en ligne.
+# Secrets du dépôt : VPS_HOST, VPS_USER, VPS_SSH_KEY (clé privée), VPS_KNOWN_HOST (ligne de ssh-keyscan).
+name: Déploiement VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {} # bouton "Run workflow" pour relancer à la main
+
+concurrency:
+  group: deploy-vps # jamais deux déploiements en même temps
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Vérifications avant déploiement
+        run: |
+          go mod verify
+          go vet ./...
+          go test -race -count=1 ./...
+          CGO_ENABLED=0 go build -o /tmp/monitor ./cmd/monitor
+      - name: Mise à jour du VPS
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          KNOWN_HOST: ${{ secrets.VPS_KNOWN_HOST }}
+          HOST: ${{ secrets.VPS_HOST }}
+          USER: ${{ secrets.VPS_USER }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519   # sans retours chariot Windows
+          printf '%s\n' "$KNOWN_HOST" | tr -d '\r' > ~/.ssh/known_hosts
+          # diagnostic (rien de secret) : à comparer avec `ssh-keygen -lf ~/.ssh/authorized_keys` sur le VPS
+          echo "Clé utilisée : $(ssh-keygen -lf ~/.ssh/id_ed25519 2>&1)"
+          echo "VPS_USER : ${#USER} caractères, VPS_HOST : ${#HOST} caractères"
+          case "$SSH_KEY" in *$'\r'*) echo "::warning::VPS_SSH_KEY contient des retours chariot Windows";; esac
+          # deploy.sh est demandé explicitement ; avec command= dans authorized_keys, le VPS l'impose de toute façon
+          ssh -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=30 "$USER@$HOST" /opt/cod4-monitor/deploy.sh

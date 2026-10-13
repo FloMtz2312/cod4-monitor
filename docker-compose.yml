@@ -1,0 +1,21 @@
+services:
+  monitor:
+    build: .
+    restart: always
+    env_file: .env
+    environment:
+      TZ: ${TZ:-Europe/Paris}
+    ports:
+      # all interfaces: reachable from the local network (phone). Protected by DASHBOARD_PASSWORD.
+      - "${HTTP_PORT:-8080}:${HTTP_PORT:-8080}"
+    volumes:
+      - data:/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:$${HTTP_PORT:-8080}/api/health || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  data:

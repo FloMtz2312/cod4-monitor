@@ -1,0 +1,61 @@
+/* Design tokens of the v2 interface: dark, sober, one accent color per server (--accent, set at runtime). */
+@font-face { font-family: 'Manrope'; src: url(/fonts/manrope.woff2) format('woff2'); font-weight: 400 800; font-display: swap; }
+@font-face { font-family: 'Space Grotesk'; src: url(/fonts/space-grotesk.woff2) format('woff2'); font-weight: 500 700; font-display: swap; }
+
+:root {
+  --bg: #0B0E13;
+  --surface: #141922;
+  --surface-2: #1B2230;
+  --line: #263042;
+  --line-soft: #1E2633;
+  --text: #E8ECF1;
+  --text-2: #C9D2DD;
+  --muted: #9AA6B5;
+  --on-accent: #11141A;
+  --accent: #F5A524;
+  --accent-soft: rgba(245, 165, 36, .15);
+  --ok: #3DD68C;
+  --warn: #F5C451;
+  --danger: #FF6369;
+  --danger-text: #FF8A8F;
+  --allies: #5EA0FF;
+  --axis: #FF7A6B;
+  --radius: 18px;
+  --radius-sm: 12px;
+  --font: 'Manrope', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'Manrope', system-ui, sans-serif;
+  --header-h: 68px;
+  /* iPhone: the page goes under the status bar and the Dynamic Island (and the notch sides in landscape) */
+  --sat: env(safe-area-inset-top, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --nav-h: 70px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body { font-family: var(--font); font-size: 15px; line-height: 1.35; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+button, input, textarea, select { font: inherit; color: inherit; }
+/* iPhone zooms on any field under 16 px when it gets the focus: never smaller on a touch screen */
+@media (pointer: coarse) { input, textarea, select { font-size: max(16px, 1em) !important; } }
+button { cursor: pointer; }
+a { color: var(--accent); }
+h1, h2, h3 { margin: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.title { font-family: var(--font-display); font-size: 26px; font-weight: 700; }
+.label { font-size: 12px; font-weight: 800; letter-spacing: .07em; color: var(--text-2); text-transform: uppercase; }
+.muted { color: var(--muted); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.scroll-hidden { scrollbar-width: none; }
+.scroll-hidden::-webkit-scrollbar { display: none; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface-2); font-weight: 800; font-size: 15px; text-decoration: none; color: var(--text); }
+.btn.primary { border: 0; background: var(--accent); color: var(--on-accent); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--text-2); }
+.btn.danger { border-color: #5A2A30; background: rgba(255, 99, 105, .12); color: var(--danger-text); }
+.btn:disabled { opacity: .5; cursor: default; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

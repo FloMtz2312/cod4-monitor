@@ -1,0 +1,11 @@
+.env
+*.db
+*.db-*
+.git
+backups
+
+*.key
+monitor
+coverage.out
+ui/node_modules
+ui/dist
