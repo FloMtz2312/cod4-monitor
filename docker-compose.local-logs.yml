@@ -1,7 +1,7 @@
 # Optional: the game server runs on the same machine. Its files are mounted read-only where the monitor reads local
 # logs (LOCAL_LOGS_ROOT, /gamelogs/ by default). Put the folder in .env (LOCAL_LOGS_DIR=/opt/cod4-server/cod4), then:
 #   docker compose -p cod4-monitor -f docker-compose.prod.yml -f docker-compose.local-logs.yml up -d --build
-# and in the dashboard: Admin → server → "Lecture des logs : Sur cette machine", folder /gamelogs/mods/<mod>/.
+# and in the dashboard: More → All servers → the server's settings → Server logs → On this machine, folder /gamelogs/mods/<mod>/.
 services:
   monitor:
     volumes:

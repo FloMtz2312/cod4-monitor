@@ -208,7 +208,7 @@
       <p class="muted small">{t('À remplir seulement si les logs ont d\'autres noms, ou si l\'heure du serveur n\'est pas celle du monitor.')}</p>
       <div class="grid">
         <label class="fl"><span>games_mp.log</span><input bind:value={f.games_log} placeholder="games_mp.log" autocapitalize="none" spellcheck="false" /></label>
-        <label class="fl"><span>console_mp.log</span><input bind:value={f.console_log} placeholder="console_mp.log" autocapitalize="none" spellcheck="false" /></label>
+        <label class="fl"><span>qconsole.log</span><input bind:value={f.console_log} placeholder="qconsole.log" autocapitalize="none" spellcheck="false" /></label>
         <label class="fl"><span>enterleave.log</span><input bind:value={f.enterleave_log} placeholder="enterleave.log" autocapitalize="none" spellcheck="false" /></label>
         <label class="fl"><span>{t('Fuseau horaire du serveur')}</span><input bind:value={f.log_tz} placeholder="Europe/Paris" autocapitalize="none" spellcheck="false" /></label>
       </div>
