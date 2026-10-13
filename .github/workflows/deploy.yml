@@ -1,5 +1,5 @@
 # Déploiement automatique sur le VPS à chaque push sur main (fusion d'une PR) :
-# connexion SSH au VPS, qui lance /opt/cod4-monitor/deploy.sh (imposé par authorized_keys).
+# connexion SSH au VPS, qui lance /opt/cod4-monitor/deploy.sh (copie de deploy/deploy.sh, imposé par authorized_keys).
 # Les tests tournent pendant le build Docker sur le VPS : s'ils échouent, le build s'arrête et l'ancien monitor reste en ligne.
 # Secrets du dépôt : VPS_HOST, VPS_USER, VPS_SSH_KEY (clé privée), VPS_KNOWN_HOST (ligne de ssh-keyscan).
 name: Déploiement VPS
@@ -39,6 +39,8 @@ jobs:
           HOST: ${{ secrets.VPS_HOST }}
           USER: ${{ secrets.VPS_USER }}
         run: |
+          # sans les secrets (un fork, un dépôt sans VPS) : rien à déployer, le job reste vert
+          if [ -z "$HOST" ] || [ -z "$SSH_KEY" ]; then echo "::notice::Secrets VPS_* absents : pas de déploiement (README, déploiement automatique)"; exit 0; fi
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519   # sans retours chariot Windows
           printf '%s\n' "$KNOWN_HOST" | tr -d '\r' > ~/.ssh/known_hosts

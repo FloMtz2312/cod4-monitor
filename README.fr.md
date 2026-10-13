@@ -7,7 +7,9 @@ Un tableau de bord web pour suivre un serveur **Call of Duty 4 / CoD4X** : qui j
 - **En direct** : état du serveur, joueurs connectés, map, console et chat.
 - **Statistiques** : activité, classements, badges, records, historique des matchs, fiche de chaque joueur avec sa progression.
 - **Administration** : changement de map, kick et ban, commandes programmées, journal des actions, détection des contournements de ban.
-- **Accès** : trois niveaux de compte (admin, semi-admin, visiteur), en français et en anglais, utilisable comme une application sur téléphone.
+- **Accès** : super admin, propriétaires de serveurs, modérateurs avec des permissions par serveur, et visiteurs ; comptes sur invitation uniquement. En français et en anglais, utilisable comme une application sur téléphone.
+
+Un bug ou une idée ? [Ouvre une issue](https://github.com/FlorianMartinez01/cod4-monitor/issues/new/choose) : le formulaire te guide.
 
 ---
 
@@ -27,6 +29,7 @@ Un tableau de bord web pour suivre un serveur **Call of Duty 4 / CoD4X** : qui j
 12. [Pour les développeurs](#12-pour-les-développeurs)
 13. [Serveur de jeu sur la même machine et réglages avancés](#13-serveur-de-jeu-sur-la-même-machine-et-réglages-avancés)
 14. [B3 : sanctions, admins et grades depuis le dashboard](#14-b3--sanctions-admins-et-grades-depuis-le-dashboard)
+15. [Signaler un bug / Contribuer](#15-signaler-un-bug--contribuer)
 - [Licence](#licence)
 
 ---
@@ -134,8 +137,8 @@ Les deux lignes (`monitor` et `caddy`) doivent afficher **Up**. Si `monitor` aff
 Va sur `https://mon-serveur.duckdns.org`. Le certificat peut mettre une minute à arriver la première fois.
 
 - **Sans te connecter**, tu vois le site comme un visiteur : les stats publiques.
-- **Se connecter** (en haut à droite), avec `DASHBOARD_USER` et `DASHBOARD_PASSWORD`, te donne l'accès admin complet.
-- Pour donner un accès à quelqu'un d'autre : onglet **Admin** → *Utilisateurs du dashboard* (voir [Comptes et rôles](#6-comptes-et-rôles)).
+- **Se connecter** (en haut à droite), avec `DASHBOARD_USER` et `DASHBOARD_PASSWORD` : c'est le compte super admin, avec tous les accès.
+- Pour donner un accès à quelqu'un d'autre : **Plus → Équipe et invitations** (un lien d'invitation, voir [Comptes et rôles](#6-comptes-et-rôles)).
 
 📱 **Sur téléphone** : ouvre le site, puis *Partager* → **Sur l'écran d'accueil** (iPhone) ou *menu* → **Ajouter à l'écran d'accueil** (Android). Le site s'ouvre alors comme une application.
 
@@ -148,14 +151,15 @@ Va sur `https://mon-serveur.duckdns.org`. Le certificat peut mettre une minute �
 Il faut [Docker Desktop](https://www.docker.com/products/docker-desktop/). Dans le dossier du projet :
 
 ```sh
-cp .env.example .env      # puis modifie au moins SERVERS
+cp .env.example .env      # puis modifie au moins SERVERS, DASHBOARD_USER et DASHBOARD_PASSWORD
 docker compose up -d
 ```
 
 Ouvre ensuite http://localhost:8080 (ou le port choisi dans `HTTP_PORT`).
 
-- Sans `DASHBOARD_PASSWORD`, aucune connexion n'est demandée, mais les commandes ne fonctionnent que depuis le PC lui-même (`localhost`).
-- Pour ouvrir le site depuis un téléphone **sur le même Wi-Fi**, mets un mot de passe, puis va sur `http://IP_DU_PC:8080`. Sous Windows, autorise une fois le port dans le pare-feu (PowerShell en administrateur) :
+- **Avec Docker, `DASHBOARD_USER` et `DASHBOARD_PASSWORD` sont obligatoires, même sur un PC.** Avec un mot de passe vide, le monitor n'écoute que sur `127.0.0.1` dans son conteneur : le port publié par Docker ne peut pas l'atteindre.
+- Un mot de passe vide ne marche qu'en lançant le binaire directement (`go run ./cmd/monitor`, voir [Pour les développeurs](#12-pour-les-développeurs)) : aucune connexion n'est demandée, et le site et ses commandes ne fonctionnent que depuis le PC lui-même (`localhost`).
+- Pour ouvrir le site depuis un téléphone **sur le même Wi-Fi**, va sur `http://IP_DU_PC:8080`. Sous Windows, autorise une fois le port dans le pare-feu (PowerShell en administrateur) :
   ```powershell
   New-NetFirewallRule -DisplayName "CoD4 Monitor (LAN)" -Direction Inbound -Protocol TCP -LocalPort 8080 -Action Allow -Profile Private
   ```
@@ -175,9 +179,41 @@ cd /opt/cod4-monitor && git pull && docker compose -p cod4-monitor -f docker-com
 
 Le `.env`, la base de données et les sauvegardes sont conservés. Les tests automatiques tournent pendant la construction : s'ils échouent, la construction s'arrête et **l'ancienne version reste en ligne**.
 
-> ⏰ Le jeton GitHub a une date d'expiration. Quand `git pull` refuse de se connecter, crée un nouveau jeton (voir [étape 3](#étape-3--récupérer-le-projet)), puis lance `rm ~/.git-credentials && git pull` et colle le nouveau jeton.
+Si tu utilises des fichiers compose en plus (`docker-compose.local-logs.yml`, `docker-compose.b3.yml`), ajoute aussi leurs `-f …` à cette commande.
 
 **Option : déployer depuis ton PC.** `sh deploy/push.sh ubuntu@IP_DU_VPS` envoie ton dossier local (`.env` compris) et ta base locale (seulement si le VPS n'en a pas encore), puis démarre le site. ⚠️ Ce script **remplace le `.env` du VPS** par celui de ton PC.
+
+### Déploiement automatique depuis GitHub
+
+Optionnel, pour ceux qui font tourner leur propre fork : chaque push sur `main` met le VPS à jour tout seul.
+
+1. **Forke** le dépôt sur GitHub. Sur le VPS, le projet doit venir de ton fork : clone l'adresse de ton fork à l'[étape 3](#étape-3--récupérer-le-projet), ou lance `git remote set-url origin https://github.com/TON_NOM/cod4-monitor.git`.
+2. Sur le VPS, copie le script de déploiement :
+   ```sh
+   cd /opt/cod4-monitor
+   cp deploy/deploy.sh /opt/cod4-monitor/deploy.sh && chmod +x /opt/cod4-monitor/deploy.sh
+   ```
+   Si le projet n'est pas dans `/opt/cod4-monitor`, change la ligne `cd` de la copie et utilise ton chemin dans la suite. Si tu utilises des fichiers compose en plus, ajoute leurs `-f …` aux lignes `docker compose` de la copie.
+3. Crée une clé qui ne sert qu'au déploiement :
+   ```sh
+   ssh-keygen -t ed25519 -N "" -C github-deploy -f ~/.ssh/github_deploy
+   ```
+4. Autorise cette clé, mais seulement pour lancer `deploy.sh` :
+   ```sh
+   echo "command=\"/opt/cod4-monitor/deploy.sh\",no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty $(cat ~/.ssh/github_deploy.pub)" >> ~/.ssh/authorized_keys
+   ```
+5. Dans ton fork : **Settings → Secrets and variables → Actions → New repository secret**. Crée quatre secrets :
+
+   | Secret | Valeur |
+   |---|---|
+   | `VPS_HOST` | L'IP du VPS |
+   | `VPS_USER` | Ton utilisateur sur le VPS (ce qu'affiche `whoami`) |
+   | `VPS_SSH_KEY` | Le contenu de `~/.ssh/github_deploy` (la clé privée : `cat ~/.ssh/github_deploy`) |
+   | `VPS_KNOWN_HOST` | Ce qu'affiche `ssh-keyscan -t ed25519 IP_DU_VPS` |
+
+   Sur un fork, GitHub désactive d'abord les workflows : ouvre l'onglet **Actions** de ton fork et active-les.
+
+Ensuite, chaque push sur `main` lance les vérifications (`go vet`, tests) sur GitHub, se connecte au VPS et lance `deploy.sh` : il suit `main` exactement, reconstruit le monitor et attend jusqu'à 2 minutes qu'il soit en bonne santé. Les modifications faites à la main sur des fichiers suivis par git sur le VPS sont perdues ; le `.env`, la base et les sauvegardes sont gardés. Pour déployer à la main : **Actions → « Déploiement VPS » → Run workflow**. Sans les secrets `VPS_*`, le workflow ne fait rien.
 
 ---
 
@@ -190,14 +226,14 @@ Après toute modification du `.env`, relance avec la commande de démarrage de l
 | Variable | Exemple | Rôle |
 |---|---|---|
 | `SERVERS` | `Mon Serveur\|203.0.113.10:55555` | Le ou les serveurs à suivre au **premier démarrage** (détails ci-dessous). Ensuite, ils se gèrent depuis le site |
-| `DASHBOARD_USER` | `admin` | Identifiant du compte **admin**. **À remplir** : sans lui, impossible de se connecter en admin |
-| `DASHBOARD_PASSWORD` | — | Mot de passe admin. **Vide = aucune connexion** : uniquement pour un usage local |
+| `DASHBOARD_USER` | `admin` | Identifiant du compte **super admin**. **Obligatoire** avec un mot de passe : sans lui, le monitor ne démarre pas |
+| `DASHBOARD_PASSWORD` | — | Mot de passe du super admin. **Obligatoire avec Docker.** Vide = aucune connexion, le monitor n'écoute que sur `127.0.0.1` : seulement en lançant le binaire directement sur ton PC |
 | `DOMAIN` | `mon-serveur.duckdns.org` | Adresse publique (VPS uniquement) |
 | `TZ` | `Europe/Paris` | Fuseau horaire d'affichage |
 
 ### Le format de `SERVERS`
 
-> **`SERVERS` n'est lu qu'au premier démarrage** : les serveurs sont alors copiés dans la base. Ensuite, l'admin les ajoute, modifie, teste, arrête ou reprend depuis l'onglet **Admin → Serveurs surveillés** (adresse, FTP, rcon), sans redémarrer le monitor. Une fois les serveurs dans la base, modifier `SERVERS` n'a plus d'effet. Tu peux même le laisser vide et ajouter ton premier serveur depuis le site.
+> **`SERVERS` n'est lu qu'au premier démarrage** : les serveurs sont alors copiés dans la base. Ensuite, ils s'ajoutent, se modifient, se testent, s'arrêtent ou reprennent depuis **Plus → Tous les serveurs** (réglages de chaque serveur, ou **+ Ajouter un serveur** : adresse, FTP, rcon), sans redémarrer le monitor. Une fois les serveurs dans la base, modifier `SERVERS` n'a plus d'effet. Tu peux même le laisser vide et ajouter ton premier serveur depuis le site.
 
 Chaque serveur s'écrit avec jusqu'à 4 champs séparés par `|`. Seuls les deux premiers sont obligatoires :
 
@@ -218,13 +254,18 @@ SERVERS=Mon Serveur|203.0.113.10:55555|ftp://user:motdepasse@203.0.113.10:21/mod
 
 | Variable | Défaut | Rôle |
 |---|---|---|
-| `POLL_INTERVAL` | `5s` | Fréquence d'interrogation du serveur (5 s minimum) |
+| `POLL_INTERVAL` | `15s` (`5s` dans `.env.example`) | Fréquence d'interrogation du serveur (5 s minimum) |
 | `QUERY_TIMEOUT` | `2s` | Délai d'attente d'une réponse |
 | `OFFLINE_AFTER` | `45s` | Durée sans réponse avant d'afficher « hors ligne » (un changement de map ne répond pas pendant 20 à 40 s) |
 | `LOG_POLL_INTERVAL` | `2s` | Fréquence de lecture des logs par FTP |
 | `SERVER_LOG_TZ` | `UTC` | Fuseau horaire de l'horloge du serveur de jeu |
-| `HTTP_PORT` | `8080` | Port du site (installation sur PC) |
+| `HTTP_PORT` | `8080` | Port d'écoute du monitor (sur un VPS, Caddy lui transmet les requêtes) |
+| `HTTP_BIND` | vide (toutes les adresses) | Adresse d'écoute du monitor. Forcée à `127.0.0.1` quand `DASHBOARD_PASSWORD` est vide |
+| `TRUSTED_PROXIES` | `127.0.0.1/32,::1/128` | Reverse proxys autorisés à transmettre l'IP du visiteur (`X-Forwarded-For`). `docker-compose.prod.yml` met l'adresse de Caddy tout seul. `none` = ignorer ces en-têtes |
+| `DB_PATH` | `monitor.db` (`/data/monitor.db` dans `.env.example`) | La base de données. Avec Docker, elle est dans le volume `data` |
+| `MONITOR_SECRET_KEY` | — | Clé qui chiffre les mots de passe FTP, rcon et B3 enregistrés (base64 de 32 octets, ex. `openssl rand -base64 32`). Vide = le fichier `DB_PATH.key` est créé à côté de la base. Voir [Sauvegardes](#9-sauvegardes) |
 | `RETENTION_DAYS` | `90` | Durée de conservation des sondages, en jours (`0` = toujours) |
+| `BACKUP_DIR` | vide (`/backups` dans `.env.example`) | Dossier des sauvegardes quotidiennes (`./backups` du projet avec Docker). Vide = pas de sauvegarde |
 | `BACKUP_KEEP` | `14` | Nombre de sauvegardes quotidiennes gardées |
 | `DISCORD_WEBHOOK_URL` | — | Alertes Discord : serveur en panne ou de retour |
 | `DISCORD_PLAYER_THRESHOLD` | `0` | Alerte Discord quand le nombre de joueurs atteint ce seuil (`0` = désactivé) |
@@ -279,38 +320,55 @@ Ce que tu reçois :
 - **Crash du serveur** : quand le serveur de jeu ne répond plus, redémarre tout seul (crash + redémarrage automatique) ou revient, avec la cause probable (dernière erreur de sa console, par ex. `ERROR: Exceeded limit of 1000 'xmodel' assets`) et les dernières lignes de la console. Après un redémarrage, la fin de l'ancienne console est lue dans `qconsole.log.old` (nécessite les logs FTP). Un arrêt normal (quit, redémarrage par l'hébergeur) est seulement enregistré, sans mail. La cause s'affiche aussi sous chaque coupure, sur l'accueil.
 - **Alertes de joueurs** : quand se connecte un joueur qui a une note d'admin **⚠ Suspect** ou **👁 À surveiller**, ou un `!report` pas encore traité (30 derniers jours). Au plus un mail par joueur toutes les 6 heures.
 
+### Notifications push (téléphone)
+
+Chaque compte de l'équipe peut aussi recevoir des **notifications sur son téléphone, même application fermée** : **Plus → Notifications** → *Activer les notifications*, puis un interrupteur par alerte :
+
+- **Serveur tombé ou revenu** (crash, redémarrage inattendu, retour en ligne, avec la cause probable) : tout compte qui a des droits sur le serveur.
+- **Nouveau signalement** (`!report` en jeu) : les comptes qui peuvent traiter les signalements ou voir les données privées.
+- **Joueur suspect ou banni qui revient** (stats anormales, joueur noté suspect / à surveiller en jeu, contournement de ban possible) et **Ban B3** : les comptes qui voient les données privées.
+
+Rien à configurer : aucun compte tiers, aucune variable dans le `.env`. Le monitor crée sa propre clé (VAPID) au premier démarrage et la garde dans sa base ; le service push du téléphone (Google, Apple, Mozilla, Microsoft) livre les notifications. Les permissions sont vérifiées à chaque envoi : retirer un droit coupe aussi ses notifications. **iPhone** : iOS 16.4 ou plus, et seulement depuis l'application ajoutée à l'écran d'accueil (Safari → Partager → *Sur l'écran d'accueil*, puis l'ouvrir depuis là). Chaque téléphone ou navigateur a ses propres choix, et peut couper un serveur. Les mails ci-dessus ne changent pas.
+
 ---
 
 ## 6. Comptes et rôles
 
 | Rôle | Qui | Voit | Peut faire |
 |---|---|---|---|
-| 👑 **Admin** | le compte du `.env` | tout | tout : commandes, kick, ban, map, comptes, notes |
-| 🛡 **Semi-admin** | les comptes créés par l'admin | tout : console, chat, IP, stats, contournements de ban | seulement changer son mot de passe |
+| 👑 **Super admin** | le compte du `.env` (`DASHBOARD_USER`) | tout, sur tous les serveurs | tout : tous les serveurs, invite les administrateurs, gère les comptes, transfère les serveurs, la machine du monitor (logs et B3 sur cette machine) |
+| 🏠 **Admin** (propriétaire de serveur) | invité par le super admin | tout sur ses propres serveurs ; seulement les stats publiques des autres | ajoute ses serveurs et les règle (adresse, FTP, rcon, B3), invite des modérateurs, toutes les actions sur ses serveurs |
+| 🛡 **Modérateur** | invité sur un serveur par son propriétaire | ce que ses permissions permettent, serveur par serveur | ce que ses permissions permettent (ci-dessous) |
 | 👀 **Visiteur** | n'importe qui, sans compte | les stats publiques : état, joueurs, activité, classements, matchs | rien |
 
-- **Créer un compte semi-admin** : onglet **Admin** → *Utilisateurs du dashboard* → identifiant et mot de passe (8 caractères minimum).
+Les permissions d'un modérateur se choisissent par serveur : **consulter les données privées** (IP, chat, logs, notes), **expulser** un joueur, **bannir** et débannir, **traiter les signalements**, **modifier les notes joueurs**, **changer la map** / relancer la partie, **envoyer un message**, **console RCON complète** et commandes programmées (contrôle total du jeu). Un modérateur n'en a aucune par défaut, et voit les siennes dans **Plus → Mes droits sur … → Mes permissions**.
+
+- **Les comptes se créent uniquement sur invitation** : **Plus → Équipe et invitations** → un lien d'invitation valable 48 h. Le propriétaire invite les modérateurs du serveur ; le super admin peut aussi inviter des administrateurs. Le super admin gère tous les comptes dans **Plus → Comptes du dashboard** (nouveau mot de passe, suppression).
 - Les **visiteurs ne voient jamais** les IP, la console, le chat ni les notes d'admin. Ce blocage est fait par le serveur, pas seulement masqué dans la page.
-- **Sécurité** : mots de passe chiffrés (PBKDF2-SHA256), connexion valable 30 jours, blocage de 15 minutes après 10 échecs depuis une même IP.
+- **Sécurité** : mots de passe hachés (PBKDF2-SHA256), connexion valable 7 jours, blocage de 15 minutes après 10 échecs depuis une même IP.
+
+Détails (invitations, permissions, transfert d'un serveur) : [docs/ACCOUNTS.md](docs/ACCOUNTS.md).
 
 ---
 
 ## 7. Ce que tu trouves dans le dashboard
 
-| Onglet | Contenu |
+Le site est une application pensée d'abord pour le téléphone (onglets en bas sur téléphone, menu latéral sur ordinateur). Elle s'installe sur l'écran d'accueil (**Plus → Installer l'application**). Les onglets : **Direct**, **Classements**, **Joueurs**, **Matchs** (visiteurs) ou **Modération** (équipe), **Plus**.
+
+| Écran | Contenu |
 |---|---|
-| **Accueil** | État du serveur, joueurs connectés, disponibilité et coupures (avec leur cause : erreur de la console, redémarrage, arrêt normal), les 7 derniers jours (joueur de la semaine, top 5, records). Pour l'admin : commandes serveur. Pour les comptes : console et chat en direct. |
-| **Activité** | Courbe du nombre de joueurs, maps jouées, heures les plus actives |
-| **Maps** | Chaque map comparée à la moyenne du serveur (passages, joueurs, temps, serveur vide, départs, votes) avec un verdict : à garder / moyenne / à remplacer. Rétention par map et votes de map. Rounds par map : durée des rounds et des matchs, victoires attaque / défense (maps déséquilibrées). |
-| **Joueurs** | Stats de chaque joueur. Fidélité : nouveaux joueurs, combien reviennent, évolution par semaine, réguliers qui ne viennent plus. Pour les comptes : pseudos par GUID et comptes liés par IP. |
-| **Combat** | Badges de la période, records, classement, historique des matchs avec tableau des scores, statistiques suspectes, duels, rounds |
-| **Admin** | Comptes, commandes programmées, alertes, contournements de ban suspects, journal des actions, bans |
-| **Serveur** | Latence, ping des joueurs (par joueur et par heure), erreurs de la console, variables du serveur |
+| **Direct** | Carte du serveur (état, map, score du match en direct, rejoindre / partager), latence, ping et disponibilité sur 30 jours, détails du serveur, joueurs connectés, activité du jour, les 7 derniers jours (joueur de la semaine, top 5, records). Pour l'équipe qui a les droits : changer de map (recherche, images, mode de jeu), redémarrer, messages, kick / ban, maps du vote de fin de match, boost XP. |
+| **Modération** (équipe) | Boîte de réception (À traiter / Historique) : signalements, stats suspectes, joueurs à surveiller en jeu, contournements de ban possibles, bans B3. Outils, selon les permissions : Chat avec recherche, Console (console du jeu en direct), Bans (bans du serveur et débannissement), Contournements (indices de contournement de ban), Comptes liés (pseudos par GUID, comptes liés par IP), B3 (sanctions, admins et grades, recherche, stats). |
+| **Joueurs** | Tous les joueurs de la période (filtres : en ligne, nouveaux, notés), recherche par pseudo actuel ou ancien (et par IP pour l'équipe). Sur ordinateur, un tableau avec temps de jeu, sessions, ping, meilleur score, messages… |
+| **Fiche joueur** | Résumé (forme par rapport à la période précédente, comparaison avec un joueur, progression K/D / headshots / précision), combat (armes, zones touchées, némésis), matchs, modération (note, message de bienvenue, sessions, IP, comptes liés, chat, grade et sanctions B3). Boutons **Copier le lien**, **Duel** et **Carte Discord** (une image PNG des 7 derniers jours du joueur, sans IP ni GUID, à poster sur Discord). |
+| **Classements** | Badges, records (joueur du jour et de la semaine), classement par critère (tableau complet triable sur ordinateur), défis de la semaine (kills, headshots, objectifs de toute la communauté ; le propriétaire règle les objectifs), **Duel** (qui a tué qui entre deux joueurs, depuis le début). |
+| **Matchs** (visiteurs) | Matchs et rounds : tableaux des scores, faits marquants, une **Carte Discord** (PNG) par match. Les comptes de l'équipe les trouvent dans Plus → Matchs récents. |
+| **Plus** | **Stats avancées** (affluence, maps avec verdict à garder / à remplacer et votes de map, fidélité, combat), **Matchs récents**, **État du serveur** (disponibilité, coupures et leur cause, latence, ping des joueurs, erreurs de la console, variables du serveur, collecte des logs et sauvegardes), **Tous les serveurs** (réglages de chaque serveur, **+ Ajouter un serveur**). Puis, pour le serveur sélectionné et selon les droits : Personnalisation, Équipe et invitations, Réglages du serveur, Console, Commandes programmées, Comptes du dashboard, Journal d'activité. Puis Notifications, Installer l'application, Mot de passe, et **À propos** (Signaler un bug ou proposer une idée, Code source). |
 
-Autres fonctionnalités :
+Aussi :
 
-- **Fiche joueur** : clic sur un pseudo. Elle affiche son temps de jeu, ses armes, sa progression sur 12 semaines, ses némésis… Le bouton **🔗 Lien** copie une adresse qui ouvre directement sa fiche, à partager sur Discord.
-- **Sur ordinateur** : menu latéral, recherche avec **Ctrl K** (joueurs, maps, pages), cloche de notifications pour les comptes (signalements à traiter, contournements de ban, crashs des dernières 24 h), score du match en direct dans la carte du serveur.
+- **Sur ordinateur** : menu latéral, recherche avec **Ctrl K** ou **/** (joueurs par pseudo actuel ou ancien, écrans).
+- Les **anciens liens** marchent toujours : `/v2/…`, `/login.html`, `/invite.html#…`, `#accueil`, `#joueur/<clé>`, `#admin`…
 - **Langue** : bouton 🇫🇷 / 🇬🇧 en haut à droite. Par défaut, le site prend la langue du navigateur.
 - **Badges** : meilleur joueur de la période dans 7 catégories. L'icône s'affiche à côté du pseudo partout sur le site.
 
@@ -332,7 +390,7 @@ Sans FTP, le site fonctionne quand même, mais seulement avec les infos publique
 
 ### Commandes RCON
 
-Avec le `rcon_password` en 4e champ de `SERVERS`, l'admin a accès à :
+Avec le `rcon_password` en 4e champ de `SERVERS` (ou dans les réglages du serveur), le propriétaire et les modérateurs qui ont les permissions correspondantes ont accès à :
 
 - **changer de map et de mode**, depuis une galerie des maps du serveur (maps stock et `usermaps/`, lues par FTP) ;
 - **map suivante, redémarrage, message à tous, commande libre** ;
@@ -340,7 +398,7 @@ Avec le `rcon_password` en 4e champ de `SERVERS`, l'admin a accès à :
 - **maps du vote de fin de match et boost XP** ;
 - **commandes programmées**, toutes les N minutes ou chaque jour à heure fixe.
 
-Chaque action est enregistrée dans le **journal des actions** (onglet Admin), avec le compte qui l'a faite.
+Chaque action est enregistrée dans le **journal d'activité** (Plus → Journal d'activité), avec le compte qui l'a faite.
 
 > Le mod ne peut pas être changé à chaud (CoD4X protège `fs_game`) : il se règle dans les paramètres de démarrage du serveur (OGP).
 
@@ -357,7 +415,7 @@ Le mod `pm_sniper` (dépôt séparé) écrit des lignes supplémentaires dans `g
 | `MV` / `MVW` | Résultats du vote de map de fin de match |
 | `PI` | Profil du joueur à son arrivée (niveau, prestige, stats de carrière) : détection des contournements de ban |
 
-On les retrouve dans le classement (noscopes, quickscopes, wallbangs, plus long kill, clutchs, premier sang, % de victoires), les records et badges, les matchs (gagnant, score, faits marquants de chaque round), la fiche joueur et l'onglet Maps (votes de map). Sans ce mod, ces colonnes et sections sont masquées et tout le reste fonctionne.
+On les retrouve dans le classement (noscopes, quickscopes, wallbangs, plus long kill, clutchs, premier sang, % de victoires), les records et badges, les matchs (gagnant, score, faits marquants de chaque round), la fiche joueur et **Plus → Stats avancées → Maps** (votes de map). Sans ce mod, ces colonnes et sections sont masquées et tout le reste fonctionne.
 
 ### Commandes dans le chat du jeu
 
@@ -367,15 +425,15 @@ Avec le `rcon_password` dans `SERVERS`, le monitor répond aux joueurs en messag
 |---|---|
 | `!stats` ou `!stats pseudo` | Kills, morts, K/D, % de headshots, noscopes, plus long kill |
 | `!top` | Les 5 meilleurs tueurs des 7 derniers jours |
-| `!report pseudo raison` | Signalement envoyé aux admins : il apparaît dans l'onglet **Admin**, avec une alerte en direct |
-| `!me` | Un lien court à taper sur le téléphone (`ton-domaine/me/K7QPX`, ou un code sans `DOMAIN`) : il ouvre la fiche du joueur dans la nouvelle interface et l'épingle (**C'est moi**). Valable 24 heures |
+| `!report pseudo raison` | Signalement envoyé aux admins : il apparaît dans **Modération** (et en notification push) |
+| `!me` | Un lien court à taper sur le téléphone (`ton-domaine/me/K7QPX`, ou un code sans `DOMAIN`) : il ouvre la fiche du joueur et l'épingle (**C'est moi**). Valable 24 heures |
 | `!help` | Liste des commandes (si le serveur a B3, c'est B3 qui répond : sa liste inclut ces commandes) |
 
 Une commande toutes les 3 secondes par joueur, un signalement par minute.
 
 ### Contournements de ban (spoofer de GUID)
 
-Onglet **Admin** → *Contournements de ban suspects* : chaque joueur actif depuis un ban est comparé au joueur banni, et chaque indice ajoute des points. Une alerte en direct s'affiche à partir de **50**. Rien n'est banni automatiquement : c'est à toi de vérifier.
+**Modération → Contournements** : chaque joueur actif depuis un ban est comparé au joueur banni, et chaque indice ajoute des points. Une alerte en direct s'affiche à partir de **50**. Rien n'est banni automatiquement : c'est à toi de vérifier.
 
 | Indice | Points |
 |---|---|
@@ -391,21 +449,27 @@ Onglet **Admin** → *Contournements de ban suspects* : chaque joueur actif depu
 
 Les indices faibles ne comptent qu'en plus d'un indice qui relie le joueur au banni, et un joueur déjà connu avant le ban n'est signalé que sur un indice fort (IP, Steam ID, profil, pseudo). Le profil vient de la ligne `PI` du mod `pm_sniper`, et les réglages réseau du mot de passe rcon. Un tricheur qui change à la fois de GUID, d'IP (VPN), de profil CoD4, de pseudo et de façon de jouer reste indétectable.
 
-**Message de bienvenue** : dans la fiche d'un joueur, l'**admin** (pas le semi-admin) peut écrire un message personnel, envoyé en privé 30 secondes après chaque connexion de ce joueur. `{name}` est remplacé par son pseudo.
+**Message de bienvenue** : dans la fiche d'un joueur (onglet Modération), le **propriétaire** du serveur (pas un modérateur) peut écrire un message personnel, envoyé en privé 30 secondes après chaque connexion de ce joueur. `{name}` est remplacé par son pseudo.
 
-**Images des maps custom** : les vignettes sont dans `web/maps/`. Après avoir ajouté des maps à ton jeu, régénère-les depuis ton PC :
+**Images des maps custom** : les vignettes sont dans `ui/public/maps/`. Après avoir ajouté des maps à ton jeu, régénère-les depuis ton PC :
 
 ```sh
-docker run --rm -v "$PWD":/src -v "<dossier cod4>":/game:ro -w /src golang:1.26-alpine go run ./cmd/mapimages /game web/maps
+docker run --rm -v "$PWD":/src -v "<dossier cod4>":/game:ro -w /src golang:1.26-alpine go run ./cmd/mapimages /game ui/public/maps
 ```
 
 ---
 
 ## 9. Sauvegardes
 
-Chaque jour, une copie de la base est écrite dans `backups/monitor-AAAA-MM-JJ.db`. Les 14 dernières sont gardées (`BACKUP_KEEP`).
+Chaque jour, une copie de la base est écrite dans `backups/monitor-AAAA-MM-JJ.db` (`BACKUP_DIR`), puis vérifiée en la restaurant. Les 14 dernières sont gardées (`BACKUP_KEEP`).
 
 > ⚠️ Ces sauvegardes sont **sur le VPS lui-même**. Pense à en copier une de temps en temps ailleurs. Depuis ton PC : `scp ubuntu@IP_DU_VPS:/opt/cod4-monitor/backups/monitor-*.db .`
+
+**Garde aussi la clé.** Les mots de passe FTP, rcon et B3 enregistrés sont chiffrés avec une clé qui n'est **pas** dans les sauvegardes : le fichier `monitor.db.key` à côté de la base (`DB_PATH` + `.key`, dans le volume `data` avec Docker), ou `MONITOR_SECRET_KEY` si tu l'as défini. Une base restaurée sans sa clé perd ces mots de passe : le monitor refuse de démarrer (`cannot decrypt server secrets`) dès qu'un serveur a un mot de passe FTP ou rcon enregistré. Copie la clé une fois, ailleurs que les sauvegardes :
+
+```sh
+docker run --rm -v cod4-monitor_data:/data alpine cat /data/monitor.db.key > monitor.db.key && chmod 600 monitor.db.key
+```
 
 **Restaurer une sauvegarde** (sur le VPS) :
 
@@ -417,9 +481,14 @@ docker run --rm -v cod4-monitor_data:/data -v "$PWD/backups":/b alpine \
 docker compose -p cod4-monitor -f docker-compose.prod.yml start monitor
 ```
 
-Remplace la date par celle de la sauvegarde voulue.
+Remplace la date par celle de la sauvegarde voulue. Sur le même VPS, la clé est toujours dans le volume. Sur une nouvelle machine (ou un nouveau volume), remets la clé avant `start monitor` : copie `monitor.db.key` dans `backups/`, lance la commande ci-dessous, puis supprime-la de `backups/`.
 
-Ce qui est conservé pour toujours : chat, pseudos, kills, rounds, connexions, bans, journal des actions. Les sondages et les sessions sont purgés après `RETENTION_DAYS` jours.
+```sh
+docker run --rm -v cod4-monitor_data:/data -v "$PWD/backups":/b alpine \
+  sh -c 'cp /b/monitor.db.key /data/monitor.db.key && chmod 600 /data/monitor.db.key && chown 1000 /data/monitor.db.key'
+```
+
+Ce qui est conservé pour toujours : chat, pseudos, kills, rounds, connexions, bans, journal d'activité. Les sondages et les sessions sont purgés après `RETENTION_DAYS` jours.
 
 ---
 
@@ -432,10 +501,10 @@ Ce qui est conservé pour toujours : chat, pseudos, kills, rounds, connexions, b
 | Logs : `invalid SERVERS entry` | La ligne `SERVERS` est mal écrite : format `Nom\|ip:port`, sans espace autour des `\|`. |
 | Logs : `invalid log URL` | L'URL FTP doit commencer par `ftp://`, et les caractères spéciaux du mot de passe doivent être encodés (voir [ici](#le-format-de-servers)). |
 | Le site ne s'ouvre pas / erreur de certificat | Vérifie que DuckDNS pointe bien sur l'IP du VPS, et que les ports 80 et 443 sont ouverts (pare-feu du VPS **et** de l'hébergeur). Regarde `docker logs cod4-monitor-caddy-1`. |
-| Impossible de se connecter en admin | `DASHBOARD_USER` est-il rempli dans le `.env` ? Après une modification, relance le site. Après 10 échecs, attends 15 minutes. |
+| Impossible de se connecter avec le compte du `.env` | `DASHBOARD_USER` est-il rempli dans le `.env` ? Après une modification, relance le site. Après 10 échecs, attends 15 minutes. |
 | « Logs non configurés » dans la console | Ajoute l'URL FTP en 3e champ de `SERVERS`. |
-| Pas de section « Commandes serveur » | Ajoute le `rcon_password` en 4e champ de `SERVERS`, et connecte-toi en **admin**. |
-| `git pull` : *Invalid username or token* | Le jeton GitHub a expiré ou est faux : `rm ~/.git-credentials`, puis `git pull` et colle un nouveau jeton. |
+| Pas de commandes serveur (map, messages, console) | Ajoute le mot de passe rcon (4e champ de `SERVERS`, ou Plus → Tous les serveurs → réglages du serveur), et connecte-toi en **propriétaire** du serveur, ou en modérateur avec la permission map, message ou RCON. |
+| Logs : `cannot decrypt server secrets` | La base a été restaurée sans sa clé. Remets le `monitor.db.key` correspondant (ou `MONITOR_SECRET_KEY`), voir [Sauvegardes](#9-sauvegardes). |
 | `fatal: not a git repository` | Tu n'es pas dans le bon dossier : `cd /opt/cod4-monitor`. |
 | `permission denied` avec `docker` | Lance `sudo usermod -aG docker $USER`, puis déconnecte-toi et reconnecte-toi. |
 | iPhone : le haut de page est caché | Mets le site à jour, puis ferme complètement l'application et rouvre-la. |
@@ -463,7 +532,7 @@ echo "alias cod4='docker compose -p cod4-monitor -f /opt/cod4-monitor/docker-com
 
 ## 12. Pour les développeurs
 
-Le monitor est écrit en Go (Gin, SQLite sans CGO). La page web (`web/`) est intégrée au binaire.
+Le monitor est écrit en Go (Gin, SQLite sans CGO). L'interface (`ui/`, Svelte) est compilée par le `Dockerfile` et intégrée au binaire.
 
 ```sh
 go test ./...                              # tests
@@ -471,18 +540,17 @@ go run ./cmd/probe 203.0.113.10:55555     # interroge un serveur une fois et aff
 DB_PATH=monitor.db go run ./cmd/monitor    # lance le monitor en local
 ```
 
-- **Traductions** : la page est écrite en français. Les traductions anglaises sont dans `web/i18n.js` : tout nouveau texte doit y être ajouté.
-- **Nouvelle interface (v2, en cours)** : application Svelte dans `ui/`, servie sur `/v2/` à côté de l'interface actuelle. Le `Dockerfile` la compile et l'intègre au binaire. Pour travailler dessus, lancer le monitor (port 8080) puis :
+- **Interface** : une application Svelte dans `ui/`, servie à la racine du site. Pour travailler dessus, lance le monitor (port 8080), puis :
 
   ```sh
   cd ui && npm ci
-  npm run dev     # http://localhost:5173/v2/ , les appels /api vont au monitor sur le port 8080
+  npm run dev     # http://localhost:5173/ , les appels /api vont au monitor sur le port 8080
   npm run check   # vérification Svelte (aussi en CI)
   npm run build   # ui/dist, intégré au binaire par go build
   ```
 
-  Sans `npm run build`, `/v2/` répond « Interface v2 non compilée ». Les textes sont en français, traduits dans `ui/src/lib/i18n.svelte.js`.
-- **Rôles** : la liste des routes accessibles à chaque rôle est dans `internal/api/auth.go` (`allowed`).
+  Sans `npm run build`, le site répond « Interface non compilée ». Les textes sont écrits en français ; les traductions anglaises sont dans `ui/src/lib/i18n.svelte.js` et `ui/src/lib/en/*.js` : tout nouveau texte doit y être ajouté.
+- **Rôles** : les routes qu'un visiteur peut lire sont dans `internal/api/auth.go` (`visitorRoutes`) ; les règles des comptes et des permissions par serveur sont dans `internal/api/tenancy.go` (`tenantAllowed`).
 - **Base de données** : `docker compose cp monitor:/data/monitor.db .` puis l'ouvrir avec `sqlite3`.
 
 <details>
@@ -490,7 +558,7 @@ DB_PATH=monitor.db go run ./cmd/monitor    # lance le monitor en local
 
 Toutes les routes `/api/servers/:id/…` acceptent `?range=24h|7d|30d|90d` ou `?from=<unix>&to=<unix>` quand elles portent sur une période.
 
-| Route | Rôle minimum | Contenu |
+| Route | Qui (propriétaire et super admin : tout sur leurs serveurs) | Contenu |
 |---|---|---|
 | `GET /api/health` | public | État du monitor (healthcheck Docker) |
 | `POST /api/login` · `POST /api/logout` · `GET /api/me` | public | Connexion, compte courant et rôle |
@@ -501,13 +569,20 @@ Toutes les routes `/api/servers/:id/…` acceptent `?range=24h|7d|30d|90d` ou `?
 | `GET …/matches` · `/match?id=` · `/mapstats` · `/heatmap` | visiteur | Matchs, tableau des scores, rétention par map, heures actives |
 | `GET /api/events` | visiteur | Flux temps réel (SSE). Un visiteur ne reçoit ni console ni chat. |
 | `GET …/mapvotes` | visiteur | Votes de map (mod) |
-| `GET …/maprank` · `/week` | visiteur | Comparaison des maps (onglet Maps), 7 derniers jours (accueil) |
+| `GET …/maprank` · `/week` | visiteur | Comparaison des maps (Stats avancées → Maps), 7 derniers jours (accueil) |
 | `GET …/maprounds` · `/retention` | visiteur | Rounds par map (durée, attaque / défense), fidélité des joueurs |
-| `GET …/pings` | compte | Ping des joueurs |
-| `GET …/logs` · `/chat` · `/aliases` · `/alts` · `/notes` · `/errors` · `/cvars` · `/evasion` · `/reports` | semi-admin | Console, chat, pseudos, IP, notes, erreurs, variables, contournements |
-| `POST …/rcon` · `/kick` · `/ban` · `/unban` · `PUT …/notes` · `PUT …/welcome` · `…/schedules` · `POST …/reports/:id/done` | admin | Actions (enregistrées dans le journal) |
-| `GET …/bans` · `/dvar` · `/catalog` · `/rcon/log` · `/api/audit` · `/api/users` | admin | Bans, variables rcon, maps du serveur, historiques, comptes |
-| `GET /metrics` | semi-admin | Format Prometheus |
+| `GET …/challenges` · `/card.png` | visiteur | Défis de la semaine, carte Discord (PNG) |
+| `GET …/logs` · `/chat` · `/aliases` · `/alts` · `/errors` · `/pings` · `/cvars` · `/evasion` · `/b3/…` | `private` | Console, chat, pseudos, IP, erreurs, ping, variables, contournements, B3 |
+| `GET …/notes` | `private` ou `notes` | Notes des joueurs |
+| `GET …/reports` · `/inbox` · `POST …/reports/:rid/done` · `/inbox/dismiss` | `reports` (lecture : ou `private`) | Signalements, boîte de réception de la modération |
+| `POST …/kick` · `/tell` · `/ban` · `/unban` · `PUT …/notes` | `kick` · `say` · `ban` · `ban` · `notes` | Actions (enregistrées dans le journal d'activité) |
+| `GET …/bans` | `ban` | Bans du serveur |
+| `GET …/catalog` | `maps` ou `rcon` | Maps du serveur |
+| `POST …/rcon` | `rcon`, ou `maps` / `say` pour les seules commandes de map et de message | Commandes |
+| `GET …/dvar` · `/rcon/log` · `…/schedules` | `rcon` | Variables rcon, historique des commandes, commandes programmées |
+| `PUT …/welcome` · `PUT …/challenges` · `…/team` · `/api/serverconf/…` | propriétaire | Message de bienvenue, objectifs des défis, équipe, réglages du serveur |
+| `/api/invitations` · `/api/serverconf` · `GET /api/audit` · `GET /api/observability` | compte admin | Invitations, serveurs, journal d'activité, santé de la collecte des logs (ses serveurs) |
+| `/api/users` · `GET /metrics` | super admin | Comptes, format Prometheus |
 
 </details>
 
@@ -523,13 +598,13 @@ Par défaut, le monitor lit les logs d'un serveur par **FTP**. Si le serveur de 
    ```ini
    LOCAL_LOGS_DIR=/opt/cod4-server/cod4
    ```
-2. Ajoute `-f docker-compose.local-logs.yml` à toutes tes commandes `docker compose`, y compris dans `deploy.sh` si tu as le déploiement automatique :
+2. Ajoute `-f docker-compose.local-logs.yml` à toutes tes commandes `docker compose`, et aux lignes `docker compose` de `/opt/cod4-monitor/deploy.sh` si tu utilises le [déploiement automatique](#déploiement-automatique-depuis-github) :
    ```sh
    docker compose -p cod4-monitor -f docker-compose.prod.yml -f docker-compose.local-logs.yml up -d --build
    ```
    Ce fichier monte `LOCAL_LOGS_DIR` en **lecture seule** sur `/gamelogs/` dans le monitor.
-3. Dans le dashboard : onglet **Admin** → le serveur → **Lecture des logs : Sur cette machine**, avec le dossier vu par le monitor. Par exemple, `/gamelogs/mods/mon_mod/` si tu as monté tout le serveur.
-4. Clique sur **Tester la connexion**. Si le dossier est faux, le test propose ceux qui existent.
+3. Dans le dashboard (avec le compte du `.env`) : **Plus → Tous les serveurs** → réglages du serveur → **Logs du serveur → Sur cette machine**, avec le dossier vu par le monitor. Par exemple, `/gamelogs/mods/mon_mod/` si tu as monté tout le serveur.
+4. Clique sur **Tester**. Si le dossier est faux, le test propose ceux qui existent.
 
 Le monitor ne peut rien lire en dehors de `/gamelogs/`.
 
@@ -537,7 +612,7 @@ Le monitor ne peut rien lire en dehors de `/gamelogs/`.
 
 ### Réglages avancés (par serveur)
 
-Dans le formulaire d'un serveur, le bloc **Réglages avancés** sert aux serveurs qui ne suivent pas les noms habituels :
+Dans les réglages d'un serveur, le bloc **Réglages avancés** sert aux serveurs qui ne suivent pas les noms habituels :
 
 | Réglage | Par défaut | À quoi ça sert |
 |---|---|---|
@@ -552,17 +627,17 @@ Un **nom** est cherché dans le dossier des logs. Il peut contenir un sous-dossi
 
 ## 14. B3 : sanctions, admins et grades depuis le dashboard
 
-Si le serveur de jeu a un bot d'administration **B3** sur la même machine (par exemple avec le projet `cod4-server`), le dashboard lit et modifie sa base (`b3.db`) :
+Si le serveur de jeu a un bot d'administration **B3**, le dashboard lit et modifie sa base : le fichier **SQLite** de B3 (`b3.db`, sur la machine du monitor, par exemple avec le projet `cod4-server`) ou sa base **MySQL / MariaDB** (le `storage: mysql://…` de B3, n'importe où tant que le monitor peut la joindre) :
 
-- **Admin → Sanctions B3** : liste des bans, bans temporaires, kicks et avertissements, avec le joueur, la raison, l'auteur (admin en jeu, `B3` ou `site: <compte>`) et la date de fin. On peut filtrer et chercher, et lever un ban ou retirer un avertissement.
-- **Admin → Admins B3** : qui est admin et à quel grade (20 modo, 40 admin, 60 full admin, 80 senior admin, 100 super admin), avec le nombre de sanctions données. Le grade se change dans la liste.
-- **Admin → Modération** : graphique des sanctions par semaine, raisons les plus fréquentes, joueurs les plus sanctionnés, admins les plus actifs (90 jours).
-- **Fiche d'un joueur → Gestion → B3** : son grade, ses sanctions, et les boutons **Avertir**, **Kick**, **Ban temporaire**, **Ban**, **Lever le ban** et **Grade B3**.
-- **Admin → Joueurs B3** : recherche par pseudo (actuel ou ancien), IP (ou son début, ex. `82.64.`) ou GUID, comme `!lookup` : grade, connexions, première et dernière visite, IP, banni ou non.
-- **Admin → Contournements de ban B3** : joueurs non bannis venus, après un ban en cours, depuis une IP du joueur banni (souvent la même personne avec un autre GUID), avec un bouton pour les bannir aussi.
+- **Modération → B3 → Sanctions** : bans, bans temporaires, kicks et avertissements, avec le joueur, la raison, l'auteur (admin en jeu, `B3` ou `site: <compte>`) et la date de fin. On peut filtrer et chercher, et lever un ban ou retirer un avertissement.
+- **Modération → B3 → Admins** : qui est admin et à quel grade (20 modo, 40 admin, 60 full admin, 80 senior admin, 100 super admin), avec les sanctions données par chacun. Le grade se change dans la liste.
+- **Modération → B3 → Stats** : sanctions par semaine, raisons les plus fréquentes, joueurs les plus sanctionnés, admins les plus actifs (90 jours).
+- **Fiche d'un joueur → Modération → B3** : son grade, ses sanctions, et les boutons **Avertir**, **Kick**, **Ban temporaire**, **Ban**, **Lever le ban** et **Grade B3**.
+- **Modération → B3 → Recherche** : recherche par pseudo (actuel ou ancien), IP (ou son début, ex. `82.64.`) ou GUID, comme `!lookup` : grade, connexions, première et dernière visite, IP, banni ou non.
+- **Modération → Contournements** : aussi les joueurs non bannis venus, après un ban en cours, depuis une IP du joueur banni (souvent la même personne avec un autre GUID), avec un bouton pour les bannir aussi.
 - **Origine des sanctions** : automatique (plugins de B3 : insultes, spam, trop d'avertissements), par un admin en jeu, ou depuis le site, avec le mot-clé de B3 (`#cuss`, `#spam`…).
 - **Fiche d'un joueur** : aussi les pseudos et les IP connus de B3, les comptes qui partagent une de ses IP (bannis signalés), son grade masqué (`!mask`) et son message d'accueil B3.
-- **Alertes** : à chaque nouveau ban ou ban temporaire (en jeu ou depuis le site), une alerte sur le dashboard et un mail si les mails sont configurés.
+- **Alertes** : chaque nouveau ban ou ban temporaire (en jeu ou depuis le site) apparaît dans la boîte de réception de la modération, en notification push, et par mail si les mails sont configurés.
 
 Comment les actions s'appliquent :
 
@@ -574,24 +649,46 @@ Comment les actions s'appliquent :
 | Lever le ban | Les bans B3 du joueur sont levés, et le ban du serveur aussi (`unban`) |
 | Grade | Écrit dans B3 ; il s'applique à la **prochaine connexion** du joueur |
 
-Seul le compte admin du `.env` peut agir. Les comptes semi-admin voient les sanctions sans pouvoir les modifier.
+Seul le propriétaire du serveur (et le compte du `.env`) peut agir. Les modérateurs qui voient les données privées voient les sanctions sans pouvoir les modifier.
 
-### Mise en place
+### Mise en place avec MySQL / MariaDB (tout propriétaire de serveur)
+
+1. Trouve la base de B3 dans son `b3.ini` : `storage: mysql://utilisateur:motdepasse@hôte/base`.
+2. Vérifie que le monitor peut la joindre : MySQL doit écouter sur une adresse que la machine du monitor peut atteindre (pas seulement `127.0.0.1`), et son pare-feu doit laisser passer le monitor. Le mieux est un compte MySQL dédié au monitor, par exemple :
+   ```sql
+   CREATE USER 'monitor'@'<IP du monitor>' IDENTIFIED BY '<mot de passe>';
+   GRANT SELECT, INSERT, UPDATE ON b3.* TO 'monitor'@'<IP du monitor>';
+   ```
+   (`SELECT` suffit pour tout voir ; `INSERT` et `UPDATE` servent aux actions : sanctions, levée de ban, grades.)
+3. Dans le dashboard : **Plus → Tous les serveurs → réglages du serveur → B3 → MySQL / MariaDB** : hôte, port, base, utilisateur, mot de passe, connexion chiffrée si le serveur la gère. **Tester** affiche le nombre d'admins et de sanctions trouvés.
+
+*MariaDB à côté de B3 sur la même machine* (le `docker-compose.mariadb.yml` du projet `cod4-server`) : avec `docker-compose.b3.yml`, le monitor voit le dossier de données de B3, où MariaDB met son socket. Dans le champ hôte, mets le chemin du socket, `/b3/mysqld/mysqld.sock` : aucun port réseau n'est ouvert (seul le compte du `.env` peut le régler).
+
+Le mot de passe est stocké chiffré, comme le mot de passe rcon, et n'est jamais renvoyé au navigateur. MySQL 5.7+, MySQL 8 et MariaDB 10.2+ sont gérés. Par sécurité, un propriétaire qui n'est pas le compte du `.env` ne peut pas diriger le monitor vers une adresse locale ou privée (`127.0.0.1`, `10.x`, `192.168.x`…) : seul le compte du `.env` le peut, pour un B3 sur la machine ou le réseau du monitor.
+
+### Mise en place avec le fichier SQLite de B3 (le compte du `.env`)
 
 1. Dans le `.env` du dashboard, indique le dossier de B3 qui contient `b3.db` :
    ```ini
    B3_DATA_DIR=/opt/cod4-server/b3data
    ```
-2. Ajoute `-f docker-compose.b3.yml` à toutes tes commandes `docker compose` et à `deploy.sh` (en plus de `docker-compose.local-logs.yml` si tu l'utilises) :
+2. Ajoute `-f docker-compose.b3.yml` à toutes tes commandes `docker compose` (en plus de `docker-compose.local-logs.yml` si tu l'utilises), et aux lignes `docker compose` de `/opt/cod4-monitor/deploy.sh` si tu utilises le [déploiement automatique](#déploiement-automatique-depuis-github) :
    ```sh
-   sed -i 's|-f docker-compose.local-logs.yml|-f docker-compose.local-logs.yml -f docker-compose.b3.yml|g' deploy.sh
-   ./deploy.sh
+   docker compose -p cod4-monitor -f docker-compose.prod.yml -f docker-compose.b3.yml up -d --build
    ```
    Ce fichier monte le dossier de B3 en lecture/écriture sur `/b3/`. Le monitor ne peut ouvrir une base B3 que dans ce dossier.
-3. Dans le dashboard : **Admin → le serveur → Modifier → Réglages avancés → Base B3** : `/b3/b3.db`. **Tester la connexion** affiche le nombre d'admins et de sanctions trouvés.
+3. Dans le dashboard : **Plus → Tous les serveurs → réglages du serveur → B3 → Fichier SQLite sur cette machine** : `/b3/b3.db`. **Tester** affiche le nombre d'admins et de sanctions trouvés.
 
 *Sans Docker* : `B3_ROOT` fixe le dossier où le monitor a le droit d'ouvrir une base B3 (par défaut `/b3/`).
 
+*Développeurs* : `B3_TEST_MYSQL=mysql://user:pass@127.0.0.1:3306/db go test ./internal/b3/` lance aussi les tests B3 sur MySQL (la CI le fait avec MySQL 8). La base est vidée.
+
+
+## 15. Signaler un bug / Contribuer
+
+- **Un bug ou une idée** : [ouvre une issue](https://github.com/FlorianMartinez01/cod4-monitor/issues/new/choose) et remplis le formulaire, en français ou en anglais. Le lien est aussi dans le dashboard : **Plus → À propos → Signaler un bug ou proposer une idée**. Ne colle jamais de mot de passe, de mot de passe rcon ni ton `.env`.
+- **Une faille de sécurité** : signale-la en privé, comme expliqué dans [SECURITY.md](SECURITY.md), jamais dans une issue publique.
+- **Une modification du code** : voir [CONTRIBUTING.md](CONTRIBUTING.md) (vérifications à lancer, traductions, pull request).
 
 ## Roadmap implémentée, sécurité et restauration
 
@@ -600,6 +697,8 @@ Voir [docs/ROADMAP.md](docs/ROADMAP.md) pour les fonctionnalités, les tests et 
 ### Comptes et équipes par serveur
 
 Les administrateurs et modérateurs rejoignent sur invitation. Voir [les rôles, invitations et permissions](docs/ACCOUNTS.md).
+
+---
 
 ## Licence
 

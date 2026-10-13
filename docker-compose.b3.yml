@@ -1,7 +1,7 @@
 # Optional: the B3 admin bot of a game server on the same machine. Its data folder (b3.db) is mounted read-write where
 # the monitor opens B3 databases (B3_ROOT, /b3/ by default): the dashboard shows and gives B3 penalties and groups.
 #   B3_DATA_DIR=/opt/cod4-server/b3data in .env, then add -f docker-compose.b3.yml to the docker compose commands,
-# and in the dashboard: Admin → server → Advanced settings → B3 database: /b3/b3.db
+# and in the dashboard: More → All servers → the server's settings → B3 → SQLite file on this machine: /b3/b3.db
 services:
   monitor:
     volumes:

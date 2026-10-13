@@ -10,7 +10,7 @@
 ## P1 — Fiabilité et maintenance
 
 - [x] **CI/tests** : tests unitaires et d'intégration HTTP/SQLite/logs, `go vet`, `go mod verify`, `go test -race -count=1 ./...`, compilation sans CGO. Le workflow de déploiement effectue ces vérifications avant l'appel SSH existant ; le build Docker conserve son propre contrôle.
-- [x] **Observabilité** : `/api/observability` réservé à l'administrateur, tableau dans l'onglet Serveur, métriques Prometheus pour octets de retard, dernière lecture réussie, lignes, rejets, erreurs, rotations, fichiers manquants et dernière restauration vérifiée. Un fichier silencieux lu correctement n'est pas considéré en retard ; utiliser le backlog et la date de lecture ensemble.
+- [x] **Observabilité** : `/api/observability` réservé à l'administrateur, tableau dans **Plus → État du serveur**, métriques Prometheus pour octets de retard, dernière lecture réussie, lignes, rejets, erreurs, rotations, fichiers manquants et dernière restauration vérifiée. Un fichier silencieux lu correctement n'est pas considéré en retard ; utiliser le backlog et la date de lecture ensemble.
 - [x] **SQLite** : index par manche, joueur/période et dernière observation ; agrégats quotidiens de combat maintenus transactionnellement par trigger et reconstruits une fois à la migration. La forme récente combine les journées agrégées avec les frontières temporelles exactes. `PRAGMA optimize` au démarrage et avec la maintenance quotidienne. Test `EXPLAIN QUERY PLAN` de l'index de manches.
 - [x] **Sauvegardes** : chaque nouvelle sauvegarde est copiée/restaurée dans un dossier temporaire, vérifiée par `integrity_check`, lecture des tables et déchiffrement des secrets. Publication atomique avec permissions 0600 ; rétention seulement après succès. Au démarrage, la sauvegarde du jour préexistante est également vérifiée si elle n'a pas encore été validée. Une sauvegarde corrompue n'est jamais supprimée silencieusement.
 
@@ -23,7 +23,7 @@
 
 ## Exploitation et restauration
 
-Le déploiement existant reste déclenché par les pushes sur `main`. Aucune nouvelle variable obligatoire n'est nécessaire pour une installation avec un compte administrateur et le compose de production fourni.
+Le déploiement automatique depuis GitHub reste optionnel (README, « Déploiement automatique depuis GitHub »). Aucune nouvelle variable obligatoire n'est nécessaire pour une installation avec un compte administrateur et le compose de production fourni.
 
 1. Au premier démarrage, le monitor crée `DB_PATH.key` à côté de la base si `MONITOR_SECRET_KEY` n'est pas défini, puis chiffre les configurations existantes. Avec Docker, le fichier est conservé dans le volume `/data`.
 2. Conserver une copie de cette clé dans un gestionnaire de secrets ou une sauvegarde protégée **séparée** des fichiers `.db`. Les sauvegardes SQLite seules ne permettent plus de retrouver les mots de passe FTP/RCON.

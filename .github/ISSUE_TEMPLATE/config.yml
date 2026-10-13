@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Security issue / Faille de sécurité
+    url: https://github.com/FlorianMartinez01/cod4-monitor/security/advisories/new
+    about: Report it privately, never in a public issue. / Signale-la en privé, jamais dans une issue publique.

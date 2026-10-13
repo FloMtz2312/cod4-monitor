@@ -7,7 +7,9 @@ A web dashboard to follow a **Call of Duty 4 / CoD4X** server — who plays, whe
 - **Live**: server status, online players, map, console and chat.
 - **Stats**: activity, rankings, badges, records, match history, a profile for every player with their progression.
 - **Admin**: map changes, kick and ban, scheduled commands, action log, ban evasion detection.
-- **Access**: three account levels (admin, semi-admin, visitor), English and French, usable as an app on a phone.
+- **Access**: super admin, server owners, moderators with per-server permissions, and visitors; accounts by invitation only. English and French, usable as an app on a phone.
+
+Found a bug or have an idea? [Open an issue](https://github.com/FlorianMartinez01/cod4-monitor/issues/new/choose): the form guides you.
 
 ---
 
@@ -27,6 +29,7 @@ A web dashboard to follow a **Call of Duty 4 / CoD4X** server — who plays, whe
 12. [For developers](#12-for-developers)
 13. [Game server on the same machine and advanced settings](#13-game-server-on-the-same-machine-and-advanced-settings)
 14. [B3: penalties, admins and grades from the dashboard](#14-b3-penalties-admins-and-grades-from-the-dashboard)
+15. [Report a bug / Contributing](#15-report-a-bug--contributing)
 - [License](#license)
 
 ---
@@ -134,8 +137,8 @@ Both lines (`monitor` and `caddy`) should say **Up**. If `monitor` says *Restart
 Go to `https://my-server.duckdns.org`. The certificate can take a minute to arrive the first time.
 
 - **Without logging in**, you see the site as a visitor would: the public stats.
-- **Log in** (top right) with `DASHBOARD_USER` and `DASHBOARD_PASSWORD` to get full admin access.
-- To give someone else access: **More → Staff and invitations** (an invitation link) (see [Accounts and roles](#6-accounts-and-roles)).
+- **Log in** (top right) with `DASHBOARD_USER` and `DASHBOARD_PASSWORD`: this is the super admin account, with full access.
+- To give someone else access: **More → Team and invitations** (an invitation link, see [Accounts and roles](#6-accounts-and-roles)).
 
 📱 **On a phone**: open the site, then tap *Share* → **Add to Home Screen** (iPhone) or *menu* → **Add to Home screen** (Android). The site then opens like an app.
 
@@ -148,14 +151,15 @@ Go to `https://my-server.duckdns.org`. The certificate can take a minute to arri
 You need [Docker Desktop](https://www.docker.com/products/docker-desktop/). In the project folder:
 
 ```sh
-cp .env.example .env      # then edit at least SERVERS
+cp .env.example .env      # then edit at least SERVERS, DASHBOARD_USER and DASHBOARD_PASSWORD
 docker compose up -d
 ```
 
 Then open http://localhost:8080 (or the port set in `HTTP_PORT`).
 
-- Without `DASHBOARD_PASSWORD`, no login is asked, but commands only work from the PC itself (`localhost`).
-- To open the site from a phone **on the same Wi-Fi**, set a password, then go to `http://PC_IP:8080`. On Windows, allow the port in the firewall once (PowerShell as administrator):
+- **With Docker, `DASHBOARD_USER` and `DASHBOARD_PASSWORD` are required, even on a PC.** With an empty password, the monitor only listens on `127.0.0.1` inside its container, so the port published by Docker can't reach it.
+- An empty password only works when you run the binary directly (`go run ./cmd/monitor`, see [For developers](#12-for-developers)): no login is asked, and the site and its commands only work from the PC itself (`localhost`).
+- To open the site from a phone **on the same Wi-Fi**, go to `http://PC_IP:8080`. On Windows, allow the port in the firewall once (PowerShell as administrator):
   ```powershell
   New-NetFirewallRule -DisplayName "CoD4 Monitor (LAN)" -Direction Inbound -Protocol TCP -LocalPort 8080 -Action Allow -Profile Private
   ```
@@ -175,9 +179,41 @@ cd /opt/cod4-monitor && git pull && docker compose -p cod4-monitor -f docker-com
 
 Your `.env`, the database and the backups are kept. The automated tests run during the build. If they fail, the build stops and **the previous version stays online**.
 
-> ⏰ GitHub tokens expire. When `git pull` refuses to connect, create a new token (see [step 3](#step-3-get-the-project)), then run `rm ~/.git-credentials && git pull` and paste the new token.
+If you use extra compose files (`docker-compose.local-logs.yml`, `docker-compose.b3.yml`), add their `-f …` to this command too.
 
 **Option: deploy from your PC.** `sh deploy/push.sh ubuntu@VPS_IP` uploads your local folder (`.env` included) and your local database (only if the VPS doesn't have one yet), then starts the site. ⚠️ This script **replaces the VPS `.env`** with the one from your PC.
+
+### Automatic deployment from GitHub
+
+Optional, for people who run their own fork: each push to `main` updates the VPS by itself.
+
+1. **Fork** the repository on GitHub. On the VPS, the project must come from your fork: clone your fork's URL at [step 3](#step-3-get-the-project), or run `git remote set-url origin https://github.com/YOUR_NAME/cod4-monitor.git`.
+2. On the VPS, copy the deployment script:
+   ```sh
+   cd /opt/cod4-monitor
+   cp deploy/deploy.sh /opt/cod4-monitor/deploy.sh && chmod +x /opt/cod4-monitor/deploy.sh
+   ```
+   If the project is not in `/opt/cod4-monitor`, change the `cd` line of the copy and use your path below. If you use extra compose files, add their `-f …` to the `docker compose` lines of the copy.
+3. Create a key used only for deployment:
+   ```sh
+   ssh-keygen -t ed25519 -N "" -C github-deploy -f ~/.ssh/github_deploy
+   ```
+4. Allow this key, but only to run `deploy.sh`:
+   ```sh
+   echo "command=\"/opt/cod4-monitor/deploy.sh\",no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty $(cat ~/.ssh/github_deploy.pub)" >> ~/.ssh/authorized_keys
+   ```
+5. In your fork: **Settings → Secrets and variables → Actions → New repository secret**. Create four secrets:
+
+   | Secret | Value |
+   |---|---|
+   | `VPS_HOST` | The VPS IP |
+   | `VPS_USER` | Your user on the VPS (the output of `whoami`) |
+   | `VPS_SSH_KEY` | The content of `~/.ssh/github_deploy` (the private key: `cat ~/.ssh/github_deploy`) |
+   | `VPS_KNOWN_HOST` | The output of `ssh-keyscan -t ed25519 VPS_IP` |
+
+   On a fork, GitHub turns workflows off at first: open the **Actions** tab of your fork and enable them.
+
+Each push to `main` then runs the checks (`go vet`, tests) on GitHub, connects to the VPS and runs `deploy.sh`: it follows `main` exactly, rebuilds the monitor and waits up to 2 minutes until it is healthy. Changes made by hand to tracked files on the VPS are lost; `.env`, the database and the backups are kept. To deploy by hand: **Actions → "Déploiement VPS" → Run workflow**. Without the `VPS_*` secrets, the workflow does nothing.
 
 ---
 
@@ -190,14 +226,14 @@ After any change to `.env`, restart with the start command from [step 6](#step-6
 | Variable | Example | Purpose |
 |---|---|---|
 | `SERVERS` | `My Server\|203.0.113.10:55555` | The server(s) to follow at the **first start** (details below). After that, they are managed from the site |
-| `DASHBOARD_USER` | `admin` | **Admin** username. **Required**: without it, nobody can log in as admin |
-| `DASHBOARD_PASSWORD` | — | Admin password. **Empty = no login at all**: only for use on your own PC |
+| `DASHBOARD_USER` | `admin` | **Super admin** username. **Required** with a password: without it, the monitor doesn't start |
+| `DASHBOARD_PASSWORD` | — | Super admin password. **Required with Docker.** Empty = no login at all, the monitor only listens on `127.0.0.1`: only when running the binary directly on your PC |
 | `DOMAIN` | `my-server.duckdns.org` | Public address (VPS only) |
 | `TZ` | `Europe/Paris` | Time zone used for display |
 
 ### The `SERVERS` format
 
-> **`SERVERS` is only read at the first start**: the servers are then copied into the database. After that, the admin adds, edits, tests, stops or resumes them from the **Admin → Monitored servers** tab (address, FTP, rcon), without restarting the monitor. Once the servers are in the database, changing `SERVERS` has no effect. You can even leave it empty and add your first server from the site.
+> **`SERVERS` is only read at the first start**: the servers are then copied into the database. After that, they are added, edited, tested, stopped or resumed from **More → All servers** (each server's settings, or **+ Add a server**: address, FTP, rcon), without restarting the monitor. Once the servers are in the database, changing `SERVERS` has no effect. You can even leave it empty and add your first server from the site.
 
 Each server is written as up to 4 fields separated by `|`. Only the first two are required:
 
@@ -218,13 +254,18 @@ SERVERS=My Server|203.0.113.10:55555|ftp://user:password@203.0.113.10:21/mods/my
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `POLL_INTERVAL` | `5s` | How often the server is queried (5 s minimum) |
+| `POLL_INTERVAL` | `15s` (`5s` in `.env.example`) | How often the server is queried (5 s minimum) |
 | `QUERY_TIMEOUT` | `2s` | How long to wait for a reply |
 | `OFFLINE_AFTER` | `45s` | Time without a reply before showing "offline" (a map change doesn't reply for 20–40 s) |
 | `LOG_POLL_INTERVAL` | `2s` | How often the logs are read over FTP |
 | `SERVER_LOG_TZ` | `UTC` | Time zone of the game server's clock |
-| `HTTP_PORT` | `8080` | Port of the site (PC install) |
+| `HTTP_PORT` | `8080` | Port the monitor listens on (on a VPS, Caddy forwards to it) |
+| `HTTP_BIND` | empty (all addresses) | Address the monitor listens on. Forced to `127.0.0.1` when `DASHBOARD_PASSWORD` is empty |
+| `TRUSTED_PROXIES` | `127.0.0.1/32,::1/128` | Reverse proxies allowed to pass the visitor's IP (`X-Forwarded-For`). `docker-compose.prod.yml` sets Caddy's address by itself. `none` = ignore these headers |
+| `DB_PATH` | `monitor.db` (`/data/monitor.db` in `.env.example`) | The database. With Docker, it is in the `data` volume |
+| `MONITOR_SECRET_KEY` | — | Key that encrypts the stored FTP, rcon and B3 passwords (base64 of 32 bytes, e.g. `openssl rand -base64 32`). Empty = the file `DB_PATH.key` is created next to the database. See [Backups](#9-backups) |
 | `RETENTION_DAYS` | `90` | How many days polls are kept (`0` = forever) |
+| `BACKUP_DIR` | empty (`/backups` in `.env.example`) | Folder of the daily backups (`./backups` of the project with Docker). Empty = no backups |
 | `BACKUP_KEEP` | `14` | Number of daily backups kept |
 | `DISCORD_WEBHOOK_URL` | — | Discord alerts when the server goes down or comes back |
 | `DISCORD_PLAYER_THRESHOLD` | `0` | Discord alert when the player count reaches this number (`0` = off) |
@@ -295,28 +336,34 @@ Nothing to configure: no third-party account, no `.env` variable. The monitor cr
 
 | Role | Who | Sees | Can do |
 |---|---|---|---|
-| 👑 **Admin** | the `.env` account | everything | everything: commands, kick, ban, map, accounts, notes |
-| 🛡 **Semi-admin** | accounts created by the admin | everything: console, chat, IPs, stats, ban evasion | only change their own password |
+| 👑 **Super admin** | the `.env` account (`DASHBOARD_USER`) | everything, on every server | everything: every server, invites administrators, manages the accounts, transfers servers, the monitor's machine (logs and B3 on this machine) |
+| 🏠 **Admin** (server owner) | invited by the super admin | everything on their own servers; only the public stats of the others | adds their servers and sets them up (address, FTP, rcon, B3), invites moderators, every action on their servers |
+| 🛡 **Moderator** | invited on a server by its owner | what their permissions allow, server by server | what their permissions allow (below) |
 | 👀 **Visitor** | anyone, no account | the public stats: status, players, activity, rankings, matches | nothing |
 
-- **Give access to someone**: **More → Staff and invitations** → an invitation link valid 48 h, with the permissions of their choice. The `.env` account manages every account in **More → Accounts** (new password, delete).
+A moderator's permissions are chosen per server: **see the private data** (IP, chat, logs, notes), **kick**, **ban** and unban, **handle the reports**, **edit the player notes**, **change the map** / restart the game, **send a message**, **full RCON console** and scheduled commands (full control of the game). A moderator has none by default, and sees theirs in **More → My rights on … → My permissions**.
+
+- **Accounts are created by invitation only**: **More → Team and invitations** → an invitation link valid 48 h. The owner invites moderators of the server; the super admin can also invite administrators. The super admin manages every account in **More → Dashboard accounts** (new password, delete).
 - **Visitors never see** IPs, the console, the chat or admin notes. The server itself blocks this data; it isn't just hidden on the page.
-- **Security**: passwords are hashed (PBKDF2-SHA256), a login lasts 30 days, and an IP is locked out for 15 minutes after 10 failed attempts.
+- **Security**: passwords are hashed (PBKDF2-SHA256), a login lasts 7 days, and an IP is locked out for 15 minutes after 10 failed attempts.
+
+Details (invitations, permissions, transfer of a server): [docs/ACCOUNTS.en.md](docs/ACCOUNTS.en.md).
 
 ---
 
 ## 7. What's in the dashboard
 
-The site is a phone-first app (bottom tabs on a phone, side menu on a computer). It can be installed on the home screen (**More → Install the app**).
+The site is a phone-first app (bottom tabs on a phone, side menu on a computer). It can be installed on the home screen (**More → Install the app**). The tabs: **Live**, **Rankings**, **Players**, **Matches** (visitors) or **Moderation** (staff), **More**.
 
 | Screen | Content |
 |---|---|
 | **Live** | Server card (status, map, live match score, join / share), latency, ping and 30-day availability, server details, online players, today's activity, the last 7 days (player of the week, top 5, records). For the staff with the rights: change map (search, images, game mode), restart, messages, kick / ban, end-of-match map vote pool, XP boost. |
-| **Moderation** (staff) | Inbox: reports, abnormal stats, tagged players in game, possible ban evasions, B3 bans. Tools: chat with search, live game console, server bans and unban, ban evasion clues, names per GUID and accounts linked by IP, B3 (penalties, admins and grades, lookup, statistics). |
+| **Moderation** (staff) | Inbox (To handle / History): reports, suspicious stats, tagged players in game, possible ban evasions, B3 bans. Tools, according to the permissions: Chat with search, Console (live game console), Bans (server bans and unban), Evasions (ban evasion clues), Linked accounts (names per GUID, accounts linked by IP), B3 (penalties, admins and grades, search, stats). |
 | **Players** | Every player of the period (filters: online, new, noted), search by current or old name (and IP for the staff). On a computer, a table with playtime, sessions, ping, best score, messages… |
-| **Player profile** | Summary (form vs previous period, compare with a player, progression K/D / headshots / accuracy), combat (weapons, hit zones, nemeses), matches, moderation (note, welcome message, sessions, IPs, linked accounts, chat, B3 grade and penalties). **Copy link** and **Duel** buttons. |
-| **Rankings** | Badges, records (player of the day and of the week), ranking by metric (full sortable table on a computer), community challenges (the owner sets the goals), duel. |
-| **More** | Matches and rounds (scoreboards, highlights), advanced stats (attendance, maps with verdicts keep / replace, retention, combat), server status (availability, outages and their cause, latency, players' ping, console errors, server variables, log collection and backups), notifications, and the administration: customization, staff and invitations, server settings, accounts, RCON console, scheduled commands, action log. |
+| **Player profile** | Summary (form vs previous period, compare with a player, progression K/D / headshots / accuracy), combat (weapons, hit zones, nemeses), matches, moderation (note, welcome message, sessions, IPs, linked accounts, chat, B3 grade and penalties). **Copy link**, **Duel** and **Discord card** buttons (a PNG image of the player's last 7 days, without IP or GUID, to post on Discord). |
+| **Rankings** | Badges, records (player of the day and of the week), ranking by metric (full sortable table on a computer), challenges of the week (kills, headshots, objectives of the whole community; the owner sets the goals), **Duel** (who killed whom between two players, all time). |
+| **Matches** (visitors) | Matches and rounds: scoreboards, highlights, a **Discord card** (PNG) per match. Staff accounts find them in More → Recent matches. |
+| **More** | **Advanced stats** (attendance, maps with verdicts keep / replace and map votes, loyalty, combat), **Recent matches**, **Server status** (availability, outages and their cause, latency, players' ping, console errors, server variables, log collection and backups), **All servers** (each server's settings, **+ Add a server**). Then, for the selected server and according to the rights: Customization, Team and invitations, Server settings, Console, Scheduled commands, Dashboard accounts, Activity log. Then Notifications, Install the app, Password, and **About** (Report a bug or suggest an idea, Source code). |
 
 Also:
 
@@ -343,7 +390,7 @@ Without FTP, the site still works, but only with the server's public info: playe
 
 ### RCON commands
 
-With the `rcon_password` as the 4th field of `SERVERS`, the admin gets:
+With the `rcon_password` as the 4th field of `SERVERS` (or in the server's settings), the owner and the moderators with the matching permissions get:
 
 - **map and mode changes** from a gallery of the server's maps (stock maps and `usermaps/`, read over FTP);
 - **next map, restart, message to all players, free command**;
@@ -351,7 +398,7 @@ With the `rcon_password` as the 4th field of `SERVERS`, the admin gets:
 - **end-of-match vote maps and XP boost**;
 - **scheduled commands**, every N minutes or every day at a set time.
 
-Every action is recorded in the **action log** (More → Action log), together with the account that did it.
+Every action is recorded in the **activity log** (More → Activity log), together with the account that did it.
 
 > The mod can't be changed on the fly (CoD4X protects `fs_game`). It's set in the server's startup parameters (OGP).
 
@@ -368,7 +415,7 @@ The `pm_sniper` mod (separate repository) writes extra lines to `games_mp.log`. 
 | `MV` / `MVW` | Results of the end-of-match map vote |
 | `PI` | Player profile on arrival (level, prestige, career stats): ban evasion detection |
 
-They show up in the ranking (noscopes, quickscopes, wallbangs, longest kill, clutches, first blood, win %), records and badges, matches (winner, score, highlights of every round), the player profile and the Maps tab (map votes). Without this mod, those columns and sections are hidden and everything else works.
+They show up in the ranking (noscopes, quickscopes, wallbangs, longest kill, clutches, first blood, win %), records and badges, matches (winner, score, highlights of every round), the player profile and **More → Advanced stats → Maps** (map votes). Without this mod, those columns and sections are hidden and everything else works.
 
 ### In-game chat commands
 
@@ -379,14 +426,14 @@ With the `rcon_password` in `SERVERS`, the monitor answers players with a privat
 | `!stats` or `!stats name` | Kills, deaths, K/D, headshot %, noscopes, longest kill |
 | `!top` | Top 5 killers of the last 7 days |
 | `!report name reason` | Report sent to the admins: it shows up in **Moderation** (and as a push notification) |
-| `!me` | A short link to type on a phone (`your-domain/me/K7QPX`, or a code without `DOMAIN`): it opens the player's profile in the new interface and pins it (**It's me**). Valid 24 hours |
+| `!me` | A short link to type on a phone (`your-domain/me/K7QPX`, or a code without `DOMAIN`): it opens the player's profile and pins it (**It's me**). Valid 24 hours |
 | `!help` | List of commands (on a server with B3, B3 answers: its list includes these commands) |
 
 One command every 3 seconds per player, one report per minute.
 
 ### Ban evasion (GUID spoofer)
 
-**Moderation → Ban evasions**: every player active since a ban is compared with the banned player, and each clue adds points. A live alert shows from **50**. Nothing is banned automatically: it's up to you to check.
+**Moderation → Evasions**: every player active since a ban is compared with the banned player, and each clue adds points. A live alert shows from **50**. Nothing is banned automatically: it's up to you to check.
 
 | Clue | Points |
 |---|---|
@@ -402,7 +449,7 @@ One command every 3 seconds per player, one report per minute.
 
 Weak clues only count on top of a clue linking the player to the banned one, and a player already known before the ban is only flagged on a strong clue (IP, Steam ID, profile, name). The profile comes from the `PI` line of the `pm_sniper` mod, the network settings need the rcon password. A cheater who changes GUID, IP (VPN), CoD4 profile, name and play style all at once stays undetectable.
 
-**Welcome message**: in a player's profile, the **admin** (not a semi-admin) can write a personal message, sent privately 30 seconds after each time that player connects. `{name}` is replaced by their name.
+**Welcome message**: in a player's profile (Moderation tab), the server's **owner** (not a moderator) can write a personal message, sent privately 30 seconds after each time that player connects. `{name}` is replaced by their name.
 
 **Custom map thumbnails**: the thumbnails are in `ui/public/maps/`. After adding maps to your game, regenerate them from your PC:
 
@@ -414,9 +461,15 @@ docker run --rm -v "$PWD":/src -v "<cod4 folder>":/game:ro -w /src golang:1.26-a
 
 ## 9. Backups
 
-Every day, a copy of the database is written to `backups/monitor-YYYY-MM-DD.db`. The last 14 are kept (`BACKUP_KEEP`).
+Every day, a copy of the database is written to `backups/monitor-YYYY-MM-DD.db` (`BACKUP_DIR`), then checked by restoring it. The last 14 are kept (`BACKUP_KEEP`).
 
 > ⚠️ These backups are **on the VPS itself**. Copy one somewhere else from time to time. From your PC: `scp ubuntu@VPS_IP:/opt/cod4-monitor/backups/monitor-*.db .`
+
+**Keep the key too.** The stored FTP, rcon and B3 passwords are encrypted with a key that is **not** in the backups: the file `monitor.db.key` next to the database (`DB_PATH` + `.key`, in the `data` volume with Docker), or `MONITOR_SECRET_KEY` if you set it. A database restored without its key loses these passwords: the monitor refuses to start (`cannot decrypt server secrets`) as soon as a server has a saved FTP or rcon password. Save the key once, somewhere other than the backups:
+
+```sh
+docker run --rm -v cod4-monitor_data:/data alpine cat /data/monitor.db.key > monitor.db.key && chmod 600 monitor.db.key
+```
 
 **Restore a backup** (on the VPS):
 
@@ -428,9 +481,14 @@ docker run --rm -v cod4-monitor_data:/data -v "$PWD/backups":/b alpine \
 docker compose -p cod4-monitor -f docker-compose.prod.yml start monitor
 ```
 
-Replace the date with the one of the backup you want.
+Replace the date with the one of the backup you want. On the same VPS, the key is still in the volume. On a new machine (or a new volume), put the saved key back before `start monitor`: copy `monitor.db.key` into `backups/`, run the command below, then delete it from `backups/`.
 
-Kept forever: chat, names, kills, rounds, connections, bans, action log. Polls and sessions are purged after `RETENTION_DAYS` days.
+```sh
+docker run --rm -v cod4-monitor_data:/data -v "$PWD/backups":/b alpine \
+  sh -c 'cp /b/monitor.db.key /data/monitor.db.key && chmod 600 /data/monitor.db.key && chown 1000 /data/monitor.db.key'
+```
+
+Kept forever: chat, names, kills, rounds, connections, bans, activity log. Polls and sessions are purged after `RETENTION_DAYS` days.
 
 ---
 
@@ -443,10 +501,10 @@ Kept forever: chat, names, kills, rounds, connections, bans, action log. Polls a
 | Logs: `invalid SERVERS entry` | The `SERVERS` line is malformed. The format is `Name\|ip:port`, with no spaces around the `\|`. |
 | Logs: `invalid log URL` | The FTP URL must start with `ftp://`, and special characters in the password must be encoded (see [here](#the-servers-format)). |
 | The site doesn't open / certificate error | Check that DuckDNS points to the VPS IP, and that ports 80 and 443 are open (VPS firewall **and** your host's). See `docker logs cod4-monitor-caddy-1`. |
-| Can't log in as admin | Is `DASHBOARD_USER` set in `.env`? After changing it, restart the site. After 10 failed attempts, wait 15 minutes. |
+| Can't log in with the `.env` account | Is `DASHBOARD_USER` set in `.env`? After changing it, restart the site. After 10 failed attempts, wait 15 minutes. |
 | "Logs not configured" in the console | Add the FTP URL as the 3rd field of `SERVERS`. |
-| No "Server commands" section | Add the `rcon_password` as the 4th field of `SERVERS`, and log in as **admin**. |
-| `git pull`: *Invalid username or token* | The GitHub token has expired or is wrong: run `rm ~/.git-credentials`, then `git pull` and paste a new token. |
+| No server commands (map, messages, console) | Add the rcon password (4th field of `SERVERS`, or More → All servers → the server's settings), and log in as the server's **owner**, or as a moderator with the map, message or RCON permission. |
+| Logs: `cannot decrypt server secrets` | The database was restored without its key. Put back the matching `monitor.db.key` (or `MONITOR_SECRET_KEY`), see [Backups](#9-backups). |
 | `fatal: not a git repository` | You're not in the right folder: `cd /opt/cod4-monitor`. |
 | `permission denied` with `docker` | Run `sudo usermod -aG docker $USER`, then log out and back in. |
 | iPhone: the top of the page is hidden | Update the site, then fully close the app and reopen it. |
@@ -492,7 +550,7 @@ DB_PATH=monitor.db go run ./cmd/monitor    # run the monitor locally
   ```
 
   Without `npm run build`, the site answers "Interface non compilée". Texts are written in French; the English translations are in `ui/src/lib/i18n.svelte.js` and `ui/src/lib/en/*.js`.
-- **Roles**: the list of routes each role may call is in `internal/api/auth.go` (`allowed`).
+- **Roles**: the routes a visitor may read are in `internal/api/auth.go` (`visitorRoutes`); the rules for accounts and per-server permissions are in `internal/api/tenancy.go` (`tenantAllowed`).
 - **Database**: `docker compose cp monitor:/data/monitor.db .`, then open it with `sqlite3`.
 
 <details>
@@ -500,7 +558,7 @@ DB_PATH=monitor.db go run ./cmd/monitor    # run the monitor locally
 
 Every `/api/servers/:id/…` route that covers a period accepts `?range=24h|7d|30d|90d` or `?from=<unix>&to=<unix>`.
 
-| Route | Minimum role | Content |
+| Route | Who (owner and super admin: everything on their servers) | Content |
 |---|---|---|
 | `GET /api/health` | public | Monitor health (Docker healthcheck) |
 | `POST /api/login` · `POST /api/logout` · `GET /api/me` | public | Login, current account and role |
@@ -511,13 +569,20 @@ Every `/api/servers/:id/…` route that covers a period accepts `?range=24h|7d|3
 | `GET …/matches` · `/match?id=` · `/mapstats` · `/heatmap` | visitor | Matches, scoreboard, retention per map, busiest hours |
 | `GET /api/events` | visitor | Live stream (SSE). Visitors receive neither console nor chat. |
 | `GET …/mapvotes` | visitor | Map votes (mod) |
-| `GET …/maprank` · `/week` | visitor | Maps compared (Maps tab), last 7 days (home) |
+| `GET …/maprank` · `/week` | visitor | Maps compared (Advanced stats → Maps), last 7 days (home) |
 | `GET …/maprounds` · `/retention` | visitor | Rounds per map (length, attack / defense), player retention |
-| `GET …/pings` | account | Players' ping |
-| `GET …/logs` · `/chat` · `/aliases` · `/alts` · `/notes` · `/errors` · `/cvars` · `/evasion` · `/reports` | semi-admin | Console, chat, names, IPs, notes, errors, variables, ban evasion |
-| `POST …/rcon` · `/kick` · `/ban` · `/unban` · `PUT …/notes` · `PUT …/welcome` · `…/schedules` · `POST …/reports/:id/done` | admin | Actions (recorded in the action log) |
-| `GET …/bans` · `/dvar` · `/catalog` · `/rcon/log` · `/api/audit` · `/api/users` | admin | Bans, rcon variables, server maps, history, accounts |
-| `GET /metrics` | semi-admin | Prometheus format |
+| `GET …/challenges` · `/card.png` | visitor | Challenges of the week, Discord card (PNG) |
+| `GET …/logs` · `/chat` · `/aliases` · `/alts` · `/errors` · `/pings` · `/cvars` · `/evasion` · `/b3/…` | `private` | Console, chat, names, IPs, errors, ping, variables, ban evasion, B3 |
+| `GET …/notes` | `private` or `notes` | Player notes |
+| `GET …/reports` · `/inbox` · `POST …/reports/:rid/done` · `/inbox/dismiss` | `reports` (reading: or `private`) | Reports, moderation inbox |
+| `POST …/kick` · `/tell` · `/ban` · `/unban` · `PUT …/notes` | `kick` · `say` · `ban` · `ban` · `notes` | Actions (recorded in the activity log) |
+| `GET …/bans` | `ban` | Server bans |
+| `GET …/catalog` | `maps` or `rcon` | Server maps |
+| `POST …/rcon` | `rcon`, or `maps` / `say` for map and message commands only | Commands |
+| `GET …/dvar` · `/rcon/log` · `…/schedules` | `rcon` | Rcon variables, command history, scheduled commands |
+| `PUT …/welcome` · `PUT …/challenges` · `…/team` · `/api/serverconf/…` | owner | Welcome message, challenge goals, team, server settings |
+| `/api/invitations` · `/api/serverconf` · `GET /api/audit` · `GET /api/observability` | admin account | Invitations, servers, activity log, log collection health (own servers) |
+| `/api/users` · `GET /metrics` | super admin | Accounts, Prometheus format |
 
 </details>
 
@@ -533,13 +598,13 @@ By default the monitor reads a server's logs over **FTP**. If the game server ru
    ```ini
    LOCAL_LOGS_DIR=/opt/cod4-server/cod4
    ```
-2. Add `-f docker-compose.local-logs.yml` to all your `docker compose` commands, including in `deploy.sh` if you use automatic deploys:
+2. Add `-f docker-compose.local-logs.yml` to all your `docker compose` commands, and to the `docker compose` lines of `/opt/cod4-monitor/deploy.sh` if you use [automatic deployment](#automatic-deployment-from-github):
    ```sh
    docker compose -p cod4-monitor -f docker-compose.prod.yml -f docker-compose.local-logs.yml up -d --build
    ```
    This file mounts `LOCAL_LOGS_DIR` **read-only** on `/gamelogs/` in the monitor.
-3. In the dashboard: **More → All servers** → the server's settings → **Reading the logs: On this machine**, with the folder as the monitor sees it. For example `/gamelogs/mods/my_mod/` if you mounted the whole server.
-4. Click **Test the connection**. If the folder is wrong, the test suggests the ones that exist.
+3. In the dashboard (as the `.env` account): **More → All servers** → the server's settings → **Server logs → On this machine**, with the folder as the monitor sees it. For example `/gamelogs/mods/my_mod/` if you mounted the whole server.
+4. Click **Test**. If the folder is wrong, the test suggests the ones that exist.
 
 The monitor cannot read anything outside `/gamelogs/`.
 
@@ -569,7 +634,7 @@ If the game server has a **B3** admin bot, the dashboard reads and changes its d
 - **Moderation → B3 → Stats**: penalties per week, most frequent reasons, most penalized players, most active admins (90 days).
 - **Player profile → Moderation → B3**: their grade, their penalties, and the **Warn**, **Kick**, **Temp ban**, **Ban**, **Lift the ban** and **B3 grade** controls.
 - **Moderation → B3 → Search**: search by name (current or past), IP (or its start, e.g. `82.64.`) or GUID, like `!lookup`: grade, connections, first and last visit, IP, banned or not.
-- **Moderation → Ban evasions**: players not banned who came, after a ban in force, from an IP of the banned player (often the same person with another GUID), with a button to ban them too.
+- **Moderation → Evasions**: also the players not banned who came, after a ban in force, from an IP of the banned player (often the same person with another GUID), with a button to ban them too.
 - **Origin of the penalties**: automatic (B3's plugins: insults, spam, too many warnings), by an admin in game, or from the site, with B3's keyword (`#cuss`, `#spam`…).
 - **Player profile**: also the names and IPs B3 knows, the accounts sharing one of their IPs (banned ones flagged), their masked grade (`!mask`) and their B3 welcome message.
 - **Alerts**: each new ban or temporary ban (in game or from the site) shows up in the moderation inbox, as a push notification, and as a mail if mails are set up.
@@ -607,10 +672,9 @@ The password is stored encrypted, like the rcon password, and is never sent back
    ```ini
    B3_DATA_DIR=/opt/cod4-server/b3data
    ```
-2. Add `-f docker-compose.b3.yml` to all your `docker compose` commands and to `deploy.sh` (next to `docker-compose.local-logs.yml` if you use it):
+2. Add `-f docker-compose.b3.yml` to all your `docker compose` commands (next to `docker-compose.local-logs.yml` if you use it), and to the `docker compose` lines of `/opt/cod4-monitor/deploy.sh` if you use [automatic deployment](#automatic-deployment-from-github):
    ```sh
-   sed -i 's|-f docker-compose.local-logs.yml|-f docker-compose.local-logs.yml -f docker-compose.b3.yml|g' deploy.sh
-   ./deploy.sh
+   docker compose -p cod4-monitor -f docker-compose.prod.yml -f docker-compose.b3.yml up -d --build
    ```
    This file mounts B3's folder read-write on `/b3/`. The monitor can only open a B3 database inside that folder.
 3. In the dashboard: **More → All servers → the server's settings → B3 → SQLite file on this machine**: `/b3/b3.db`. **Test** shows how many admins and penalties were found.
@@ -620,13 +684,21 @@ The password is stored encrypted, like the rcon password, and is never sent back
 *Developers*: `B3_TEST_MYSQL=mysql://user:pass@127.0.0.1:3306/db go test ./internal/b3/` also runs the B3 tests on MySQL (the CI does it with MySQL 8). The database is emptied.
 
 
-## Implemented roadmap, security and restore guide (French)
+## 15. Report a bug / Contributing
 
-Voir [docs/ROADMAP.md](docs/ROADMAP.md) pour les fonctionnalités, les tests et les instructions de sauvegarde de la clé de chiffrement.
+- **A bug or an idea**: [open an issue](https://github.com/FlorianMartinez01/cod4-monitor/issues/new/choose) and fill in the form, in English or French. The link is also in the dashboard: **More → About → Report a bug or suggest an idea**. Never paste passwords, rcon passwords or your `.env`.
+- **A security issue**: report it privately, as explained in [SECURITY.md](SECURITY.md), never in a public issue.
+- **A code change**: see [CONTRIBUTING.md](CONTRIBUTING.md) (checks to run, translations, pull request).
+
+## Implemented roadmap, security and restore guide
+
+See [docs/ROADMAP.md](docs/ROADMAP.md) (in French) for the features, the tests and how to keep the encryption key with your backups.
 
 ### Server ownership and invitations
 
-Administrators and moderators join by invitation. See [roles, invitations and per-server permissions](docs/ACCOUNTS.md).
+Administrators and moderators join by invitation. See [roles, invitations and per-server permissions](docs/ACCOUNTS.en.md).
+
+---
 
 ## License
 
