@@ -8,6 +8,7 @@
   import { permsOf, isOwner } from '../lib/perms.js';
   import { href } from '../lib/router.svelte.js';
   import { i18n, setLang, t } from '../lib/i18n.svelte.js';
+  import { REPO, NEW_ISSUE } from '../lib/project.js';
   import { post } from '../lib/api.js';
   import { say } from '../lib/toast.svelte.js';
 
@@ -130,6 +131,14 @@
     {#if r !== 'visitor' && !app.me?.noauth}
       <button class="row danger" onclick={logout}><Icon name="logout" size={20} /><span>{t('Se déconnecter')}</span></button>
     {/if}
+  </div>
+</section>
+
+<section>
+  <h2 class="label group">{t('À propos')}</h2>
+  <div class="card rows">
+    <a class="row" href={NEW_ISSUE} target="_blank" rel="noopener"><Icon name="alert" size={20} /><span>{t('Signaler un bug ou proposer une idée')}<small>{t('sur GitHub, en français ou en anglais')}</small></span><Icon name="external" size={18} /></a>
+    <a class="row" href={REPO} target="_blank" rel="noopener"><Icon name="link" size={20} /><span>{t('Code source')}<small>{t('CoD4 Monitor, logiciel libre (AGPL-3.0)')}</small></span><Icon name="external" size={18} /></a>
   </div>
 </section>
 

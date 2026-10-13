@@ -1,0 +1,21 @@
+name: 💡 Idea / Proposer une idée
+description: A feature or an improvement. / Une fonctionnalité ou une amélioration.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you need? / De quoi as-tu besoin ?
+      description: The problem it solves for you, your admins or your players. / Le problème que ça règle pour toi, tes admins ou tes joueurs.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea / Ton idée
+      description: How you picture it. Mockups or screenshots welcome. / Comment tu l'imagines. Maquettes ou captures bienvenues.
+  - type: textarea
+    id: context
+    attributes:
+      label: Context / Contexte
+      description: Your server (mod, game type, number of players…), if it matters. / Ton serveur (mod, mode de jeu, nombre de joueurs…), si ça compte.
