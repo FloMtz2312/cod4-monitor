@@ -1,0 +1,19 @@
+# Image of a release (GoReleaser, see .goreleaser.yaml): the binary already built for the target platform, the demo
+# viewer and the same runtime as the Dockerfile. To build from the sources, use the Dockerfile.
+
+# The demo viewer cod4-demo (github.com/TiPSYSPiT/cod4-demo, GPL-3.0): plain HTML/JS, the same for every platform.
+FROM --platform=$BUILDPLATFORM alpine:3.22 AS demoviewer
+ARG COD4_DEMO_REF=34f9cc265980febe46886d20e2c69abc494a645e
+ADD https://github.com/TiPSYSPiT/cod4-demo/archive/${COD4_DEMO_REF}.tar.gz /tmp/viewer.tgz
+RUN mkdir /viewer && tar -xzf /tmp/viewer.tgz -C /viewer --strip-components 1 && rm /tmp/viewer.tgz \
+    && cd /viewer && rm -rf python tools docs start.bat .github .gitignore geometry
+
+FROM alpine:3.22
+ARG TARGETPLATFORM
+RUN apk add --no-cache tzdata && adduser -D -u 1000 app && mkdir /data && chown app /data
+USER app
+COPY $TARGETPLATFORM/cod4-monitor /monitor
+COPY --from=demoviewer /viewer /demo-viewer
+ENV DB_PATH=/data/monitor.db DEMO_VIEWER_DIR=/demo-viewer
+EXPOSE 8080
+ENTRYPOINT ["/monitor"]

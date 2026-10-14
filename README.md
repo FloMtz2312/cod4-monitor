@@ -587,6 +587,20 @@ Every `/api/servers/:id/…` route that covers a period accepts `?range=24h|7d|3
 
 </details>
 
+### Releases (GoReleaser)
+
+Each **tag `v*`** pushed to GitHub runs the *Release* workflow ([`.goreleaser.yaml`](.goreleaser.yaml)): the tests, then
+- the binaries (interface included) for Linux (amd64, arm64), Windows (amd64) and macOS (amd64, arm64), with `checksums.txt`, on the [Releases](https://github.com/FloMtz2312/cod4-monitor/releases) page, with the release notes;
+- the Docker image `ghcr.io/flomtz2312/cod4-monitor:<version>` (and `latest`), for amd64 and arm64, with the demo viewer.
+
+```sh
+git tag v1.0.0 && git push origin v1.0.0   # a tag like v1.1.0-rc1 makes a pre-release (no "latest")
+goreleaser release --snapshot --clean --skip=docker   # try it locally, files in dist/
+cod4-monitor -version                      # the version of a binary
+```
+
+The binary of a release runs without Docker: the same `.env` settings as environment variables (`.env.example` is in the archive). The demo viewer is not in the archives: set `DEMO_VIEWER_DIR` to a copy of [cod4-demo](https://github.com/TiPSYSPiT/cod4-demo), or use the Docker image. The first time, make the image public on GitHub (*Packages → cod4-monitor → Package settings → Change visibility*) so anyone can pull it.
+
 ---
 
 ## 13. Game server on the same machine and advanced settings

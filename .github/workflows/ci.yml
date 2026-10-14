@@ -61,3 +61,16 @@ jobs:
       - name: Svelte check (types and accessibility warnings)
         run: npm run check
       - run: npm run build
+  release-config:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: GoReleaser configuration (.goreleaser.yaml)
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: check
+        env:
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}

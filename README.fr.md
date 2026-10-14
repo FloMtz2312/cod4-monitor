@@ -587,6 +587,20 @@ Toutes les routes `/api/servers/:id/…` acceptent `?range=24h|7d|30d|90d` ou `?
 
 </details>
 
+### Versions publiées (GoReleaser)
+
+Chaque **tag `v*`** poussé sur GitHub lance le workflow *Release* ([`.goreleaser.yaml`](.goreleaser.yaml)) : les tests, puis
+- les binaires (interface incluse) pour Linux (amd64, arm64), Windows (amd64) et macOS (amd64, arm64), avec `checksums.txt`, sur la page [Releases](https://github.com/FloMtz2312/cod4-monitor/releases), avec les notes de version ;
+- l'image Docker `ghcr.io/flomtz2312/cod4-monitor:<version>` (et `latest`), pour amd64 et arm64, avec le lecteur de démos.
+
+```sh
+git tag v1.0.0 && git push origin v1.0.0   # un tag comme v1.1.0-rc1 fait une pré-version (pas de « latest »)
+goreleaser release --snapshot --clean --skip=docker   # essai en local, fichiers dans dist/
+cod4-monitor -version                      # la version d'un binaire
+```
+
+Le binaire d'une version tourne sans Docker : mêmes réglages que le `.env`, en variables d'environnement (`.env.example` est dans l'archive). Le lecteur de démos n'est pas dans les archives : mets dans `DEMO_VIEWER_DIR` une copie de [cod4-demo](https://github.com/TiPSYSPiT/cod4-demo), ou utilise l'image Docker. La première fois, rends l'image publique sur GitHub (*Packages → cod4-monitor → Package settings → Change visibility*) pour que tout le monde puisse la télécharger.
+
 ---
 
 ## 13. Serveur de jeu sur la même machine et réglages avancés

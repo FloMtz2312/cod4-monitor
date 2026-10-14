@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"log/slog"
 	"net"
@@ -79,8 +80,16 @@ func backups(ctx context.Context, st *store.Store, dir string, keep int) {
 	}
 }
 
+// version of the build, set by GoReleaser (-X main.version=…); "dev" for a local build.
+var version = "dev"
+
 func main() {
+	if len(os.Args) > 1 && (os.Args[1] == "-version" || os.Args[1] == "--version") {
+		fmt.Println("cod4-monitor", version)
+		return
+	}
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+	slog.Info("cod4-monitor", "version", version)
 	gin.SetMode(gin.ReleaseMode)
 
 	interval := dur("POLL_INTERVAL", "15s")
