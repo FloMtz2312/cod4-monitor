@@ -6,7 +6,7 @@
   import { get, post } from '../lib/api.js';
   import { app, currentServer } from '../lib/state.svelte.js';
   import { permsOf } from '../lib/perms.js';
-  import { ago, clean, colorParts } from '../lib/format.js';
+  import { agoText, clean, colorParts } from '../lib/format.js';
   import { dt } from '../lib/moderation.js';
   import { say } from '../lib/toast.svelte.js';
   import { t } from '../lib/i18n.svelte.js';
@@ -149,7 +149,7 @@
           <div class="item">
             <button class="row" aria-expanded={open === i} onclick={() => (open = open === i ? -1 : i)}>
               <code>{l.command}</code>
-              <span class="muted when">{#if l.error}<span class="bad">{t('erreur')}</span>{' · '}{/if}{t('il y a {d}', { d: ago(l.ts) })}</span>
+              <span class="muted when">{#if l.error}<span class="bad">{t('erreur')}</span>{' · '}{/if}{agoText(l.ts)}</span>
             </button>
             {#if open === i}
               <div class="detail">

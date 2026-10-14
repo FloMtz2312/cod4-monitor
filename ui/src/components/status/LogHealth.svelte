@@ -2,7 +2,7 @@
   // Account admins: collection of the server's log files (FTP) and the state of the backups.
   import { get } from '../../lib/api.js';
   import { app } from '../../lib/state.svelte.js';
-  import { ago, fmt } from '../../lib/format.js';
+  import { agoText, fmt } from '../../lib/format.js';
   import { t } from '../../lib/i18n.svelte.js';
   import { dt } from '../stats/util.js';
 
@@ -47,7 +47,7 @@
             {#each logs as r (r.file)}
               <tr>
                 <td><b>{r.file}</b>{#if r.missing}<span class="bad">{' ⚠ '}{t('absent')}</span>{/if}</td>
-                <td>{r.last_success ? t('il y a {d}', { d: ago(r.last_success) }) : '—'}</td>
+                <td>{r.last_success ? agoText(r.last_success) : '—'}</td>
                 <td class="n" class:bad={r.backlog_bytes > 1048576}>{kb(r.backlog_bytes)}</td>
                 <td class="n">{fmt(r.lines)}</td>
                 <td class="n" class:bad={r.rejected > 0}>{fmt(r.rejected)}</td>

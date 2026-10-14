@@ -5,7 +5,7 @@
   import { api, get, post } from '../lib/api.js';
   import { app, currentServer } from '../lib/state.svelte.js';
   import { isOwner } from '../lib/perms.js';
-  import { ago } from '../lib/format.js';
+  import { agoText } from '../lib/format.js';
   import { say } from '../lib/toast.svelte.js';
   import { t } from '../lib/i18n.svelte.js';
 
@@ -181,7 +181,7 @@
       <div class="card rows">
         {#each invites as i (i.id)}
           <div class="row">
-            <span class="rt"><b>{i.username}</b><span class="muted">{i.account_role === 'admin' ? t('administrateur') : t('modérateur')} · {inviteStatus(i)} · {t('il y a {d}', { d: ago(i.created_at) })}</span></span>
+            <span class="rt"><b>{i.username}</b><span class="muted">{i.account_role === 'admin' ? t('administrateur') : t('modérateur')} · {inviteStatus(i)} · {agoText(i.created_at)}</span></span>
             {#if pending(i)}<button class="btn ghost" onclick={() => revoke(i)}>{t('Révoquer')}</button>{/if}
           </div>
         {/each}

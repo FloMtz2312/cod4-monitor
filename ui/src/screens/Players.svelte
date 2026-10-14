@@ -9,10 +9,11 @@
   import { app, currentServer, mapName, selectServer } from '../lib/state.svelte.js';
   import { meOn, claim } from '../lib/me.svelte.js';
   import { go, href } from '../lib/router.svelte.js';
-  import { clean, ago, fmt, dateTime, dur, pingColor } from '../lib/format.js';
+  import { clean, agoText, fmt, dateTime, dur, pingColor } from '../lib/format.js';
   import { permsOf } from '../lib/perms.js';
   import { t } from '../lib/i18n.svelte.js';
   import { say } from '../lib/toast.svelte.js';
+  import { tagLabel } from '../lib/moderation.js';
 
   const PAGE = 60;
   const srv = $derived(currentServer());
@@ -211,7 +212,7 @@
     <a class="tn" href={href('joueur', p.key)}>
       <span class="dot2" class:on={p.online}></span><CodName raw={p.name_raw} />
       {#if newKeys.has(p.key)}<span class="new">{t('Nouveau')}</span>{/if}
-      {#if noteOf(p)}<span class="nt" title={noteOf(p).note}>{noteOf(p).tag || t('Note')}</span>{/if}
+      {#if noteOf(p)}<span class="nt" title={noteOf(p).note}>{noteOf(p).tag ? tagLabel(noteOf(p).tag) : t('Note')}</span>{/if}
     </a>
     {#if others(p).length}<span class="aka">{t('aussi : {names}', { names: others(p).join(', ') })}</span>{/if}
   {/snippet}
@@ -224,9 +225,9 @@
       <a class="row" href={href('joueur', p.key)} class:mine={p.key === me?.key}>
         <span class="av">{(p.name_clean || '?').charAt(0).toUpperCase()}<span class="dot" class:on={p.online}></span></span>
         <span class="mid">
-          <span class="pn"><CodName raw={p.name_raw} />{#if p.key === me?.key}<span class="you">{t('toi')}</span>{/if}{#if newKeys.has(p.key)}<span class="new">{t('Nouveau')}</span>{/if}{#if noteOf(p)}<span class="nt" title={noteOf(p).note}>{noteOf(p).tag || t('Note')}</span>{/if}</span>
+          <span class="pn"><CodName raw={p.name_raw} />{#if p.key === me?.key}<span class="you">{t('toi')}</span>{/if}{#if newKeys.has(p.key)}<span class="new">{t('Nouveau')}</span>{/if}{#if noteOf(p)}<span class="nt" title={noteOf(p).note}>{noteOf(p).tag ? tagLabel(noteOf(p).tag) : t('Note')}</span>{/if}</span>
           <span class="sub">
-            {#if p.online}{t('En ligne')}{#if srv?.map}{' · '}{mapName(srv.map)}{/if}{:else}{t('Vu il y a {d}', { d: ago(p.last_seen) })}{/if}{#if p.level}{' · '}{t('Niv. {n}', { n: p.level })}{/if}
+            {#if p.online}{t('En ligne')}{#if srv?.map}{' · '}{mapName(srv.map)}{/if}{:else}{t('Vu {when}', { when: agoText(p.last_seen) })}{/if}{#if p.level}{' · '}{t('Niv. {n}', { n: p.level })}{/if}
           </span>
           <span class="sub">{dur(p.playtime_s)} {t('de jeu')} · {t('{n} sessions', { n: p.sessions ?? 0 })}{#if pingOf(p) != null}{' · '}<span style:color={pingColor(pingOf(p))}>{Math.round(pingOf(p))} ms</span>{/if}{#if priv && p.ip}{' · '}{p.ip}{/if}</span>
         </span>

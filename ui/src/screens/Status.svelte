@@ -12,7 +12,7 @@
   import { get } from '../lib/api.js';
   import { app, currentServer, mapName } from '../lib/state.svelte.js';
   import { permsOf } from '../lib/perms.js';
-  import { ago, clean } from '../lib/format.js';
+  import { agoText, clean } from '../lib/format.js';
   import { t } from '../lib/i18n.svelte.js';
   import { dt } from '../components/stats/util.js';
 
@@ -83,7 +83,7 @@
       [t('Mode'), snap.gametype || vars.g_gametype || '—'],
       [t('Joueurs'), online ? `${snap.players} / ${snap.max_players}` : '—'],
       [t('Latence'), online && snap.latency_ms != null ? `${snap.latency_ms.toFixed(1)} ms` : '—'],
-      [t('Dernier sondage OK'), lastOk ? `${dt(lastOk)} · ${t('il y a {d}', { d: ago(lastOk) })}` : '—'],
+      [t('Dernier sondage OK'), lastOk ? `${dt(lastOk)} · ${agoText(lastOk)}` : '—'],
       [t('Map lancée'), vars.g_mapStartTime || '—'],
       [t('Mod'), vars.fs_game || '—'],
       [t('Version'), vars.version || vars.shortversion || '—']
@@ -148,7 +148,7 @@
           <summary>
             <span class="dot" class:on={o.ended_at == null}></span>
             <span class="ot"><b>{o.ended_at == null ? t('En cours depuis {d}', { d: dur(o.duration_s) }) : dur(o.duration_s)}</b>
-              <span class="muted">{t('il y a {d}', { d: ago(o.started_at) })} · {cause(o)}</span></span>
+              <span class="muted">{agoText(o.started_at)} · {cause(o)}</span></span>
           </summary>
           {#if o.console}<pre>{o.console}</pre>{:else}<p class="muted s-small">{t('Pas de détail de console.')}</p>{/if}
         </details>
@@ -195,7 +195,7 @@
             {#each errors as e (e.message)}
               <div class="err">
                 <code>{e.message}</code>
-                <span class="muted s-small">{t('{n} fois', { n: e.count })} · {t('il y a {d}', { d: ago(e.last_seen) })}</span>
+                <span class="muted s-small">{t('{n} fois', { n: e.count })} · {agoText(e.last_seen)}</span>
               </div>
             {/each}
           </div>

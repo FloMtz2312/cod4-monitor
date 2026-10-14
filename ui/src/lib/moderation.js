@@ -8,6 +8,10 @@ export const dt = ts => (ts ? new Date(ts * 1000).toLocaleString(locale(), { dat
 /** Short date only. */
 export const day = ts => (ts ? new Date(ts * 1000).toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—');
 
+/** Staff tags of the player notes, as shown next to a name ("vip" → "★ VIP"). */
+export const TAG_LABEL = { suspect: '⚠ Suspect', surveiller: '👁 À surveiller', vip: '★ VIP', ami: '♥ Ami' };
+export const tagLabel = tag => t(TAG_LABEL[tag] ?? tag);
+
 export const PEN_LABEL = { Ban: 'Ban', TempBan: 'Ban temporaire', Kick: 'Kick', Warning: 'Avertissement', Notice: 'Note' };
 export const PEN_COLOR = { Ban: '#FF6B5E', TempBan: '#FFA94D', Kick: '#B18CFF', Warning: '#F0C56B', Notice: '#8DBBFF' };
 

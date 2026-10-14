@@ -5,7 +5,7 @@
   import { get } from '../../lib/api.js';
   import { mapName } from '../../lib/state.svelte.js';
   import { href } from '../../lib/router.svelte.js';
-  import { ago } from '../../lib/format.js';
+  import { agoText } from '../../lib/format.js';
   import { t, i18n } from '../../lib/i18n.svelte.js';
   import { dur, short, dec } from './util.js';
 
@@ -176,7 +176,7 @@
         <div><b>{uptime['30d'] == null ? '—' : `${uptime['30d'].toFixed(1)} %`}</b><span>{t('en ligne · 30 j')}</span></div>
         <div><b>{outages.length}</b><span>{t('coupures')}</span></div>
       </div>
-      {#if outages[0]}<p class="muted s-small">{t('Dernière coupure il y a {d}', { d: ago(outages[0].started_at) })}{#if outages[0].ended_at == null}{' · '}{t('en cours')}{/if}</p>{/if}
+      {#if outages[0]}<p class="muted s-small">{t('Dernière coupure {when}', { when: agoText(outages[0].started_at) })}{#if outages[0].ended_at == null}{' · '}{t('en cours')}{/if}</p>{/if}
     </section>
   {/if}
 </div>

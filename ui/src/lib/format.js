@@ -53,6 +53,12 @@ export function ago(ts, now = Date.now() / 1000) {
   return `${Math.floor(s / 86400)} ${t('j')}`;
 }
 
+/** "il y a 3 min" / "3 min ago", or "à l'instant" / "just now" (never "just now ago"). */
+export function agoText(ts, now = Date.now() / 1000) {
+  const d = ago(ts, now);
+  return d === t('à l\'instant') ? d : t('il y a {d}', { d });
+}
+
 export const pingColor = p => p == null ? 'var(--muted)' : p < 60 ? 'var(--ok)' : p < 100 ? 'var(--warn)' : 'var(--danger)';
 
 export const fmt = n => n == null ? '—' : Number(n).toLocaleString(document.documentElement.lang === 'en' ? 'en-US' : 'fr-FR');

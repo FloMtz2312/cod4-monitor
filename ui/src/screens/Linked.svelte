@@ -8,7 +8,7 @@
   import { app, currentServer } from '../lib/state.svelte.js';
   import { permsOf } from '../lib/perms.js';
   import { href } from '../lib/router.svelte.js';
-  import { ago, clean } from '../lib/format.js';
+  import { agoText, clean } from '../lib/format.js';
   import { dt } from '../lib/moderation.js';
   import { t } from '../lib/i18n.svelte.js';
 
@@ -76,7 +76,7 @@
               {#each g.names as n, i (i)}<span title={t('vu du {a} au {b}', { a: dt(n.first_seen), b: dt(n.last_seen) })}><CodName raw={n.name_raw} /></span>{/each}
               {#if g.names.length > 1}<b class="count">{g.names.length}</b>{/if}
             </span>
-            <span class="muted sub"><code>{g.guid}</code>{#if g.ips.length}{' · '}{g.ips.join(', ')}{/if}{' · '}{t('il y a {d}', { d: ago(g.last) })}</span>
+            <span class="muted sub"><code>{g.guid}</code>{#if g.ips.length}{' · '}{g.ips.join(', ')}{/if}{' · '}{agoText(g.last)}</span>
           </a>
         {:else}
           <p class="muted empty">{t('Aucun GUID connu (nécessite les logs du serveur)')}</p>
