@@ -119,6 +119,10 @@ func testB3(t *testing.T, d *DB) {
 		('111', 'Boss', '1.1.1.1', 50, 16, 1, 2), ('222', 'Cheater', '2.2.2.2', 3, 1, 1, 3)`); err != nil {
 		t.Fatal(err)
 	}
+	// the players seen between two dates: last visit after from, first visit before to
+	if cs, err := d.Seen(3, 10, 10); err != nil || len(cs) != 1 || cs[0].GUID != "222" || cs[0].Connections != 3 {
+		t.Fatalf("seen %+v %v", cs, err)
+	}
 	// a warning given by the admin in game, a ban from the dashboard for an unknown player
 	if _, err := d.Exec(`INSERT INTO penalties (type, client_id, admin_id, duration, reason, time_add, time_expire) VALUES
 		('Warning', 2, 1, 60, 'spam', ?, ?)`, now.Unix()-100, now.Unix()+3500); err != nil {

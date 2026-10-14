@@ -398,8 +398,20 @@ func Router(cfg Config) *gin.Engine {
 		if role(c) == roleVisitor {
 			ipCol = `NULL`
 		}
+		// the list, completed with the players of games_mp.log and of B3 it misses
+		list := func(c *gin.Context, source, sql string, args ...any) {
+			ps, err := rows(db, sql, args...)
+			if err == nil {
+				ps, err = morePlayers(st, id, from, to, role(c) == roleVisitor, ps)
+			}
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(200, gin.H{"source": source, "players": ps})
+		}
 		if hasConn {
-			send(c, map[string]func() (any, error){"source": func() (any, error) { return "enterleave", nil }, "players": q(`
+			list(c, "enterleave", `
 				WITH s AS (SELECT *, COALESCE(left_at, joined_at) AS last_seen, COALESCE(guid, 'n:'||name_clean) AS pid
 				           FROM connections WHERE server_id=?1 AND IIF(open=1, ?3, COALESCE(left_at, joined_at)) >= ?2 AND joined_at < ?4)
 				SELECT s.guid, s.pid AS key, MAX(open) AS online, COUNT(*) AS sessions, MIN(joined_at) AS first_seen,
@@ -407,15 +419,15 @@ func Router(cfg Config) *gin.Engine {
 				  -- time played inside [from, to); unknown ends (crash before monitoring) count 0
 				  SUM(MAX(0, MIN(COALESCE(left_at, IIF(open=1, ?3, joined_at)), ?4) - MAX(joined_at, ?2))) AS playtime_s,
 				  (SELECT MAX(best_score) FROM player_sessions ps WHERE ps.server_id=?1 AND ps.name_clean IN (SELECT name_clean FROM s s2 WHERE s2.pid=s.pid)) AS best_score,
-				  `+ipCol+` AS ip,`+common, id, from, time.Now().Unix(), to)})
+				  `+ipCol+` AS ip,`+common, id, from, time.Now().Unix(), to)
 			return
 		}
-		send(c, map[string]func() (any, error){"source": func() (any, error) { return "udp", nil }, "players": q(`
+		list(c, "udp", `
 			WITH ng AS (SELECT name_clean, guid, MAX(last_seen) FROM player_names WHERE server_id=?1 GROUP BY name_clean),
 			s AS (SELECT p.*, ng.guid, COALESCE(ng.guid, 'n:'||p.name_clean) AS pid
 			      FROM player_sessions p LEFT JOIN ng USING(name_clean) WHERE p.server_id=?1 AND p.last_seen>=?2 AND p.started_at<?3)
 			SELECT s.guid, s.pid AS key, MAX(open) AS online, COUNT(*) AS sessions, MIN(started_at) AS first_seen, MAX(last_seen) AS last_seen,
-			  SUM(last_seen-started_at) AS playtime_s, MAX(best_score) AS best_score, NULL AS ip,`+common, id, from, to)})
+			  SUM(last_seen-started_at) AS playtime_s, MAX(best_score) AS best_score, NULL AS ip,`+common, id, from, to)
 	})
 
 	// Every name each GUID used (and the IPs it connected from), players with several names first.

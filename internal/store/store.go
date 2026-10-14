@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"strconv"
 	"time"
 
 	"cod4monitor/internal/query"
@@ -439,6 +440,55 @@ func (s *Store) Welcome(serverID int64, guid, nameClean string) string {
 }
 
 // AddAccuracy stores a P_A line: shots / hits / damage since the previous line of this player (the mod resets after logging).
+// AddPastKill stores a kill imported from the history of the log: no round (the rounds of that time aren't known).
+func (s *Store) AddPastKill(serverID int64, ts time.Time, kGUID, kRaw, kClean, kTeam, vGUID, vRaw, vClean, vTeam, weapon, cause, hitloc string, damage int) error {
+	var killerKey any
+	if kRaw != "" {
+		killerKey = PlayerKey(kGUID, kClean)
+	}
+	teamkill := kRaw != "" && kTeam != "" && kTeam == vTeam
+	_, err := s.conn().Exec(`INSERT INTO kills(server_id, ts, round_id, killer_key, killer_guid, killer_name, killer_team,
+		victim_key, victim_guid, victim_name, victim_team, weapon, cause, hitloc, damage, teamkill)
+		VALUES(?1, ?2, NULL, ?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)`,
+		serverID, ts.Unix(), killerKey, nullIf(kGUID), nullIf(kRaw), kTeam, PlayerKey(vGUID, vClean), nullIf(vGUID), vRaw, vTeam,
+		weapon, cause, hitloc, damage, teamkill)
+	return err
+}
+
+// Connections lists the connections of enterleave.log of a server (slot, clean name, join and leave times), to date the
+// history of games_mp.log.
+func (s *Store) Connections(serverID int64) (joins, leaves map[string][]int64, err error) {
+	rs, err := s.DB.Query(`SELECT slot, name_clean, joined_at, left_at FROM connections WHERE server_id=?`, serverID)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rs.Close()
+	joins, leaves = map[string][]int64{}, map[string][]int64{}
+	for rs.Next() {
+		var slot int
+		var name string
+		var in int64
+		var out sql.NullInt64
+		if err := rs.Scan(&slot, &name, &in, &out); err != nil {
+			return nil, nil, err
+		}
+		k := strconv.Itoa(slot) + "|" + name
+		joins[k] = append(joins[k], in)
+		if out.Valid {
+			leaves[k] = append(leaves[k], out.Int64)
+		}
+	}
+	return joins, leaves, rs.Err()
+}
+
+// FirstGameData is the time of the oldest kill, round or chat message of a server (0: none), from the log followed live.
+func (s *Store) FirstGameData(serverID int64) (int64, error) {
+	var ts sql.NullInt64
+	err := s.conn().QueryRow(`SELECT MIN(t) FROM (SELECT MIN(ts) AS t FROM kills WHERE server_id=?1 AND round_id IS NOT NULL
+		UNION ALL SELECT MIN(started_at) FROM rounds WHERE server_id=?1 UNION ALL SELECT MIN(ts) FROM chat_messages WHERE server_id=?1)`, serverID).Scan(&ts)
+	return ts.Int64, err
+}
+
 func (s *Store) AddAccuracy(serverID int64, ts time.Time, guid, nameRaw, nameClean string, shots, hits, dmgDone, dmgTaken, ffDone, ffTaken int) error {
 	_, err := s.conn().Exec(`INSERT INTO accuracy(server_id, ts, round_id, key, guid, name_raw, shots, hits, dmg_done, dmg_taken, ff_done, ff_taken)
 		VALUES(?1, ?2, (SELECT id FROM rounds WHERE server_id=?1 AND ended_at IS NULL ORDER BY id DESC LIMIT 1), ?3,?4,?5,?6,?7,?8,?9,?10,?11)`,

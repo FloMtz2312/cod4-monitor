@@ -384,10 +384,12 @@ With the FTP URL of the mod folder as the 3rd field of `SERVERS`, the monitor re
 | File | What it brings |
 |---|---|
 | `qconsole.log` | Live console (nothing is stored) |
-| `games_mp.log` | Chat, kills, rounds, accuracy, name ↔ GUID links |
+| `games_mp.log` | Chat, kills, rounds, accuracy, name ↔ GUID links. On first start, the part written before the monitor is imported once in the background (players, kills, chat), dated with `enterleave.log`: this log only holds the time since the server started, so a server run that `enterleave.log` doesn't cover is skipped, and these old kills have no round. |
 | `enterleave.log` | Joins and leaves with IP and GUID. The whole history is imported on first start. |
 
 Without FTP, the site still works, but only with the server's public info: players, scores, map.
+
+The **Players** screen lists the connections of `enterleave.log` (with the playtime), completed by the players seen only in `games_mp.log` or by B3 (marked "Seen in the game log" / "Seen by B3", without playtime).
 
 ### RCON commands
 

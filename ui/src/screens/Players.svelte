@@ -128,7 +128,7 @@
   const others = p => String(p.aliases ?? '').split(', ').filter(n => n && n !== p.name_clean);
   const COLS = $derived([
     { k: 'level', label: t('Niveau'), v: p => (p.level == null ? null : (p.prestige ?? 0) * 100 + p.level), f: p => (p.level == null ? '—' : (p.prestige ? `P${p.prestige} · ` : '') + p.level) },
-    { k: 'play', label: t('Temps de jeu'), v: p => p.playtime_s ?? 0, f: p => dur(p.playtime_s) },
+    { k: 'play', label: t('Temps de jeu'), v: p => p.playtime_s ?? 0, f: p => (p.playtime_s == null ? '—' : dur(p.playtime_s)), title: t('inconnu pour les joueurs vus seulement dans le log du jeu ou par B3') },
     { k: 'sessions', label: t('Sessions'), v: p => p.sessions ?? 0 },
     { k: 'kd', label: 'K/D', v: kdOf, f: p => (kdOf(p) == null ? '—' : kdOf(p).toFixed(2)), strong: true },
     ...(priv ? [{ k: 'ping', label: t('Ping'), title: t('ping moyen sur la période'), v: pingOf, f: p => (pingOf(p) == null ? '—' : `${Math.round(pingOf(p))} ms`) }] : []),
@@ -229,7 +229,7 @@
           <span class="sub">
             {#if p.online}{t('En ligne')}{#if srv?.map}{' · '}{mapName(srv.map)}{/if}{:else}{t('Vu {when}', { when: agoText(p.last_seen) })}{/if}{#if p.level}{' · '}{t('Niv. {n}', { n: p.level })}{/if}
           </span>
-          <span class="sub">{dur(p.playtime_s)} {t('de jeu')} · {t('{n} sessions', { n: p.sessions ?? 0 })}{#if pingOf(p) != null}{' · '}<span style:color={pingColor(pingOf(p))}>{Math.round(pingOf(p))} ms</span>{/if}{#if priv && p.ip}{' · '}{p.ip}{/if}</span>
+          <span class="sub">{#if p.source === 'b3'}{t('Vu par B3')}{#if p.sessions}{' · '}{t('{n} connexions', { n: p.sessions })}{/if}{:else if p.source === 'log'}{t('Vu dans le log du jeu')}{:else}{dur(p.playtime_s)} {t('de jeu')} · {t('{n} sessions', { n: p.sessions ?? 0 })}{/if}{#if pingOf(p) != null}{' · '}<span style:color={pingColor(pingOf(p))}>{Math.round(pingOf(p))} ms</span>{/if}{#if priv && p.ip}{' · '}{p.ip}{/if}</span>
         </span>
         <span class="kd"><b>{kdOf(p) == null ? '—' : kdOf(p).toFixed(2)}</b><small>K/D</small></span>
       </a>

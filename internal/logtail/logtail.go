@@ -169,6 +169,7 @@ type Tail struct {
 	lastCmd map[string]time.Time // chat command cooldowns per slot
 	clock   eventClock
 	pending *KillEvent // KE line waiting for its K line
+	history bool       // the import of the history of games_mp.log was started
 }
 
 const keep = 500
@@ -402,10 +403,17 @@ func (t *Tail) follow(ctx context.Context, st *store.Store, files []*file) error
 	tick := time.NewTicker(t.Every)
 	defer tick.Stop()
 	for {
+		caughtUp := true
 		for _, f := range files {
 			if err := t.poll(c, st, f); err != nil {
 				return err
 			}
+			caughtUp = caughtUp && (f.missing || f.loaded && !f.catching)
+		}
+		// once enterleave.log is read (it dates the history), the part of games_mp.log written before the monitor
+		if caughtUp && !t.history {
+			t.history = true
+			go t.importHistory(ctx, st)
 		}
 		select {
 		case <-ctx.Done():

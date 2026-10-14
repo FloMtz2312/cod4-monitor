@@ -727,6 +727,11 @@ func (d *DB) clientsWhere(where string, args ...any) ([]Client, error) {
 	return d.scanClients(rs, groups)
 }
 
+// Seen lists the players B3 saw between from and to (first visit before to, last visit after from), most recent first.
+func (d *DB) Seen(from, to int64, limit int) ([]Client, error) {
+	return d.clientsWhere(`guid <> '' AND time_edit >= ? AND time_add < ? ORDER BY time_edit DESC LIMIT ?`, from, to, limit)
+}
+
 // Search finds players by name (current or past), IP (or its start, "1.2.3.") or GUID, like B3's !lookup.
 func (d *DB) Search(q string, limit int) ([]Client, error) {
 	q = strings.TrimSpace(q)
