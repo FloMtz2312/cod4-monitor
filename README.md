@@ -506,6 +506,7 @@ Kept forever: chat, names, kills, rounds, connections, bans, activity log. Polls
 | "Logs not configured" in the console | Add the FTP URL as the 3rd field of `SERVERS`. |
 | No server commands (map, messages, console) | Add the rcon password (4th field of `SERVERS`, or More → All servers → the server's settings), and log in as the server's **owner**, or as a moderator with the map, message or RCON permission. |
 | Logs: `cannot decrypt server secrets` | The database was restored without its key. Put back the matching `monitor.db.key` (or `MONITOR_SECRET_KEY`), see [Backups](#9-backups). |
+| `compose file "/var/lib/snapd/void/…" is invalid` | Docker was installed with snap, which can't read `/opt`. Replace it with the official Docker: `sudo snap remove --purge docker && sudo sh deploy/setup-vps.sh`, then run the command again. |
 | `fatal: not a git repository` | You're not in the right folder: `cd /opt/cod4-monitor`. |
 | `permission denied` with `docker` | Run `sudo usermod -aG docker $USER`, then log out and back in. |
 | iPhone: the top of the page is hidden | Update the site, then fully close the app and reopen it. |

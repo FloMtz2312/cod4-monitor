@@ -506,6 +506,7 @@ Ce qui est conservé pour toujours : chat, pseudos, kills, rounds, connexions, b
 | « Logs non configurés » dans la console | Ajoute l'URL FTP en 3e champ de `SERVERS`. |
 | Pas de commandes serveur (map, messages, console) | Ajoute le mot de passe rcon (4e champ de `SERVERS`, ou Plus → Tous les serveurs → réglages du serveur), et connecte-toi en **propriétaire** du serveur, ou en modérateur avec la permission map, message ou RCON. |
 | Logs : `cannot decrypt server secrets` | La base a été restaurée sans sa clé. Remets le `monitor.db.key` correspondant (ou `MONITOR_SECRET_KEY`), voir [Sauvegardes](#9-sauvegardes). |
+| `compose file "/var/lib/snapd/void/…" is invalid` | Docker a été installé avec snap, qui ne peut pas lire `/opt`. Remplace-le par le Docker officiel : `sudo snap remove --purge docker && sudo sh deploy/setup-vps.sh`, puis relance la commande. |
 | `fatal: not a git repository` | Tu n'es pas dans le bon dossier : `cd /opt/cod4-monitor`. |
 | `permission denied` avec `docker` | Lance `sudo usermod -aG docker $USER`, puis déconnecte-toi et reconnecte-toi. |
 | iPhone : le haut de page est caché | Mets le site à jour, puis ferme complètement l'application et rouvre-la. |

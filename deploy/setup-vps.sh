@@ -5,6 +5,8 @@ set -eu
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -q
 apt-get install -yq ca-certificates curl ufw unattended-upgrades
+# Docker from snap (offered by the Ubuntu installer) cannot read /opt: replace it with the official package.
+if command -v snap >/dev/null && snap list docker >/dev/null 2>&1; then snap remove --purge docker; fi
 command -v docker >/dev/null || curl -fsSL https://get.docker.com | sh
 ufw allow OpenSSH
 ufw allow 80/tcp
