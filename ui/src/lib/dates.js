@@ -1,7 +1,5 @@
 // Dates and durations of the profile and live screens.
-import { i18n } from './i18n.svelte.js';
-
-const locale = () => (i18n.lang === 'en' ? 'en-GB' : 'fr-FR');
+import { i18n, locale } from './i18n.svelte.js';
 
 /** Unix seconds → "12/10/2026 21:04" (local time). */
 export function dt(ts) {
@@ -22,5 +20,5 @@ export function dur(s) {
   if (s < 3600) return `${Math.floor(s / 60)} min`;
   const h = Math.floor(s / 3600);
   if (h < 48) return `${h} h ${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}`;
-  return `${Math.floor(h / 24)} ${i18n.lang === 'en' ? 'd' : 'j'} ${h % 24} h`;
+  return `${Math.floor(h / 24)} ${({ en: 'd', de: 'T' })[i18n.lang] ?? 'j'} ${h % 24} h`;
 }

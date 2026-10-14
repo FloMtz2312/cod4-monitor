@@ -89,7 +89,7 @@ func pushRoutes(r *gin.Engine, st *store.Store, ps *push.Sender) {
 				types = append(types, k)
 			}
 		}
-		if in.Lang != "en" {
+		if in.Lang != "en" && in.Lang != "de" {
 			in.Lang = "fr"
 		}
 		sub := store.PushSub{Endpoint: in.Endpoint, Username: c.GetString("user"), P256dh: pushB64.EncodeToString(pub), Auth: pushB64.EncodeToString(auth),

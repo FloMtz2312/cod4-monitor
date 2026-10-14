@@ -1,13 +1,13 @@
 # CoD4 Monitor
 
-🇬🇧 **English** · 🇫🇷 [Français](README.fr.md)
+🇬🇧 **English** · 🇫🇷 [Français](README.fr.md) · 🇩🇪 [Deutsch](README.de.md)
 
 A web dashboard to follow a **Call of Duty 4 / CoD4X** server — who plays, when, on which map, with which stats — and to run it from a browser or a phone.
 
 - **Live**: server status, online players, map, console and chat.
 - **Stats**: activity, rankings, badges, records, match history, a profile for every player with their progression.
 - **Admin**: map changes, kick and ban, scheduled commands, action log, ban evasion detection.
-- **Access**: super admin, server owners, moderators with per-server permissions, and visitors; accounts by invitation only. English and French, usable as an app on a phone.
+- **Access**: super admin, server owners, moderators with per-server permissions, and visitors; accounts by invitation only. English, French and German, usable as an app on a phone (notifications and emails in English or French).
 
 Found a bug or have an idea? [Open an issue](https://github.com/FloMtz2312/cod4-monitor/issues/new/choose): the form guides you.
 
@@ -552,7 +552,7 @@ DB_PATH=monitor.db go run ./cmd/monitor    # run the monitor locally
   npm run build   # ui/dist, embedded in the binary by go build
   ```
 
-  Without `npm run build`, the site answers "Interface non compilée". Texts are written in French; the English translations are in `ui/src/lib/i18n.svelte.js` and `ui/src/lib/en/*.js`.
+  Without `npm run build`, the site answers "Interface non compilée". Texts are written in French; the English translations are in `ui/src/lib/i18n.svelte.js` and `ui/src/lib/en/*.js`, the German ones in `ui/src/lib/de/*.js`.
 - **Roles**: the routes a visitor may read are in `internal/api/auth.go` (`visitorRoutes`); the rules for accounts and per-server permissions are in `internal/api/tenancy.go` (`tenantAllowed`).
 - **Database**: `docker compose cp monitor:/data/monitor.db .`, then open it with `sqlite3`.
 

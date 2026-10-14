@@ -1,13 +1,13 @@
 # CoD4 Monitor
 
-🇬🇧 [English](README.md) · 🇫🇷 **Français**
+🇬🇧 [English](README.md) · 🇫🇷 **Français** · 🇩🇪 [Deutsch](README.de.md)
 
 Un tableau de bord web pour suivre un serveur **Call of Duty 4 / CoD4X** : qui joue, quand, sur quelle map, avec quelles stats, et pour l'administrer depuis un navigateur ou un téléphone.
 
 - **En direct** : état du serveur, joueurs connectés, map, console et chat.
 - **Statistiques** : activité, classements, badges, records, historique des matchs, fiche de chaque joueur avec sa progression.
 - **Administration** : changement de map, kick et ban, commandes programmées, journal des actions, détection des contournements de ban.
-- **Accès** : super admin, propriétaires de serveurs, modérateurs avec des permissions par serveur, et visiteurs ; comptes sur invitation uniquement. En français et en anglais, utilisable comme une application sur téléphone.
+- **Accès** : super admin, propriétaires de serveurs, modérateurs avec des permissions par serveur, et visiteurs ; comptes sur invitation uniquement. En français, en anglais et en allemand, utilisable comme une application sur téléphone (notifications et mails en français ou en anglais).
 
 Un bug ou une idée ? [Ouvre une issue](https://github.com/FloMtz2312/cod4-monitor/issues/new/choose) : le formulaire te guide.
 
@@ -552,7 +552,7 @@ DB_PATH=monitor.db go run ./cmd/monitor    # lance le monitor en local
   npm run build   # ui/dist, intégré au binaire par go build
   ```
 
-  Sans `npm run build`, le site répond « Interface non compilée ». Les textes sont écrits en français ; les traductions anglaises sont dans `ui/src/lib/i18n.svelte.js` et `ui/src/lib/en/*.js` : tout nouveau texte doit y être ajouté.
+  Sans `npm run build`, le site répond « Interface non compilée ». Les textes sont écrits en français ; les traductions anglaises sont dans `ui/src/lib/i18n.svelte.js` et `ui/src/lib/en/*.js` : tout nouveau texte doit y être ajouté. Les traductions allemandes sont dans `ui/src/lib/de/*.js` (à défaut, le texte anglais s'affiche).
 - **Rôles** : les routes qu'un visiteur peut lire sont dans `internal/api/auth.go` (`visitorRoutes`) ; les règles des comptes et des permissions par serveur sont dans `internal/api/tenancy.go` (`tenantAllowed`).
 - **Base de données** : `docker compose cp monitor:/data/monitor.db .` puis l'ouvrir avec `sqlite3`.
 

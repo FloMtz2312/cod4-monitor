@@ -5,7 +5,7 @@
   import { api, get } from '../lib/api.js';
   import { say } from '../lib/toast.svelte.js';
   import { gb, size } from '../lib/demos.js';
-  import { t } from '../lib/i18n.svelte.js';
+  import { t, locale } from '../lib/i18n.svelte.js';
 
   /** @type {{ serverId: number }} */
   let { serverId } = $props();
@@ -57,7 +57,7 @@
 
   const st = $derived(data?.status ?? {});
   const days = n => (n >= 2 ? t('{n} jours', { n: Math.floor(n) }) : t('{n} h', { n: Math.floor(n * 24) }));
-  const num = (n, d = 1) => (n ?? 0).toLocaleString(document.documentElement.lang === 'en' ? 'en-US' : 'fr-FR', { maximumFractionDigits: d });
+  const num = (n, d = 1) => (n ?? 0).toLocaleString(locale(true), { maximumFractionDigits: d });
 </script>
 
 <section class="card box">

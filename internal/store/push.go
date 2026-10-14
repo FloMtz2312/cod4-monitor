@@ -15,7 +15,7 @@ type PushSub struct {
 	Username string   `json:"-"`
 	P256dh   string   `json:"-"` // browser's public key and secret (base64url), for the payload encryption
 	Auth     string   `json:"-"`
-	Lang     string   `json:"lang"`  // "fr" or "en"
+	Lang     string   `json:"lang"`  // "fr", "en" or "de" (notifications in English)
 	Types    []string `json:"types"` // down, report, suspect, b3ban
 	Muted    []int64  `json:"muted"` // servers left out
 	LastOK   int64    `json:"last_ok"`

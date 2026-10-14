@@ -1,5 +1,5 @@
 // Small display helpers shared by the screens.
-import { t } from './i18n.svelte.js';
+import { t, locale } from './i18n.svelte.js';
 
 /** CoD4 color codes (^0..^9) → readable colors on the dark background. */
 const COLORS = { 0: '#9AA6B5', 1: '#FF6B6B', 2: '#5BE38F', 3: '#FFD866', 4: '#6FA8FF', 5: '#5ED8F2', 6: '#F07CF0', 7: '#E8ECF1', 8: '#E8ECF1', 9: '#9AA6B5' };
@@ -61,9 +61,8 @@ export function agoText(ts, now = Date.now() / 1000) {
 
 export const pingColor = p => p == null ? 'var(--muted)' : p < 60 ? 'var(--ok)' : p < 100 ? 'var(--warn)' : 'var(--danger)';
 
-export const fmt = n => n == null ? '—' : Number(n).toLocaleString(document.documentElement.lang === 'en' ? 'en-US' : 'fr-FR');
+export const fmt = n => n == null ? '—' : Number(n).toLocaleString(locale(true));
 
-const locale = () => (document.documentElement.lang === 'en' ? 'en-GB' : 'fr-FR');
 
 /** Unix seconds → "12/10/2026 21:04" (local time). */
 export const dateTime = ts => ts ? new Date(ts * 1000).toLocaleString(locale(), { dateStyle: 'short', timeStyle: 'short' }) : '—';
