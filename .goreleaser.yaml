@@ -1,0 +1,61 @@
+# GoReleaser: on each tag v*, builds the monitor (interface included) for Linux, Windows and macOS, the archives with
+# their checksums, the GitHub release with its notes, and the Docker image on ghcr.io (amd64 and arm64).
+# Try it locally: goreleaser release --snapshot --clean
+version: 2
+project_name: cod4-monitor
+
+before:
+  hooks:
+    # the interface (Svelte) is built first: the binary embeds ui/dist
+    - npm --prefix ui ci --no-audit --no-fund
+    - npm --prefix ui run build
+
+builds:
+  - id: monitor
+    main: ./cmd/monitor
+    binary: cod4-monitor
+    env: [CGO_ENABLED=0]
+    flags: [-trimpath]
+    ldflags: ["-s -w -X main.version={{ .Version }}"]
+    goos: [linux, windows, darwin]
+    goarch: [amd64, arm64]
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files: [LICENSE, README.md, README.fr.md, .env.example]
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude: ["^Merge ", "^docs", "^test"]
+
+# Docker image (amd64 and arm64): the binaries built above, with the demo viewer (same stages as the Dockerfile)
+dockers_v2:
+  - images: ["ghcr.io/{{ tolower .Env.GITHUB_REPOSITORY_OWNER }}/cod4-monitor"]
+    tags:
+      - "{{ .Version }}"
+      - "{{ if not .Prerelease }}latest{{ end }}" # not for a pre-release (v1.2.0-rc1)
+    dockerfile: Dockerfile.release
+    platforms: [linux/amd64, linux/arm64]
+    labels:
+      org.opencontainers.image.source: "{{ .GitURL }}"
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.licenses: AGPL-3.0-only
+
+release:
+  prerelease: auto
+  footer: |
+    **Docker**: `docker pull ghcr.io/{{ tolower .Env.GITHUB_REPOSITORY_OWNER }}/cod4-monitor:{{ .Version }}`
+
+    Installation and update: see the [README](https://github.com/FloMtz2312/cod4-monitor#readme) ([français](https://github.com/FloMtz2312/cod4-monitor/blob/main/README.fr.md)).

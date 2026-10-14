@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"cod4monitor/internal/mail"
@@ -51,10 +50,8 @@ type Reading struct {
 
 func Read(dir string) Reading {
 	r := Reading{-1, -1, -1}
-	var fs syscall.Statfs_t
-	if syscall.Statfs(dir, &fs) == nil && fs.Blocks > 0 {
-		used := float64(fs.Blocks - fs.Bfree)
-		r.DiskPct = 100 * used / (used + float64(fs.Bavail))
+	if pct, ok := diskPct(dir); ok {
+		r.DiskPct = pct
 	}
 	if b, err := os.ReadFile("/proc/meminfo"); err == nil {
 		kb := map[string]float64{}
