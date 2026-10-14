@@ -3,6 +3,7 @@ import moderation from './en/moderation.js';
 import stats from './en/stats.js';
 import rankings from './en/rankings.js';
 import profile from './en/profile.js';
+import demos from './en/demos.js';
 
 const BASE = {
   'Direct': 'Live',
@@ -669,7 +670,7 @@ const BASE = {
   'Comptes': 'Accounts'
 };
 
-const EN = { ...BASE, ...moderation, ...stats, ...rankings, ...profile };
+const EN = { ...BASE, ...moderation, ...stats, ...rankings, ...profile, ...demos };
 
 function initial() {
   try {

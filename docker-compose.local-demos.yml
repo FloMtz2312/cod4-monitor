@@ -1,0 +1,9 @@
+# Optional, with docker-compose.local-logs.yml: lets the monitor delete the server demos it no longer keeps. The demo
+# folder of the game server (<LOCAL_LOGS_DIR>/demos) is mounted read-write over the read-only game folder. Create it
+# first, owned by the game server's user, or Docker creates it as root and the server cannot record:
+#   mkdir -p /opt/cod4-server/cod4/demos && chown 1000:1000 /opt/cod4-server/cod4/demos
+#   docker compose -p cod4-monitor -f docker-compose.prod.yml -f docker-compose.local-logs.yml -f docker-compose.local-demos.yml up -d --build
+services:
+  monitor:
+    volumes:
+      - ${LOCAL_LOGS_DIR:?mets LOCAL_LOGS_DIR=dossier_du_serveur_de_jeu dans le .env}/demos:/gamelogs/demos

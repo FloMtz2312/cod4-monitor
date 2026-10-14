@@ -13,6 +13,7 @@
   import { dt, dur } from '../../lib/dates.js';
   import { say } from '../../lib/toast.svelte.js';
   import { t } from '../../lib/i18n.svelte.js';
+  import { length, live, viewerURL, viewerInstalled } from '../../lib/demos.js';
 
   /** @type {{ p: any, key: string, nameRaw: string, serverId: number, perms: Set<string>, livePlayer: any }} */
   let { p, key, nameRaw, serverId, perms, livePlayer } = $props();
@@ -34,6 +35,19 @@
     const sid = serverId;
     rconOn = false;
     get(`/api/servers/${sid}/rcon`).then(r => { rconOn = !!r.enabled; }).catch(() => {});
+  });
+
+  // the demos recorded from this player's eyes (most recent first)
+  let demos = $state([]);
+  let viewer = $state(false);
+  $effect(() => {
+    const sid = serverId, k = key;
+    demos = [];
+    if (!priv || !hasGuid) return;
+    let alive = true;
+    get(`/api/servers/${sid}/demos?limit=6&player=${encodeURIComponent(k)}`).then(r => { if (alive) demos = r.demos ?? []; }).catch(() => {});
+    viewerInstalled().then(v => { viewer = v; });
+    return () => { alive = false; };
   });
 
   $effect(() => {
@@ -152,6 +166,18 @@
     </section>
   {/if}
 
+  {#if demos.length}
+    <section class="card box" aria-label={t('Démos')}>
+      <div class="hd"><h2 class="label">{t('Démos')}</h2><a class="all" href={href('demos', key)}>{t('Toutes')}</a></div>
+      {#each demos.slice(0, 5) as d (d.id)}
+        <div class="li">
+          <span>{dt(d.started_at)} · {length(d)}{#if live(d)}{' · '}<b class="rec">{t('en cours')}</b>{/if}{#if d.kept}{' · '}{t('gardée')}{/if}</span>
+          {#if viewer}<a href={viewerURL(serverId, d)} target="_blank" rel="noopener">{t('Voir')}</a>{/if}
+        </div>
+      {/each}
+    </section>
+  {/if}
+
   <form class="card box" aria-label={t('Note de l\'équipe')} onsubmit={saveNote}>
     <h2 class="label">{t('Note de l\'équipe')}</h2>
     <p class="muted small">{t('Visible seulement par l\'équipe du serveur.')}{#if noteAt}{' '}{t('Modifiée le {d}.', { d: dt(noteAt) })}{/if}</p>
@@ -233,6 +259,7 @@
   .txt :global(.name) { white-space: normal; }
   textarea { width: 100%; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); padding: 10px 12px; font-size: 16px; resize: vertical; }
   textarea:disabled { opacity: .7; }
+  .rec { color: var(--danger-text); }
   .tags { display: flex; flex-wrap: wrap; gap: 6px; }
   .tags button { height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text-2); font-weight: 700; font-size: 13px; }
   .tags button.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }

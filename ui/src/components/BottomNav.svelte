@@ -14,7 +14,7 @@
     serveurs: 'plus', personnalisation: 'plus', equipe: 'plus', console: 'plus', programmes: 'plus', journal: 'plus',
     motdepasse: 'plus', etat: 'plus', reglages: 'plus', notifications: 'plus',
     connexion: 'plus', invitation: 'plus', comptes: 'plus',
-    bans: 'moderation', chat: 'moderation', b3: 'moderation', contournements: 'moderation', 'comptes-lies': 'moderation'
+    bans: 'moderation', chat: 'moderation', b3: 'moderation', contournements: 'moderation', 'comptes-lies': 'moderation', demos: 'moderation'
   };
   // screens linked from several tabs keep lit the tab they were opened from (Stats from Plus lights Plus)
   const from = { stats: ['classements', 'plus'], duel: ['classements', 'joueurs'], matchs: ['classements', 'plus'], match: ['classements', 'plus'] };

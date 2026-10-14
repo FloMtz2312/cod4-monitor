@@ -34,6 +34,7 @@
   import B3 from './screens/B3.svelte';
   import Evasions from './screens/Evasions.svelte';
   import Linked from './screens/Linked.svelte';
+  import Demos from './screens/Demos.svelte';
   import { app, role, loadMe, loadServers, selectServer } from './lib/state.svelte.js';
   import { tabsFor } from './lib/roles.js';
   import { permsOf } from './lib/perms.js';
@@ -167,6 +168,8 @@
       <Evasions />
     {:else if route.name === 'comptes-lies'}
       <Linked />
+    {:else if route.name === 'demos'}
+      <Demos />
     {:else}
       <Direct />
     {/if}

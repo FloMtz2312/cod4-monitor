@@ -31,6 +31,7 @@
     ['bans', 'Bans du serveur', 'ban', p => p.has('ban')],
     ['contournements', 'Contournements de ban', 'alert', p => p.has('private')],
     ['comptes-lies', 'Comptes liés', 'link', p => p.has('private')],
+    ['demos', 'Démos', 'film', p => p.has('private')],
     ['b3', 'B3', 'bot', p => p.has('private')],
     ['comptes', 'Comptes', 'key', () => !!app.me?.admin],
     ['programmes', 'Commandes programmées', 'clock', p => p.has('rcon')],
