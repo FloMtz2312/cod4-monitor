@@ -97,6 +97,8 @@ sudo usermod -aG docker $USER
 
 > ⚠️ If your host also has a firewall in its control panel, open ports **80** and **443** there too.
 
+> ℹ️ If the VPS already hosts something else (game servers, a website, SSH on another port…), the script does **not** turn on the firewall, so as not to cut it off. It shows the ports involved: open them yourself (e.g. `sudo ufw allow 28960/udp`), then `sudo ufw enable`.
+
 ### Step 5: configure
 
 ```sh
@@ -507,6 +509,7 @@ Kept forever: chat, names, kills, rounds, connections, bans, activity log. Polls
 | No server commands (map, messages, console) | Add the rcon password (4th field of `SERVERS`, or More → All servers → the server's settings), and log in as the server's **owner**, or as a moderator with the map, message or RCON permission. |
 | Logs: `cannot decrypt server secrets` | The database was restored without its key. Put back the matching `monitor.db.key` (or `MONITOR_SECRET_KEY`), see [Backups](#9-backups). |
 | `compose file "/var/lib/snapd/void/…" is invalid` | Docker was installed with snap, which can't read `/opt`. Replace it with the official Docker: `sudo snap remove --purge docker && sudo sh deploy/setup-vps.sh`, then run the command again. |
+| After `setup-vps.sh`, a game server or another service on the VPS can't be reached | The firewall was already on and only lets SSH, HTTP and HTTPS through. Open the service's ports (e.g. `sudo ufw allow 28960/udp`), or turn the firewall off: `sudo ufw disable`. |
 | `fatal: not a git repository` | You're not in the right folder: `cd /opt/cod4-monitor`. |
 | `permission denied` with `docker` | Run `sudo usermod -aG docker $USER`, then log out and back in. |
 | iPhone: the top of the page is hidden | Update the site, then fully close the app and reopen it. |

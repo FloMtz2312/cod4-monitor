@@ -11,7 +11,17 @@ command -v docker >/dev/null || curl -fsSL https://get.docker.com | sh
 ufw allow OpenSSH
 ufw allow 80/tcp
 ufw allow 443/tcp
-ufw --force enable
+# Other services already reachable from outside (game servers, web sites, SSH on another port…) would be cut off
+# by the firewall: in that case leave it off and let the admin open their ports first.
+others=$(ss -Htuln | awk '{print $5}' | grep -vE '^(127\.|\[::1\]|::1)' | sed 's/.*://' | grep -vxE '22|53|68|80|443|546' | sort -un | tr '\n' ' ')
+if ufw status | grep -q 'Status: active'; then
+  firewall="déjà actif, ports 80 et 443 ajoutés"
+elif [ -n "$others" ]; then
+  firewall="NON activé : d'autres services écoutent sur les ports $others(voir README)"
+else
+  ufw --force enable
+  firewall="SSH, HTTP, HTTPS"
+fi
 dpkg-reconfigure -f noninteractive unattended-upgrades
 mkdir -p /opt/cod4-monitor
-echo "VPS prêt : Docker $(docker --version | cut -d' ' -f3) — pare-feu : SSH, HTTP, HTTPS"
+echo "VPS prêt : Docker $(docker --version | cut -d' ' -f3) — pare-feu : $firewall"

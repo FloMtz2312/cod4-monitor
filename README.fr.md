@@ -97,6 +97,8 @@ sudo usermod -aG docker $USER
 
 > ⚠️ Si ton hébergeur a aussi un pare-feu dans son espace client, ouvre-y les ports **80** et **443**.
 
+> ℹ️ Si le VPS héberge déjà autre chose (serveurs de jeu, site web, SSH sur un autre port…), le script n'active **pas** le pare-feu, pour ne pas le couper. Il affiche les ports concernés : ouvre-les toi-même (ex. `sudo ufw allow 28960/udp`), puis `sudo ufw enable`.
+
 ### Étape 5 : configurer
 
 ```sh
@@ -507,6 +509,7 @@ Ce qui est conservé pour toujours : chat, pseudos, kills, rounds, connexions, b
 | Pas de commandes serveur (map, messages, console) | Ajoute le mot de passe rcon (4e champ de `SERVERS`, ou Plus → Tous les serveurs → réglages du serveur), et connecte-toi en **propriétaire** du serveur, ou en modérateur avec la permission map, message ou RCON. |
 | Logs : `cannot decrypt server secrets` | La base a été restaurée sans sa clé. Remets le `monitor.db.key` correspondant (ou `MONITOR_SECRET_KEY`), voir [Sauvegardes](#9-sauvegardes). |
 | `compose file "/var/lib/snapd/void/…" is invalid` | Docker a été installé avec snap, qui ne peut pas lire `/opt`. Remplace-le par le Docker officiel : `sudo snap remove --purge docker && sudo sh deploy/setup-vps.sh`, puis relance la commande. |
+| Après `setup-vps.sh`, un serveur de jeu ou un autre service du VPS n'est plus joignable | Le pare-feu était déjà actif et ne laisse passer que SSH, HTTP et HTTPS. Ouvre les ports du service (ex. `sudo ufw allow 28960/udp`), ou désactive le pare-feu : `sudo ufw disable`. |
 | `fatal: not a git repository` | Tu n'es pas dans le bon dossier : `cd /opt/cod4-monitor`. |
 | `permission denied` avec `docker` | Lance `sudo usermod -aG docker $USER`, puis déconnecte-toi et reconnecte-toi. |
 | iPhone : le haut de page est caché | Mets le site à jour, puis ferme complètement l'application et rouvre-la. |
