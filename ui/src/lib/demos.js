@@ -25,7 +25,7 @@ export const live = d => Date.now() / 1000 - (d.last_write ?? 0) < 120;
 
 /** Address of the viewer opening this demo (the file is read from the game server by the monitor). */
 export const viewerURL = (serverId, d) =>
-  `/demo-viewer/index.html?demo=${encodeURIComponent(`/api/servers/${serverId}/demos/${d.id}/file/${d.file}`)}`;
+  `/demo-viewer/?demo=${encodeURIComponent(`/api/servers/${serverId}/demos/${d.id}/file/${d.file}`)}`;
 
 /** Address to download the demo. */
 export const fileURL = (serverId, d) => `/api/servers/${serverId}/demos/${d.id}/file/${encodeURIComponent(d.file)}`;

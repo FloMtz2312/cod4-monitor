@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
 	"cod4monitor/internal/logtail"
 	"cod4monitor/internal/store"
 )
@@ -103,5 +105,34 @@ func TestDemos(t *testing.T) {
 	expect(req("PUT", conf, `{"enabled":false,"min_players":2,"keep_hours":72}`, "owner"), 200)
 	if strings.Join(sent, "|") != "stoprecord all|set sv_autodemorecord 0" {
 		t.Fatalf("disable sent %q", sent)
+	}
+}
+
+func TestDemoViewer(t *testing.T) {
+	dir := t.TempDir()
+	os.MkdirAll(filepath.Join(dir, "js"), 0o755)
+	os.WriteFile(filepath.Join(dir, "index.html"), []byte("VIEWER"), 0o644)
+	os.WriteFile(filepath.Join(dir, "js", "app.js"), []byte("JS"), 0o644)
+	os.WriteFile(filepath.Join(t.TempDir(), "secret"), []byte("NO"), 0o644)
+	r := gin.New()
+	demoViewerRoutes(r, dir)
+	get := func(p string) *httptest.ResponseRecorder {
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, httptest.NewRequest("GET", p, nil))
+		return w
+	}
+	for p, want := range map[string]string{"/demo-viewer/?demo=%2Fx": "VIEWER", "/demo-viewer/js/app.js": "JS"} {
+		if w := get(p); w.Code != 200 || w.Body.String() != want {
+			t.Fatalf("%s: %d %q", p, w.Code, w.Body)
+		}
+	}
+	// index.html sends back to the folder (keeping the demo), folders and paths outside are refused
+	if w := get("/demo-viewer/index.html?demo=x"); w.Code != 301 || w.Header().Get("Location") != "./?demo=x" {
+		t.Fatalf("index: %d %q", w.Code, w.Header().Get("Location"))
+	}
+	for _, p := range []string{"/demo-viewer/js/", "/demo-viewer/../secret", "/demo-viewer/%2e%2e/secret", "/demo-viewer/nope"} {
+		if w := get(p); w.Code != 404 {
+			t.Fatalf("%s: %d", p, w.Code)
+		}
 	}
 }

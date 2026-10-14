@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"path"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -180,19 +180,27 @@ func demoViewerRoutes(r *gin.Engine, dir string) {
 	if dir == "" {
 		return
 	}
-	files := http.FileServer(http.Dir(dir))
+	root, err := os.OpenRoot(dir) // nothing outside the viewer's folder can be opened
+	if err != nil {
+		return
+	}
+	fsys := root.FS()
+	files := http.FileServerFS(fsys)
 	r.GET("/demo-viewer/*file", func(c *gin.Context) {
-		p := path.Clean("/" + c.Param("file"))
-		if fi, err := os.Stat(filepath.Join(dir, filepath.FromSlash(p))); err != nil || fi.IsDir() && p != "/" {
+		p := strings.TrimPrefix(path.Clean("/"+c.Param("file")), "/")
+		if p == "" {
+			p = "."
+		}
+		// no folder listing: only files, and the viewer's page itself (/demo-viewer/ serves its index.html)
+		if fi, err := fs.Stat(fsys, p); err != nil || fi.IsDir() && p != "." {
 			c.Status(404)
 			return
 		}
-		if p == "/" {
-			c.Redirect(302, "/demo-viewer/index.html")
-			return
-		}
 		c.Header("Cache-Control", "public, max-age=3600")
-		c.Request.URL.Path = p
+		c.Request.URL.Path = "/"
+		if p != "." {
+			c.Request.URL.Path += p
+		}
 		files.ServeHTTP(c.Writer, c.Request)
 	})
 }
@@ -201,7 +209,12 @@ func viewerInstalled(dir string) bool {
 	if dir == "" {
 		return false
 	}
-	_, err := os.Stat(filepath.Join(dir, "index.html"))
+	root, err := os.OpenRoot(dir)
+	if err != nil {
+		return false
+	}
+	defer root.Close()
+	_, err = root.Stat("index.html")
 	return err == nil
 }
 
