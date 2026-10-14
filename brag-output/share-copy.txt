@@ -1,0 +1,1 @@
+CoD4 Monitor: a free, open-source dashboard for your CoD4X server. Live scoreboard, a page for every player, ban-evasion detection, and it runs on your phone. One Go binary + SQLite. github.com/FlorianMartinez01/cod4-monitor
