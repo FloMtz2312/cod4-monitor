@@ -384,10 +384,12 @@ Avec l'URL FTP du dossier du mod en 3e champ de `SERVERS`, le monitor lit trois 
 | Fichier | Ce qu'il apporte |
 |---|---|
 | `qconsole.log` | Console affichée en direct (rien n'est stocké) |
-| `games_mp.log` | Chat, kills, rounds, précision, liens pseudo ↔ GUID |
+| `games_mp.log` | Chat, kills, rounds, précision, liens pseudo ↔ GUID. Au premier lancement, la partie écrite avant le monitor est importée une fois en arrière-plan (joueurs, kills, chat), datée grâce à `enterleave.log` : ce log ne contient que le temps depuis le démarrage du serveur, donc une période que `enterleave.log` ne couvre pas est ignorée, et ces anciens kills n'ont pas de round. |
 | `enterleave.log` | Connexions et départs avec IP et GUID. Tout l'historique est importé au premier lancement. |
 
 Sans FTP, le site fonctionne quand même, mais seulement avec les infos publiques du serveur : joueurs, scores, map.
+
+L'écran **Joueurs** liste les connexions d'`enterleave.log` (avec le temps de jeu), complétées par les joueurs vus seulement dans `games_mp.log` ou par B3 (marqués « Vu dans le log du jeu » / « Vu par B3 », sans temps de jeu).
 
 ### Commandes RCON
 
