@@ -220,7 +220,7 @@ Jeder Push auf `main` führt dann die Prüfungen (`go vet`, Tests) auf GitHub au
 
 ## 5. Konfiguration (`.env`)
 
-Nach jeder Änderung an der `.env` startest du neu, mit dem Startbefehl aus [Schritt 6](#schritt-6-starten). Die Kommentare in `.env.example` sind auf Französisch. Dieser Abschnitt beschreibt jede Variable.
+Nach jeder Änderung an der `.env` startest du neu, mit dem Startbefehl aus [Schritt 6](#schritt-6-starten). Die Kommentare in `.env.example` sind auf Englisch. Dieser Abschnitt beschreibt jede Variable.
 
 ### Das Wichtigste
 
@@ -348,7 +348,7 @@ Die Rechte eines Moderators werden pro Server gewählt: **private Daten sehen** 
 - **Besucher sehen nie** IPs, die Konsole, den Chat oder Admin-Notizen. Der Server selbst sperrt diese Daten; sie sind nicht nur auf der Seite ausgeblendet.
 - **Sicherheit**: Passwörter werden gehasht (PBKDF2-SHA256), eine Anmeldung gilt 7 Tage, und eine IP wird nach 10 Fehlversuchen für 15 Minuten gesperrt.
 
-Details (Einladungen, Rechte, Übertragung eines Servers): [docs/ACCOUNTS.en.md](docs/ACCOUNTS.en.md).
+Details (Einladungen, Rechte, Übertragung eines Servers): [docs/ACCOUNTS.de.md](docs/ACCOUNTS.de.md).
 
 ---
 
@@ -732,17 +732,17 @@ Sag deinen Spielern, dass die Spiele aufgezeichnet werden, zum Beispiel in den R
 
 ## 16. Fehler melden / Mitwirken
 
-- **Ein Fehler oder eine Idee**: [Eröffne ein Issue](https://github.com/FloMtz2312/cod4-monitor/issues/new/choose) und füll das Formular aus, auf Englisch oder Französisch. Der Link ist auch im Dashboard: **Mehr → Über → Bug melden oder Idee vorschlagen**. Füge niemals Passwörter, rcon-Passwörter oder deine `.env` ein.
+- **Ein Fehler oder eine Idee**: [Eröffne ein Issue](https://github.com/FloMtz2312/cod4-monitor/issues/new/choose) und füll das Formular aus, auf Englisch, Französisch oder Deutsch. Der Link ist auch im Dashboard: **Mehr → Über → Bug melden oder Idee vorschlagen**. Füge niemals Passwörter, rcon-Passwörter oder deine `.env` ein.
 - **Ein Sicherheitsproblem**: Melde es vertraulich, wie in [SECURITY.md](SECURITY.md) beschrieben, niemals in einem öffentlichen Issue.
 - **Eine Code-Änderung**: siehe [CONTRIBUTING.md](CONTRIBUTING.md) (auszuführende Prüfungen, Übersetzungen, Pull Request).
 
 ## Umgesetzte Roadmap, Sicherheit und Anleitung zur Wiederherstellung
 
-Siehe [docs/ROADMAP.md](docs/ROADMAP.md) (auf Französisch) für die Funktionen, die Tests und wie du den Verschlüsselungsschlüssel zusammen mit deinen Backups aufbewahrst.
+Siehe [docs/ROADMAP.md](docs/ROADMAP.md) (auf Englisch) für die Funktionen, die Tests und wie du den Verschlüsselungsschlüssel zusammen mit deinen Backups aufbewahrst.
 
 ### Serverbesitz und Einladungen
 
-Administratoren und Moderatoren kommen per Einladung dazu. Siehe [Rollen, Einladungen und Rechte pro Server](docs/ACCOUNTS.en.md).
+Administratoren und Moderatoren kommen per Einladung dazu. Siehe [Rollen, Einladungen und Rechte pro Server](docs/ACCOUNTS.de.md).
 
 ---
 
