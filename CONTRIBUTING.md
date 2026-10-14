@@ -4,9 +4,9 @@ Thanks for helping! English or French, both are fine. / Merci de ton aide ! En a
 
 ## Report a bug or suggest an idea / Signaler un bug ou proposer une idée
 
-Open an [issue](https://github.com/FlorianMartinez01/cod4-monitor/issues/new/choose) and fill in the form. The link is also in the dashboard: *More → About → Report a bug*. Never paste passwords, rcon passwords, tokens or your `.env`.
+Open an [issue](https://github.com/FloMtz2312/cod4-monitor/issues/new/choose) and fill in the form. The link is also in the dashboard: *More → About → Report a bug*. Never paste passwords, rcon passwords, tokens or your `.env`.
 
-Ouvre une [issue](https://github.com/FlorianMartinez01/cod4-monitor/issues/new/choose) et remplis le formulaire. Le lien est aussi dans le dashboard : *Plus → À propos → Signaler un bug*. Ne colle jamais de mot de passe, de jeton ni ton `.env`.
+Ouvre une [issue](https://github.com/FloMtz2312/cod4-monitor/issues/new/choose) et remplis le formulaire. Le lien est aussi dans le dashboard : *Plus → À propos → Signaler un bug*. Ne colle jamais de mot de passe, de jeton ni ton `.env`.
 
 Security issues: see [SECURITY.md](SECURITY.md). / Failles de sécurité : voir [SECURITY.md](SECURITY.md).
 

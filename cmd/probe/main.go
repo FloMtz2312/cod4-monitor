@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"cod4monitor/internal/query"
@@ -20,12 +21,20 @@ func main() {
 		addr = flag.Arg(0)
 	}
 	if *rcon != "" {
-		out, err := query.Rcon(addr, os.Getenv("RCON_PASSWORD"), *rcon, 2*time.Second)
+		pass := os.Getenv("RCON_PASSWORD")
+		out, err := query.Rcon(addr, pass, *rcon, 2*time.Second)
 		if err != nil {
 			fmt.Println("rcon failed:", err)
 			os.Exit(1)
 		}
-		fmt.Print(out)
+		// never print the password, even when the command shows it (rcon_password, cvarlist…)
+		lines := strings.Split(out, "\n")
+		for i, l := range lines {
+			if pass != "" && strings.Contains(l, pass) {
+				lines[i] = "(line hidden: it contains the rcon password)"
+			}
+		}
+		fmt.Print(strings.Join(lines, "\n"))
 		return
 	}
 	st, err := query.Query(addr, 2*time.Second)

@@ -9,7 +9,7 @@ A web dashboard to follow a **Call of Duty 4 / CoD4X** server — who plays, whe
 - **Admin**: map changes, kick and ban, scheduled commands, action log, ban evasion detection.
 - **Access**: super admin, server owners, moderators with per-server permissions, and visitors; accounts by invitation only. English and French, usable as an app on a phone.
 
-Found a bug or have an idea? [Open an issue](https://github.com/FlorianMartinez01/cod4-monitor/issues/new/choose): the form guides you.
+Found a bug or have an idea? [Open an issue](https://github.com/FloMtz2312/cod4-monitor/issues/new/choose): the form guides you.
 
 ---
 
@@ -80,7 +80,7 @@ Install git, then clone the project into `/opt/cod4-monitor`:
 ```sh
 sudo apt update && sudo apt install -y git
 sudo mkdir -p /opt/cod4-monitor && sudo chown $USER /opt/cod4-monitor
-git clone https://github.com/FlorianMartinez01/cod4-monitor.git /opt/cod4-monitor
+git clone https://github.com/FloMtz2312/cod4-monitor.git /opt/cod4-monitor
 cd /opt/cod4-monitor
 ```
 
@@ -716,7 +716,7 @@ Tell your players that games are recorded, for example in the rules or the messa
 
 ## 16. Report a bug / Contributing
 
-- **A bug or an idea**: [open an issue](https://github.com/FlorianMartinez01/cod4-monitor/issues/new/choose) and fill in the form, in English or French. The link is also in the dashboard: **More → About → Report a bug or suggest an idea**. Never paste passwords, rcon passwords or your `.env`.
+- **A bug or an idea**: [open an issue](https://github.com/FloMtz2312/cod4-monitor/issues/new/choose) and fill in the form, in English or French. The link is also in the dashboard: **More → About → Report a bug or suggest an idea**. Never paste passwords, rcon passwords or your `.env`.
 - **A security issue**: report it privately, as explained in [SECURITY.md](SECURITY.md), never in a public issue.
 - **A code change**: see [CONTRIBUTING.md](CONTRIBUTING.md) (checks to run, translations, pull request).
 
