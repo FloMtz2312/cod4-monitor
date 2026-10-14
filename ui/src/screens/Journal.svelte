@@ -4,7 +4,7 @@
   import BackTitle from '../components/BackTitle.svelte';
   import { get } from '../lib/api.js';
   import { app } from '../lib/state.svelte.js';
-  import { ago } from '../lib/format.js';
+  import { agoText } from '../lib/format.js';
   import { t } from '../lib/i18n.svelte.js';
 
   let log = $state(null);
@@ -38,7 +38,7 @@
   <div class="card rows">
     {#each rows.slice(0, shown) as l, i (i)}
       <div class="row">
-        <span class="top"><b>{t(l.action)}</b><span class="muted" title={when(l.ts)}>{t('il y a {d}', { d: ago(l.ts) })}</span></span>
+        <span class="top"><b>{t(l.action)}</b><span class="muted" title={when(l.ts)}>{agoText(l.ts)}</span></span>
         {#if l.detail}<span class="detail">{l.detail}</span>{/if}
         <span class="muted small">{l.username || t('admin')}{#if l.server}{' · '}{l.server.replace(/\^\d/g, '')}{/if}</span>
       </div>

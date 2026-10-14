@@ -3,7 +3,7 @@
   import CodName from './CodName.svelte';
   import Icon from './Icon.svelte';
   import { mapName } from '../lib/state.svelte.js';
-  import { ago, pingColor } from '../lib/format.js';
+  import { agoText, pingColor } from '../lib/format.js';
   import { dt } from '../lib/dates.js';
   import { t } from '../lib/i18n.svelte.js';
 
@@ -23,7 +23,7 @@
     [t('Mode'), snap.gametype || vars.g_gametype || '—'],
     [t('Joueurs'), on ? `${snap.players ?? 0} / ${snap.max_players ?? '?'}` : '—'],
     [t('Latence'), on && snap.latency_ms != null ? `${snap.latency_ms.toFixed(1)} ms` : '—'],
-    [t('Dernier sondage OK'), lastOk ? `${dt(lastOk)} (${t('il y a {d}', { d: ago(lastOk, now) })})` : '—'],
+    [t('Dernier sondage OK'), lastOk ? `${dt(lastOk)} (${agoText(lastOk, now)})` : '—'],
     [t('Map lancée'), vars.g_mapStartTime || '—'],
     [t('Mod'), vars.fs_game || '—'],
     [t('Version'), vars.version || vars.shortversion || '—']

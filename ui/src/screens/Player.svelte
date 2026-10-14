@@ -13,7 +13,7 @@
   import { meOn, setMe, clearMe } from '../lib/me.svelte.js';
   import { route, back, go, href } from '../lib/router.svelte.js';
   import { shareCard } from '../lib/card.js';
-  import { clean, ago, fmt } from '../lib/format.js';
+  import { clean, agoText, fmt } from '../lib/format.js';
   import { dur, day } from '../lib/dates.js';
   import { t } from '../lib/i18n.svelte.js';
   import { say } from '../lib/toast.svelte.js';
@@ -130,7 +130,7 @@
         {#if livePlayer}
           <span class="st on"><span class="dot"></span>{t('En ligne')}{#if srv}{' · '}{clean(srv.name)}{/if}</span>
         {:else if lastSeen}
-          <span class="st"><span class="dot"></span>{t('Vu il y a {d}', { d: ago(lastSeen) })}</span>
+          <span class="st"><span class="dot"></span>{t('Vu {when}', { when: agoText(lastSeen) })}</span>
         {/if}
         {#if sniper.level}<span class="lv">{t('Niv. {n}', { n: sniper.level })}{#if sniper.prestige}{' · '}{t('Prestige {n}', { n: sniper.prestige })}{/if}</span>{/if}
       </div>

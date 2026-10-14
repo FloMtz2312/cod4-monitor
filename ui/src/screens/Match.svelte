@@ -8,7 +8,7 @@
   import { app, mapName } from '../lib/state.svelte.js';
   import { route, back, href } from '../lib/router.svelte.js';
   import { shareCard } from '../lib/card.js';
-  import { ago, teamName, weaponName, clean, dateTime, fmt } from '../lib/format.js';
+  import { agoText, teamName, weaponName, clean, dateTime, fmt } from '../lib/format.js';
   import { meOn } from '../lib/me.svelte.js';
   import { t } from '../lib/i18n.svelte.js';
 
@@ -92,7 +92,7 @@
     <div class="top">
       {#if img}<img src={`/maps/${m.map}.jpg`} alt="" onerror={() => (img = false)} />{/if}
       <div class="ttl">
-        <span class="meta">{(m.gametype || '').toUpperCase()} · {dateTime(m.started_at)} · {t('il y a {d}', { d: ago(m.ended_at || m.started_at) })} · {clock(secs)} · {t('{n} kills', { n: fmt(m.kills) })}</span>
+        <span class="meta">{(m.gametype || '').toUpperCase()} · {dateTime(m.started_at)} · {agoText(m.ended_at || m.started_at)} · {clock(secs)} · {t('{n} kills', { n: fmt(m.kills) })}</span>
         <h1>{mapName(m.map)}</h1>
       </div>
     </div>

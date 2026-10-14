@@ -1,7 +1,7 @@
 <script>
   // The player's matches of the last 30 days: result, map, when, their kills / deaths.
   import { mapName } from '../../lib/state.svelte.js';
-  import { ago } from '../../lib/format.js';
+  import { agoText } from '../../lib/format.js';
   import { href } from '../../lib/router.svelte.js';
   import { t } from '../../lib/i18n.svelte.js';
 
@@ -23,7 +23,7 @@
         <span class="res {m.player?.result}" title={resLabel(m.player?.result)}>{res(m.player?.result)}<span class="sr-only"> {resLabel(m.player?.result)}</span></span>
         <span class="mid">
           <b>{mapName(m.match.map)}</b>
-          <span class="muted">{t('il y a {d}', { d: ago(m.match.ended_at || m.match.started_at) })}{#if m.score_allies != null}{' · '}{m.score_allies}–{m.score_axis}{/if}</span>
+          <span class="muted">{agoText(m.match.ended_at || m.match.started_at)}{#if m.score_allies != null}{' · '}{m.score_allies}–{m.score_axis}{/if}</span>
         </span>
         <span class="kd"><b>{m.player?.kills ?? 0} / {m.player?.deaths ?? 0}</b><small>{t('kills / morts')}</small></span>
       </a>

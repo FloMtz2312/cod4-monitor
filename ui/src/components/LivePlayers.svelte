@@ -4,11 +4,10 @@
   import { pingColor } from '../lib/format.js';
   import { dur } from '../lib/dates.js';
   import { t } from '../lib/i18n.svelte.js';
+  import { tagLabel } from '../lib/moderation.js';
 
   /** @type {{ groups: {id: string, name: string, color: string, players: any[]}[], ontap: (p: any) => void, hint: string, meKey?: string, tagOf?: (p: any) => string, now?: number }} */
   let { groups, ontap, hint, meKey = '', tagOf = () => '', now = Date.now() / 1000 } = $props();
-  // staff tags of the notes (private): short marker next to the name
-  const TAG = { suspect: '⚠ Suspect', surveiller: '👁 À surveiller', vip: '★ VIP', ami: '♥ Ami' };
 </script>
 
 <div class="groups">
@@ -24,7 +23,7 @@
         <button class="row" class:me={!!meKey && p.key === meKey} onclick={() => ontap(p)} aria-label={t('{name} : {k} kills, {d} morts, ping {p} ms', { name: p.name_clean, k: p.kills ?? 0, d: p.deaths ?? 0, p: p.ping ?? '—' })}>
           <span class="rk">{i + 1}</span>
           <span class="nm">
-            <span class="l1"><CodName raw={p.name_raw} />{#if meKey && p.key === meKey}<span class="you">{t('toi')}</span>{/if}{#if tagOf(p)}<span class="tag {tagOf(p)}">{t(TAG[tagOf(p)] ?? tagOf(p))}</span>{/if}</span>
+            <span class="l1"><CodName raw={p.name_raw} />{#if meKey && p.key === meKey}<span class="you">{t('toi')}</span>{/if}{#if tagOf(p)}<span class="tag {tagOf(p)}">{tagLabel(tagOf(p))}</span>{/if}</span>
             {#if p.started_at}<span class="since">{t('depuis {d}', { d: dur(now - p.started_at) })}</span>{/if}
           </span>
           <span class="kd">{p.kills ?? '–'}/{p.deaths ?? '–'}</span>

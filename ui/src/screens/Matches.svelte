@@ -8,7 +8,7 @@
   import { get } from '../lib/api.js';
   import { app, mapName } from '../lib/state.svelte.js';
   import { href, route, replace } from '../lib/router.svelte.js';
-  import { ago, teamName, dateTime, fmt } from '../lib/format.js';
+  import { agoText, teamName, dateTime, fmt } from '../lib/format.js';
   import { t } from '../lib/i18n.svelte.js';
 
   const id = $derived(app.serverId);
@@ -58,7 +58,7 @@
         <span class="info">
           <b>{mapName(x.match.map)}</b>
           <span class="muted">{(x.match.gametype || '').toUpperCase()} · {duration(x.match)} · {t('{n} rounds', { n: x.match.rounds })} · {t('{n} kills', { n: fmt(x.match.kills) })}</span>
-          <span class="muted" title={t('il y a {d}', { d: ago(x.match.started_at) })}>{dateTime(x.match.started_at)}{#if x.players}{' · '}{t('{n} joueurs', { n: x.players })}{/if}</span>
+          <span class="muted" title={agoText(x.match.started_at)}>{dateTime(x.match.started_at)}{#if x.players}{' · '}{t('{n} joueurs', { n: x.players })}{/if}</span>
         </span>
         <span class="res">
           {#if x.score_allies != null}

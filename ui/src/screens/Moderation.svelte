@@ -11,7 +11,7 @@
   import { permsOf, canAct, isOwner } from '../lib/perms.js';
   import { inbox, loadInbox, dismiss } from '../lib/inbox.svelte.js';
   import { href } from '../lib/router.svelte.js';
-  import { ago, clean } from '../lib/format.js';
+  import { agoText, clean } from '../lib/format.js';
   import { say } from '../lib/toast.svelte.js';
   import { t } from '../lib/i18n.svelte.js';
 
@@ -161,7 +161,7 @@
       <article class="card item">
         <div class="top">
           <span class="pill {it.type}">{t(LABEL[it.type])}</span>
-          <span class="muted meta">{it.type === 'watch' ? t('en jeu maintenant') : t('il y a {d}', { d: ago(it.ts) })}</span>
+          <span class="muted meta">{it.type === 'watch' ? t('en jeu maintenant') : agoText(it.ts)}</span>
         </div>
 
         {#if it.type === 'report'}
@@ -212,7 +212,7 @@
       {#each reports as r (r.id)}
         <div class="hrow">
           <span class="ht"><b>{r.target}</b> <span class="muted">· {r.reason || '—'}</span></span>
-          <span class="muted hs">{t('par {who}, il y a {d}', { who: r.handled_by || '—', d: ago(r.handled_at) })}</span>
+          <span class="muted hs">{t('par {who}, {when}', { who: r.handled_by || '—', when: agoText(r.handled_at) })}</span>
         </div>
       {:else}
         <p class="muted">{t('Aucun signalement traité.')}</p>
@@ -233,7 +233,7 @@
               <a href={href('joueur', p.guid)}><CodName raw={p.name} /></a>
               <span class="muted">· {p.reason || p.keyword || '—'}</span>
             </span>
-            <span class="muted hs">{p.admin || 'B3'} · {t('il y a {d}', { d: ago(p.time_add) })}
+            <span class="muted hs">{p.admin || 'B3'} · {agoText(p.time_add)}
               {#if owner && p.active && (p.type === 'Ban' || p.type === 'TempBan')}
                 {#if confirmLift === String(p.id)}
                   <button class="link danger" disabled={busy === String(p.id)} onclick={() => lift(p.id, '')}>{t('Confirmer')}</button>

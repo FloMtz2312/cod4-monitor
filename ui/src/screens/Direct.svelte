@@ -21,7 +21,7 @@
   import { permsOf } from '../lib/perms.js';
   import { meOn } from '../lib/me.svelte.js';
   import { go, href } from '../lib/router.svelte.js';
-  import { teamName, ago } from '../lib/format.js';
+  import { teamName, agoText } from '../lib/format.js';
   import { t } from '../lib/i18n.svelte.js';
   import { say } from '../lib/toast.svelte.js';
 
@@ -217,7 +217,7 @@
     <section class="card down">
       <span class="chip off"><span class="dot"></span>{t('Hors ligne')}</span>
       <h1>{t('Le serveur ne répond plus')}</h1>
-      <p class="muted">{lastOk ? t('Dernière réponse il y a {d}.', { d: ago(lastOk, now) }) : t('Aucune réponse enregistrée pour le moment.')}
+      <p class="muted">{lastOk ? t('Dernière réponse {when}.', { when: agoText(lastOk, now) }) : t('Aucune réponse enregistrée pour le moment.')}
         {#if canPrivate}{t('Les admins sont prévenus par mail.')}{/if}</p>
       {#if canPrivate}<a class="btn" href="#/etat">{t('Voir les coupures et la cause')}</a>{/if}
     </section>

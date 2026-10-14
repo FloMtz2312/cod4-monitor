@@ -4,7 +4,7 @@
   import { api, get, post } from '../lib/api.js';
   import { app, currentServer } from '../lib/state.svelte.js';
   import { permsOf } from '../lib/perms.js';
-  import { ago } from '../lib/format.js';
+  import { agoText } from '../lib/format.js';
   import { say } from '../lib/toast.svelte.js';
   import { t } from '../lib/i18n.svelte.js';
 
@@ -72,7 +72,7 @@
       {#each list as s (s.id)}
         <div class="card item" class:off={!s.enabled}>
           <code>{s.command}</code>
-          <span class="muted">{when(s)}{#if s.last_run}{' · '}{t('dernière fois il y a {d}', { d: ago(s.last_run) })}{/if}</span>
+          <span class="muted">{when(s)}{#if s.last_run}{' · '}{t('dernière fois {when}', { when: agoText(s.last_run) })}{/if}</span>
           <div class="acts">
             <button class="btn" onclick={() => toggle(s)}>{s.enabled ? t('Mettre en pause') : t('Réactiver')}</button>
             <button class="btn ghost" onclick={() => del(s)}>{t('Supprimer')}</button>

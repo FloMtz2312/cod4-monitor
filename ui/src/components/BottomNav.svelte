@@ -10,17 +10,26 @@
   let { tabs } = $props();
   // screens opened from a tab keep it lit
   const parent = {
-    joueur: 'joueurs', moi: 'joueurs', match: 'matchs', stats: 'classements', duel: 'classements',
+    joueur: 'joueurs', moi: 'joueurs', match: 'matchs',
     serveurs: 'plus', personnalisation: 'plus', equipe: 'plus', console: 'plus', programmes: 'plus', journal: 'plus',
     motdepasse: 'plus', etat: 'plus', reglages: 'plus', notifications: 'plus',
     connexion: 'plus', invitation: 'plus', comptes: 'plus',
     bans: 'moderation', chat: 'moderation', b3: 'moderation', contournements: 'moderation', 'comptes-lies': 'moderation'
   };
-  // a screen whose tab this role doesn't have (Matchs for the staff) lights Classements, where its link is
+  // screens linked from several tabs keep lit the tab they were opened from (Stats from Plus lights Plus)
+  const from = { stats: ['classements', 'plus'], duel: ['classements', 'joueurs'], matchs: ['classements', 'plus'], match: ['classements', 'plus'] };
+  let last = $state('direct');
+  $effect(() => {
+    const p = parent[route.name] ?? route.name;
+    if (!from[route.name] && tabs.includes(p)) last = p;
+  });
   const todo = $derived(inboxCount(app.serverId));
   const active = $derived.by(() => {
     const p = parent[route.name] ?? route.name;
-    return tabs.includes(p) ? p : 'classements';
+    if (tabs.includes(p)) return p;
+    const opts = (from[route.name] ?? []).filter(x => tabs.includes(x));
+    // otherwise (Matchs for the staff…) Classements, where its link is
+    return opts.includes(last) ? last : opts[0] ?? 'classements';
   });
 </script>
 
