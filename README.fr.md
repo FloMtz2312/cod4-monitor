@@ -29,7 +29,8 @@ Un bug ou une idée ? [Ouvre une issue](https://github.com/FlorianMartinez01/cod
 12. [Pour les développeurs](#12-pour-les-développeurs)
 13. [Serveur de jeu sur la même machine et réglages avancés](#13-serveur-de-jeu-sur-la-même-machine-et-réglages-avancés)
 14. [B3 : sanctions, admins et grades depuis le dashboard](#14-b3--sanctions-admins-et-grades-depuis-le-dashboard)
-15. [Signaler un bug / Contribuer](#15-signaler-un-bug--contribuer)
+15. [Démos du serveur](#15-démos-du-serveur)
+16. [Signaler un bug / Contribuer](#16-signaler-un-bug--contribuer)
 - [Licence](#licence)
 
 ---
@@ -684,7 +685,36 @@ Le mot de passe est stocké chiffré, comme le mot de passe rcon, et n'est jamai
 *Développeurs* : `B3_TEST_MYSQL=mysql://user:pass@127.0.0.1:3306/db go test ./internal/b3/` lance aussi les tests B3 sur MySQL (la CI le fait avec MySQL 8). La base est vidée.
 
 
-## 15. Signaler un bug / Contribuer
+## 15. Démos du serveur
+
+Le monitor peut faire enregistrer au serveur de jeu une **démo de chaque joueur** (commande `record` de CoD4X : un fichier par joueur et par map, vu par ses yeux), et les ouvrir dans le navigateur avec le lecteur [cod4-demo](https://github.com/TiPSYSPiT/cod4-demo) : rien à télécharger ni à importer.
+
+- **Activer** : **Plus → Tous les serveurs → réglages du serveur → Démos** (le propriétaire du serveur ; il faut le mot de passe rcon). Dès qu'il y a au moins **N vrais joueurs** (2 par défaut), le monitor envoie `record <slot>` pour chacun ; les bots ne sont jamais enregistrés. Sous le seuil, ou quand l'option est désactivée, il envoie `stoprecord all`.
+- **Regarder** : **Modération → Démos** liste les démos (équipe avec les données privées), avec une liste déroulante pour en ouvrir une directement dans le lecteur, un bouton de téléchargement et **Garder**. Le bloc **Démos** de la fiche d'un joueur (onglet Modération) montre ses dernières.
+- **Liées à la modération** : les démos d'un joueur signalé, aux stats suspectes, surveillé, qui ressemble à un banni ou qui est banni (B3 ou le site), de 30 minutes avant à 10 minutes après, sont **gardées 90 jours** et s'ouvrent en un clic depuis la carte de la boîte de réception.
+- **Durée de conservation** : les autres démos sont supprimées après la durée choisie (48 h par défaut). Si le disque d'un serveur sur la même machine passe sous 10 % libres, les plus vieilles non gardées partent en premier.
+
+**Combien de place ?** Les réglages affichent une estimation pendant la saisie :
+
+> place par jour = joueurs en moyenne × heures par jour à N joueurs ou plus × Mo par joueur et par heure
+> durée possible = place disponible ÷ place par jour
+
+L'affluence vient des 30 derniers jours du serveur. Une démo pèse environ **45 Mo par joueur et par heure** tant que le monitor n'a pas mesuré les tiennes (dès 3 démos). La place disponible est l'espace libre du disque (20 % gardés en réserve) pour un serveur sur la même machine, ou la place que tu réserves aux démos (réglages avancés) pour un serveur en FTP. *Exemple* : 8 joueurs, 6 h par jour → 8 × 6 × 45 Mo ≈ 2,2 Go par jour ; avec 20 Go, environ 9 jours.
+
+**Où sont les fichiers** : CoD4X les écrit dans `demos/` de son dossier personnel (`fs_homepath`), par défaut `../../demos/` depuis le dossier des logs (`mods/<mod>/`). À changer dans les réglages avancés si tes logs sont ailleurs.
+
+- *FTP* : le compte FTP doit pouvoir lire et supprimer les fichiers de ce dossier.
+- *Même machine* ([section 13](#13-serveur-de-jeu-sur-la-même-machine-et-réglages-avancés)) : le dossier du jeu est monté en lecture seule, le monitor ne peut donc pas supprimer les vieilles démos. Ajoute `docker-compose.local-demos.yml` pour monter le dossier des démos en lecture-écriture, après l'avoir créé pour l'utilisateur du serveur de jeu :
+  ```sh
+  mkdir -p /opt/cod4-server/cod4/demos && chown 1000:1000 /opt/cod4-server/cod4/demos
+  docker compose -p cod4-monitor -f docker-compose.prod.yml -f docker-compose.local-logs.yml -f docker-compose.local-demos.yml up -d --build
+  ```
+
+**Le lecteur** est inclus dans l'image Docker (dossier `/demo-viewer`, `DEMO_VIEWER_DIR`). La géométrie des maps (119 Mo) n'est pas incluse ; construis avec `--build-arg DEMO_GEOMETRY=1` pour l'ajouter. Sans Docker, mets dans `DEMO_VIEWER_DIR` une copie de [cod4-demo](https://github.com/TiPSYSPiT/cod4-demo). Le lecteur est de TiPSYSPiT, sous licence GPL-3.0.
+
+Préviens tes joueurs que les parties sont enregistrées, par exemple dans les règles ou le message du jour.
+
+## 16. Signaler un bug / Contribuer
 
 - **Un bug ou une idée** : [ouvre une issue](https://github.com/FlorianMartinez01/cod4-monitor/issues/new/choose) et remplis le formulaire, en français ou en anglais. Le lien est aussi dans le dashboard : **Plus → À propos → Signaler un bug ou proposer une idée**. Ne colle jamais de mot de passe, de mot de passe rcon ni ton `.env`.
 - **Une faille de sécurité** : signale-la en privé, comme expliqué dans [SECURITY.md](SECURITY.md), jamais dans une issue publique.
@@ -707,3 +737,5 @@ Copyright © 2026 Florian Martinez.
 CoD4 Monitor est un logiciel libre, sous [licence publique générale GNU Affero v3.0](LICENSE) (AGPL-3.0) : tu peux l'utiliser, le modifier et le partager, à condition de garder la mention de l'auteur et de publier tes modifications sous la même licence. Cela vaut aussi pour une version modifiée mise en ligne comme site pour d'autres : ses utilisateurs doivent pouvoir en obtenir le code source.
 
 Les images des cartes (`ui/public/maps/`) appartiennent à Activision et aux auteurs des cartes ; elles ne sont pas couvertes par cette licence.
+
+L'image Docker contient aussi le lecteur de démos [cod4-demo](https://github.com/TiPSYSPiT/cod4-demo) de TiPSYSPiT (GPL-3.0), sans modification (sans ses outils ni sa documentation), servi sur `/demo-viewer/`.

@@ -177,6 +177,8 @@ type Config struct {
 	Servers        ServerManager // applies a server's settings saved from the dashboard (start, restart, stop)
 	UI             fs.FS         // built interface (ui/dist): the page, maps/<map>.jpg, fonts; nil = not served
 	Push           *push.Sender  // push notifications of the staff; nil = off
+	DemoStatus     DemoStatusOf  // recording status of the server-side demos; nil = unknown
+	DemoViewer     string        // folder of the cod4-demo viewer (GPL-3.0), served on /demo-viewer/; "" = not installed
 }
 
 func init() {
@@ -226,6 +228,8 @@ func Router(cfg Config) *gin.Engine {
 	}
 
 	serverConfRoutes(r, st, cfg.Servers)
+	demoSettingsRoutes(r, st, rcons, cfg.DemoStatus)
+	demoViewerRoutes(r, cfg.DemoViewer)
 	observabilityRoutes(r, st)
 
 	// accounts only (not in visitorRoutes)
@@ -490,6 +494,7 @@ func Router(cfg Config) *gin.Engine {
 	insightRoutes(g, db)
 	liveRoutes(g, db)
 	inboxRoutes(g, st)
+	demoRoutes(g, st)
 	brandRoutes(g, db)
 	meRoutes(r, st)
 	pushRoutes(r, st, cfg.Push)

@@ -44,30 +44,33 @@ func LocalOK(p string) bool {
 	return path.IsAbs(p) && strings.HasPrefix(strings.TrimSuffix(path.Clean(p), "/")+"/", LocalRoot)
 }
 
-func (t *Tail) connect(ctx context.Context) (source, error) {
-	if IsLocal(t.Dir) {
-		if !LocalOK(t.Dir.Path) {
+func (t *Tail) connect(ctx context.Context) (source, error) { return dial(ctx, t.Dir) }
+
+// dial opens the log folder dir: an FTP server, or a folder on this machine inside LocalRoot.
+func dial(ctx context.Context, dir *url.URL) (source, error) {
+	if IsLocal(dir) {
+		if !LocalOK(dir.Path) {
 			return nil, errors.New("dossier local refusé : il doit être dans " + LocalRoot)
 		}
-		if fi, err := os.Stat(t.Dir.Path); err != nil || !fi.IsDir() {
-			return nil, errors.New("dossier introuvable sur le VPS : " + t.Dir.Path)
+		if fi, err := os.Stat(dir.Path); err != nil || !fi.IsDir() {
+			return nil, errors.New("dossier introuvable sur le VPS : " + dir.Path)
 		}
 		return localSource{}, nil
 	}
-	host := t.Dir.Host
-	if t.Dir.Port() == "" {
+	host := dir.Host
+	if dir.Port() == "" {
 		host += ":21"
 	}
 	options := []ftp.DialOption{ftp.DialWithContext(ctx), ftp.DialWithTimeout(10 * time.Second)}
-	if t.Dir.Scheme == "ftps" {
-		options = append(options, ftp.DialWithExplicitTLS(&tls.Config{MinVersion: tls.VersionTLS12, ServerName: t.Dir.Hostname()}))
+	if dir.Scheme == "ftps" {
+		options = append(options, ftp.DialWithExplicitTLS(&tls.Config{MinVersion: tls.VersionTLS12, ServerName: dir.Hostname()}))
 	}
 	c, err := ftp.Dial(host, options...)
 	if err != nil {
 		return nil, err
 	}
-	pass, _ := t.Dir.User.Password()
-	if err := c.Login(t.Dir.User.Username(), pass); err != nil {
+	pass, _ := dir.User.Password()
+	if err := c.Login(dir.User.Username(), pass); err != nil {
 		c.Quit()
 		return nil, err
 	}

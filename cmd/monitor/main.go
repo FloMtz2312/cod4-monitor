@@ -220,6 +220,7 @@ func main() {
 	}
 	handler := api.Router(api.Config{
 		Store: st, Hub: hub, UI: uiDist, PollInterval: interval, Rcon: fl.Rcon, ServerLoc: serverLoc, Servers: fl, Push: pusher,
+		DemoStatus: fl.DemoStatus, DemoViewer: os.Getenv("DEMO_VIEWER_DIR"),
 		TrustedProxies: proxies,
 		User:           os.Getenv("DASHBOARD_USER"), Password: os.Getenv("DASHBOARD_PASSWORD"),
 		RecentLogs: func(id int64) []string {

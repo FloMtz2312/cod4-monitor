@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"cod4monitor/internal/api"
+	"cod4monitor/internal/demos"
 	"cod4monitor/internal/logtail"
 	"cod4monitor/internal/mail"
 	"cod4monitor/internal/poller"
@@ -48,6 +49,7 @@ type running struct {
 	done   chan struct{} // closed when the poller and the log tail have stopped
 	rcon   func(string) (string, error)
 	tail   *logtail.Tail
+	demos  *demos.Recorder
 }
 
 // Apply (re)starts a server with its saved settings, or stops it when it is disabled.
@@ -131,6 +133,12 @@ func (f *fleet) start(c store.ServerConf) error {
 		wg.Add(1)
 		go func() { defer wg.Done(); bans.Run(ctx) }()
 	}
+	// server-side demos: recorded while enough players are on, listed and cleaned in the server's demos/ folder
+	r.demos = &demos.Recorder{ServerID: c.ID, Name: c.Name, Store: f.st, Rcon: r.rcon, LogURL: c.LogURL,
+		Link: func(now time.Time) error { return api.LinkDemos(f.st, c.ID, now) }}
+	wg.Add(1)
+	go func() { defer wg.Done(); r.demos.Run(ctx) }()
+
 	f.wg.Add(1)
 	go func() { wg.Wait(); close(r.done); f.wg.Done() }()
 
@@ -149,6 +157,16 @@ func (f *fleet) Rcon(id int64) func(string) (string, error) {
 		return r.rcon
 	}
 	return nil
+}
+
+// DemoStatus: the recording status of a running server's demos.
+func (f *fleet) DemoStatus(id int64) (demos.Status, bool) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	if r := f.run[id]; r != nil && r.demos != nil {
+		return r.demos.Status(), true
+	}
+	return demos.Status{}, false
 }
 
 func (f *fleet) Tail(id int64) *logtail.Tail {

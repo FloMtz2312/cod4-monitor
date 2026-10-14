@@ -120,7 +120,8 @@ func tenantAllowed(db *sql.DB, c *gin.Context) bool {
 	ps := grants(db, user, id)
 	if method == "GET" {
 		switch suffix {
-		case "/logs", "/chat", "/aliases", "/alts", "/errors", "/pings", "/cvars", "/evasion", "/b3", "/b3/player", "/b3/search", "/b3/evasions", "/b3/stats", "/b3/admins", "/b3/penalties":
+		case "/logs", "/chat", "/aliases", "/alts", "/errors", "/pings", "/cvars", "/evasion", "/b3", "/b3/player", "/b3/search", "/b3/evasions", "/b3/stats", "/b3/admins", "/b3/penalties",
+			"/demos", "/demos/:did/file/:name":
 			return ps["private"]
 		case "/notes":
 			return ps["private"] || ps["notes"]
@@ -142,6 +143,8 @@ func tenantAllowed(db *sql.DB, c *gin.Context) bool {
 		return ps["say"]
 	case "/ban", "/unban":
 		return ps["ban"]
+	case "/demos/:did/keep":
+		return ps["private"]
 	case "/reports/:rid/done", "/inbox/dismiss":
 		return ps["reports"]
 	case "/notes":

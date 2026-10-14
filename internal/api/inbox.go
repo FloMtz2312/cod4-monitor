@@ -50,9 +50,17 @@ func inboxRoutes(g *gin.RouterGroup, st *store.Store) {
 		}
 		out := []inboxItem{}
 		for _, it := range items {
-			if !dismissed[it["id"].(string)] {
-				out = append(out, it)
+			if dismissed[it["id"].(string)] {
+				continue
 			}
+			// the demos of the player around the facts (private data: the recording of the player's game)
+			if key, _ := it["key"].(string); private && key != "" {
+				ts, _ := it["ts"].(int64)
+				if ds, err := st.Demos(id, store.DemoFilter{Player: key, From: ts - 30*60, To: ts + 10*60, Limit: 10}); err == nil && len(ds) > 0 {
+					it["demos"] = ds
+				}
+			}
+			out = append(out, it)
 		}
 		sort.SliceStable(out, func(i, j int) bool { return out[i]["ts"].(int64) > out[j]["ts"].(int64) })
 		c.JSON(200, gin.H{"items": out, "b3": b3on, "private": private})

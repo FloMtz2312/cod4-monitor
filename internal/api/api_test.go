@@ -40,9 +40,9 @@ func TestSameOrigin(t *testing.T) {
 	}{
 		{"localhost:8090", "http://localhost:8090", "application/json", 200},
 		{"127.0.0.1:8090", "", "application/json", 200},
-		{"localhost:8090", "https://evil.example", "application/json", 403},          // other site
-		{"localhost:8090", "", "text/plain", 403},                                    // form/simple request, no preflight
-		{"evil.example:8090", "http://evil.example:8090", "application/json", 403},   // DNS rebinding
+		{"localhost:8090", "https://evil.example", "application/json", 403},        // other site
+		{"localhost:8090", "", "text/plain", 403},                                  // form/simple request, no preflight
+		{"evil.example:8090", "http://evil.example:8090", "application/json", 403}, // DNS rebinding
 		{"192.168.1.20:8090", "http://192.168.1.20:8090", "application/json", 403}, // LAN without password
 	} {
 		req := httptest.NewRequest("POST", "/x", strings.NewReader("{}"))

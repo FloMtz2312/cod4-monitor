@@ -14,6 +14,7 @@
   import { agoText, clean } from '../lib/format.js';
   import { say } from '../lib/toast.svelte.js';
   import { t } from '../lib/i18n.svelte.js';
+  import { viewerURL, viewerInstalled } from '../lib/demos.js';
 
   const id = $derived(app.serverId);
   const perms = $derived(permsOf(app.me, id));
@@ -28,6 +29,8 @@
   let penalties = $state(null);
   let busy = $state('');
   let confirmLift = $state('');
+  let viewer = $state(false);
+  viewerInstalled().then(v => { viewer = v; });
   let sheet = $state('');
   let target = $state(null);
 
@@ -113,6 +116,7 @@
     perms.has('ban') && ['bans', 'ban', 'Bans'],
     perms.has('private') && ['contournements', 'alert', 'Contournements'],
     perms.has('private') && ['comptes-lies', 'link', 'Comptes liés'],
+    perms.has('private') && ['demos', 'film', 'Démos'],
     perms.has('private') && inbox.b3 && inbox.serverId === id && ['b3', 'bot', 'B3']
   ].filter(x => !!x));
 
@@ -187,6 +191,8 @@
         <div class="acts">
           {#if it.key}<a class="btn" href={href('joueur', it.key)}>{t('Voir')}</a>{/if}
           {#if it.type === 'evasion' && it.ban_key}<a class="btn" href={href('joueur', it.ban_key)}>{t('Voir le banni')}</a>{/if}
+          {#if it.demos?.length === 1 && viewer}<a class="btn" href={viewerURL(id, it.demos[0])} target="_blank" rel="noopener"><Icon name="play" size={16} />{t('Voir la démo')}</a>
+          {:else if it.demos?.length}<a class="btn" href={href('demos', it.key)}><Icon name="film" size={16} />{t('Démos ({n})', { n: it.demos.length })}</a>{/if}
           {#if on && canTapAct && it.type !== 'b3ban'}<button class="btn primary" onclick={() => act({ ...on, key: it.key })}>{t('Agir en jeu')}</button>{/if}
           {#if it.type === 'b3ban' && it.active && owner}
             {#if confirmLift === it.id}

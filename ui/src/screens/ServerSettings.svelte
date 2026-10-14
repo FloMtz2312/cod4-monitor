@@ -3,6 +3,7 @@
   // folder of this machine), advanced settings; "Tester" checks everything before saving. Passwords are never
   // sent back: left empty, the saved ones are kept.
   import BackTitle from '../components/BackTitle.svelte';
+  import DemoSettings from '../components/DemoSettings.svelte';
   import { api, get, post } from '../lib/api.js';
   import { app, loadServers, selectServer } from '../lib/state.svelte.js';
   import { route, back } from '../lib/router.svelte.js';
@@ -241,6 +242,8 @@
         <button class="btn" disabled={!!busy} onclick={() => setEnabled(true)}>{t('Reprendre la surveillance')}</button>
       {/if}
     </section>
+
+    <DemoSettings serverId={conf.id} />
 
     {#if superAdmin && admins}
       <section class="card box">

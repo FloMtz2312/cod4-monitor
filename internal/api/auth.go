@@ -118,6 +118,7 @@ func role(c *gin.Context) string {
 var visitorRoutes = map[string]bool{
 	"/api/servers/:id/form": true, "/api/servers/:id/challenges": true, "/api/servers/:id/card.png": true,
 	"/api/me": true, "/api/servers": true, "/api/events": true, "/api/servers/:id/rcon": true,
+	"/demo-viewer/*file": true, "/api/demo-viewer": true, // the viewer itself is public code (the demos are not)
 	"/api/servers/:id/status": true, "/api/servers/:id/history": true, "/api/servers/:id/uptime": true,
 	"/api/servers/:id/players": true, "/api/servers/:id/player": true, "/api/servers/:id/maps": true,
 	"/api/servers/:id/records": true, "/api/servers/:id/combat": true, "/api/servers/:id/rounds": true,
