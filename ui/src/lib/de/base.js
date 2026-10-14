@@ -586,7 +586,7 @@ export default {
   'Débannissement': 'Entbannung',
   'Ban B3 levé': 'B3-Ban aufgehoben',
   'Sanction B3 levée': 'B3-Strafe aufgehoben',
-  'Grade B3': 'B3-Gruppe',
+  'Grade B3': 'B3-Rang',
   'Note joueur': 'Spielernotiz',
   'Commande programmée ajoutée': 'Geplanter Befehl hinzugefügt',
   'Commande programmée en pause / reprise': 'Geplanter Befehl pausiert / fortgesetzt',

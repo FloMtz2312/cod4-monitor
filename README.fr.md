@@ -370,7 +370,7 @@ Aussi :
 
 - **Sur ordinateur** : menu latéral, recherche avec **Ctrl K** ou **/** (joueurs par pseudo actuel ou ancien, écrans).
 - Les **anciens liens** marchent toujours : `/v2/…`, `/login.html`, `/invite.html#…`, `#accueil`, `#joueur/<clé>`, `#admin`…
-- **Langue** : bouton 🇫🇷 / 🇬🇧 en haut à droite. Par défaut, le site prend la langue du navigateur.
+- **Langue** : **Plus → Langue** (français, anglais, allemand). Par défaut, le site prend la langue du navigateur.
 - **Badges** : meilleur joueur de la période dans 7 catégories. L'icône s'affiche à côté du pseudo partout sur le site.
 
 ---

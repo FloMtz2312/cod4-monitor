@@ -370,7 +370,7 @@ Also:
 
 - **On a computer**: side menu, search with **Ctrl K** or **/** (players by current or old name, screens).
 - **Old links** keep working: `/v2/…`, `/login.html`, `/invite.html#…`, `#accueil`, `#joueur/<key>`, `#admin`…
-- **Language**: 🇬🇧 / 🇫🇷 button at the top right. By default, the site uses the browser's language.
+- **Language**: **More → Language** (French, English, German). By default, the site uses the browser's language.
 - **Badges**: the best player of the period in 7 categories. The icon shows next to their name everywhere on the site.
 
 ---
