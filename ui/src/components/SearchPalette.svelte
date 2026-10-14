@@ -34,6 +34,7 @@
     ['demos', 'Démos', 'film', p => p.has('private')],
     ['b3', 'B3', 'bot', p => p.has('private')],
     ['comptes', 'Comptes', 'key', () => !!app.me?.admin],
+    ['logs-monitor', 'Logs du monitor', 'terminal', () => !!app.me?.admin],
     ['programmes', 'Commandes programmées', 'clock', p => p.has('rcon')],
     ['equipe', 'Équipe et invitations', 'users', (p, owner) => owner],
     ['personnalisation', 'Personnalisation', 'palette', (p, owner) => owner],

@@ -14,6 +14,18 @@ export default {
 
   // dashboard accounts
   'Comptes du dashboard': 'Dashboard-Konten',
+  'Logs copiés': 'Logs kopiert',
+  'Copie impossible': 'Kopieren nicht möglich',
+  'Logs du monitor': 'Monitor-Logs',
+  'Les dernières lignes du monitor, comme docker logs. Mots de passe et clés masqués, rien n\'est gardé après un redémarrage.': 'Die letzten Zeilen des Monitors, wie docker logs. Passwörter und Schlüssel sind maskiert, nach einem Neustart wird nichts behalten.',
+  'Filtrer les logs': 'Logs filtern',
+  'Erreurs et alertes': 'Fehler und Warnungen',
+  'Rechercher dans les logs…': 'In den Logs suchen…',
+  'Rechercher dans les logs': 'In den Logs suchen',
+  'Actualiser toutes les 5 s': 'Alle 5 s aktualisieren',
+  'Copier': 'Kopieren',
+  'Aucune ligne.': 'Keine Zeile.',
+  'comme docker logs : erreurs FTP, logs, notifications': 'wie docker logs: FTP-Fehler, Logs, Benachrichtigungen',
   'mots de passe, suppression': 'Passwörter, Löschen',
   'Les administrateurs rejoignent sur invitation. Chaque serveur a sa propre équipe.': 'Administratoren kommen per Einladung dazu. Jeder Server hat sein eigenes Team.',
   'Réservé au super admin.': 'Nur für den Super-Admin.',

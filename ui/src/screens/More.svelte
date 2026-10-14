@@ -107,6 +107,7 @@
       {/if}
       {#if superAdmin}
         <a class="row" href={href('comptes')}><Icon name="users" size={20} /><span>{t('Comptes du dashboard')}<small>{t('mots de passe, suppression')}</small></span><Icon name="chevronRight" size={18} /></a>
+        <a class="row" href={href('logs-monitor')}><Icon name="terminal" size={20} /><span>{t('Logs du monitor')}<small>{t('comme docker logs : erreurs FTP, logs, notifications')}</small></span><Icon name="chevronRight" size={18} /></a>
       {/if}
       {#if accountAdmin}
         <a class="row" href={href('journal')}><Icon name="list" size={20} /><span>{t('Journal d\'activité')}<small>{t('qui a fait quoi depuis le site')}</small></span><Icon name="chevronRight" size={18} /></a>
