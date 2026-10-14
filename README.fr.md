@@ -732,13 +732,13 @@ Préviens tes joueurs que les parties sont enregistrées, par exemple dans les r
 
 ## 16. Signaler un bug / Contribuer
 
-- **Un bug ou une idée** : [ouvre une issue](https://github.com/FloMtz2312/cod4-monitor/issues/new/choose) et remplis le formulaire, en français ou en anglais. Le lien est aussi dans le dashboard : **Plus → À propos → Signaler un bug ou proposer une idée**. Ne colle jamais de mot de passe, de mot de passe rcon ni ton `.env`.
+- **Un bug ou une idée** : [ouvre une issue](https://github.com/FloMtz2312/cod4-monitor/issues/new/choose) et remplis le formulaire, en français, en anglais ou en allemand. Le lien est aussi dans le dashboard : **Plus → À propos → Signaler un bug ou proposer une idée**. Ne colle jamais de mot de passe, de mot de passe rcon ni ton `.env`.
 - **Une faille de sécurité** : signale-la en privé, comme expliqué dans [SECURITY.md](SECURITY.md), jamais dans une issue publique.
 - **Une modification du code** : voir [CONTRIBUTING.md](CONTRIBUTING.md) (vérifications à lancer, traductions, pull request).
 
 ## Roadmap implémentée, sécurité et restauration
 
-Voir [docs/ROADMAP.md](docs/ROADMAP.md) pour les fonctionnalités, les tests et les instructions de sauvegarde de la clé de chiffrement.
+Voir [docs/ROADMAP.fr.md](docs/ROADMAP.fr.md) pour les fonctionnalités, les tests et les instructions de sauvegarde de la clé de chiffrement.
 
 ### Comptes et équipes par serveur
 

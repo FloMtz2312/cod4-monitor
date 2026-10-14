@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: 🔒 Security issue / Faille de sécurité
+  - name: 🔒 Security issue / Faille de sécurité / Sicherheitslücke
     url: https://github.com/FloMtz2312/cod4-monitor/security/advisories/new
-    about: Report it privately, never in a public issue. / Signale-la en privé, jamais dans une issue publique.
+    about: Report it privately, never in a public issue. / Signale-la en privé, jamais dans une issue publique. / Melde sie privat, nie in einem öffentlichen Issue.

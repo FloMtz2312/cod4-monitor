@@ -220,7 +220,7 @@ Each push to `main` then runs the checks (`go vet`, tests) on GitHub, connects t
 
 ## 5. Configuration (`.env`)
 
-After any change to `.env`, restart with the start command from [step 6](#step-6-start). The comments inside `.env.example` are in French. This section describes every variable.
+After any change to `.env`, restart with the start command from [step 6](#step-6-start). The comments inside `.env.example` are in English. This section describes every variable.
 
 ### The essentials
 
@@ -732,13 +732,13 @@ Tell your players that games are recorded, for example in the rules or the messa
 
 ## 16. Report a bug / Contributing
 
-- **A bug or an idea**: [open an issue](https://github.com/FloMtz2312/cod4-monitor/issues/new/choose) and fill in the form, in English or French. The link is also in the dashboard: **More → About → Report a bug or suggest an idea**. Never paste passwords, rcon passwords or your `.env`.
+- **A bug or an idea**: [open an issue](https://github.com/FloMtz2312/cod4-monitor/issues/new/choose) and fill in the form, in English, French or German. The link is also in the dashboard: **More → About → Report a bug or suggest an idea**. Never paste passwords, rcon passwords or your `.env`.
 - **A security issue**: report it privately, as explained in [SECURITY.md](SECURITY.md), never in a public issue.
 - **A code change**: see [CONTRIBUTING.md](CONTRIBUTING.md) (checks to run, translations, pull request).
 
 ## Implemented roadmap, security and restore guide
 
-See [docs/ROADMAP.md](docs/ROADMAP.md) (in French) for the features, the tests and how to keep the encryption key with your backups.
+See [docs/ROADMAP.md](docs/ROADMAP.md) for the features, the tests and how to keep the encryption key with your backups.
 
 ### Server ownership and invitations
 

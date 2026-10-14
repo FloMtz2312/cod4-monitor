@@ -1,6 +1,6 @@
 # Accounts, invitations and servers
 
-🇬🇧 **English** · 🇫🇷 [Français](ACCOUNTS.md)
+🇬🇧 **English** · 🇫🇷 [Français](ACCOUNTS.md) · 🇩🇪 [Deutsch](ACCOUNTS.de.md)
 
 Accounts are created by invitation only. For the selected server, **More → Team and invitations** holds the team and the invitations; **More → All servers** lists the servers (each one's settings, **+ Add a server**).
 

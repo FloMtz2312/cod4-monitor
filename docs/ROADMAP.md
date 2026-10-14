@@ -1,39 +1,41 @@
-# Roadmap cod4-monitor — mise en œuvre
+# Roadmap cod4-monitor — implementation
 
-## P0 — Sécurité et intégrité
+🇬🇧 **English** · 🇫🇷 [Français](ROADMAP.fr.md)
 
-- [x] **Proxy/IP de confiance** : `TRUSTED_PROXIES`, validation de la chaîne X-Forwarded-For par Gin, HTTPS transmis seulement par un pair autorisé. Docker production réserve un réseau à Caddy/monitor et ne fait confiance qu'à Caddy (`172.30.94.2`). En exécution native, seules les adresses loopback sont autorisées par défaut.
-- [x] **Sessions/secrets** : sessions de 7 jours, cookies HttpOnly et SameSite Strict, révocation lors des changements de mot de passe, révocation des sessions administrateur après changement des identifiants dans l'environnement, limite de 10 sessions par compte. PBKDF2 à 600 000 itérations pour les nouveaux mots de passe ; les anciens hachages restent acceptés. Corps HTTP limité à 1 Mio, délais de lecture HTTP, écoute loopback imposée sans authentification. FTP/RCON chiffrés avec AES-256-GCM en base et migration automatique. FTPS explicite disponible dans le formulaire. Chemins de logs locaux confinés par `os.Root`, y compris les liens symboliques.
-- [x] **Reprise des logs** : événements, horloge, KE en attente et position enregistrés dans la même transaction ; les effets externes attendent le commit. Empreinte des 128 octets précédant la position pour détecter les remplacements, même plus longs. Lectures limitées à 256 Kio, fragments conservés jusqu'au saut de ligne. Tests de rotation, troncature, redémarrage, replay et erreur SQLite.
-- [x] **Timestamps** : horloge relative du jeu ancrée en UTC et persistée, conservation des écarts entre événements et après une interruption du monitor. Fractions de seconde acceptées au parsing ; le schéma des événements conserve les secondes Unix. Après une remise à zéro de l'horloge serveur ou une première observation sans ancre, le temps absolu reste une estimation. `enterleave.log` conserve ses dates absolues et son fuseau configuré.
+## P0 — Security and integrity
 
-## P1 — Fiabilité et maintenance
+- [x] **Trusted proxies/IPs**: `TRUSTED_PROXIES`, X-Forwarded-For chain validated by Gin, HTTPS passed on only by an allowed peer. Production Docker keeps a dedicated network for Caddy/monitor and trusts only Caddy (`172.30.94.2`). When running natively, only loopback addresses are allowed by default.
+- [x] **Sessions/secrets**: 7-day sessions, HttpOnly and SameSite Strict cookies, revocation on password changes, revocation of the admin sessions after the credentials in the environment change, limit of 10 sessions per account. PBKDF2 with 600,000 iterations for new passwords; old hashes are still accepted. HTTP body limited to 1 MiB, HTTP read timeouts, loopback-only listening enforced without authentication. FTP/RCON encrypted with AES-256-GCM in the database, with automatic migration. Explicit FTPS available in the form. Local log paths confined by `os.Root`, symbolic links included.
+- [x] **Log resumption**: events, clock, pending KE and position saved in the same transaction; external effects wait for the commit. Fingerprint of the 128 bytes before the position to detect replaced files, even longer ones. Reads limited to 256 KiB, partial lines kept until the line break. Tests for rotation, truncation, restart, replay and SQLite errors.
+- [x] **Timestamps**: the game's relative clock is anchored in UTC and persisted; gaps between events are kept, including after the monitor was interrupted. Fractions of a second are accepted when parsing; the event schema keeps Unix seconds. After the server clock is reset, or on a first observation without an anchor, the absolute time remains an estimate. `enterleave.log` keeps its absolute dates and its configured time zone.
 
-- [x] **CI/tests** : tests unitaires et d'intégration HTTP/SQLite/logs, `go vet`, `go mod verify`, `go test -race -count=1 ./...`, compilation sans CGO. Le workflow de déploiement effectue ces vérifications avant l'appel SSH existant ; le build Docker conserve son propre contrôle.
-- [x] **Observabilité** : `/api/observability` réservé à l'administrateur, tableau dans **Plus → État du serveur**, métriques Prometheus pour octets de retard, dernière lecture réussie, lignes, rejets, erreurs, rotations, fichiers manquants et dernière restauration vérifiée. Un fichier silencieux lu correctement n'est pas considéré en retard ; utiliser le backlog et la date de lecture ensemble.
-- [x] **SQLite** : index par manche, joueur/période et dernière observation ; agrégats quotidiens de combat maintenus transactionnellement par trigger et reconstruits une fois à la migration. La forme récente combine les journées agrégées avec les frontières temporelles exactes. `PRAGMA optimize` au démarrage et avec la maintenance quotidienne. Test `EXPLAIN QUERY PLAN` de l'index de manches.
-- [x] **Sauvegardes** : chaque nouvelle sauvegarde est copiée/restaurée dans un dossier temporaire, vérifiée par `integrity_check`, lecture des tables et déchiffrement des secrets. Publication atomique avec permissions 0600 ; rétention seulement après succès. Au démarrage, la sauvegarde du jour préexistante est également vérifiée si elle n'a pas encore été validée. Une sauvegarde corrompue n'est jamais supprimée silencieusement.
+## P1 — Reliability and maintenance
 
-## P2 — Expérience joueurs
+- [x] **CI/tests**: unit tests and HTTP/SQLite/log integration tests, `go vet`, `go mod verify`, `go test -race -count=1 ./...`, build without CGO. The deployment workflow runs these checks before the existing SSH call; the Docker build keeps its own check.
+- [x] **Observability**: `/api/observability` restricted to the admin, a table in **More → Server status**, Prometheus metrics for bytes behind, last successful read, lines, rejections, errors, rotations, missing files and last verified restore. A quiet file that is read correctly is not considered behind; use the backlog and the read date together.
+- [x] **SQLite**: indexes by round, player/period and last observation; daily combat aggregates maintained transactionally by a trigger and rebuilt once during the migration. A player's recent form combines the aggregated days with the exact time boundaries. `PRAGMA optimize` at startup and with the daily maintenance. `EXPLAIN QUERY PLAN` test for the rounds index.
+- [x] **Backups**: every new backup is copied/restored into a temporary folder and checked with `integrity_check`, by reading the tables and by decrypting the secrets. Atomic publication with 0600 permissions; retention only after success. At startup, an existing backup of the day is also checked if it hasn't been validated yet. A corrupted backup is never deleted silently.
 
-- [x] **Profil enrichi** : 7 derniers jours / 7 jours précédents, différence K/D avec avertissement pour petits échantillons, précision, comparaison avec un autre joueur, 10 dernières manches cliquables.
-- [x] **Timeline** : événements horodatés par manche, kills/headshots/teamkills, poses/désamorçages et événements d'objectif/clutch. Ouverture des manches à la demande. Limite explicite de 5 000 événements à l'affichage.
-- [x] **Cartes partageables** : PNG 1200 × 630 de joueur (7 jours) ou de match, sans IP ni GUID dans l'image. Bouton sur les deux fiches ; partage natif de fichier quand disponible, sinon téléchargement à joindre dans Discord. Aucun envoi automatique à Discord et pas de bot requis.
-- [x] **Défis communautaires** : semaine du lundi 00:00 UTC au lundi suivant, kills/headshots/objectifs, progression collective, top contributeurs et records journaliers. Objectifs par défaut 1 000 / 200 / 50 ; l'administrateur règle ceux des semaines suivantes. Les cibles de la semaine en cours restent figées.
+## P2 — Player experience
 
-## Exploitation et restauration
+- [x] **Richer profile**: last 7 days / previous 7 days, K/D difference with a warning for small samples, accuracy, comparison with another player, last 10 rounds clickable.
+- [x] **Timeline**: timestamped events per round, kills/headshots/teamkills, plants/defuses and objective/clutch events. Rounds are opened on demand. Explicit limit of 5,000 events on display.
+- [x] **Shareable cards**: 1200 × 630 PNG for a player (7 days) or a match, with no IP or GUID in the image. Button on both pages; native file sharing when available, otherwise a download to attach in Discord. Nothing is sent to Discord automatically and no bot is required.
+- [x] **Community challenges**: week from Monday 00:00 UTC to the next Monday, kills/headshots/objectives, collective progress, top contributors and daily records. Default goals 1,000 / 200 / 50; the admin sets those of the following weeks. The current week's targets stay fixed.
 
-Le déploiement automatique depuis GitHub reste optionnel (README, « Déploiement automatique depuis GitHub »). Aucune nouvelle variable obligatoire n'est nécessaire pour une installation avec un compte administrateur et le compose de production fourni.
+## Operations and restore
 
-1. Au premier démarrage, le monitor crée `DB_PATH.key` à côté de la base si `MONITOR_SECRET_KEY` n'est pas défini, puis chiffre les configurations existantes. Avec Docker, le fichier est conservé dans le volume `/data`.
-2. Conserver une copie de cette clé dans un gestionnaire de secrets ou une sauvegarde protégée **séparée** des fichiers `.db`. Les sauvegardes SQLite seules ne permettent plus de retrouver les mots de passe FTP/RCON.
-3. Pour restaurer : arrêter le monitor, restaurer la base et sa clé correspondante (ou la même valeur `MONITOR_SECRET_KEY`), retirer les anciens fichiers `-wal`/`-shm` uniquement après l'arrêt et remplacement de la base, fixer les droits à 0600 et redémarrer. Ne pas restaurer par-dessus une base ouverte.
-4. Une mise à jour du mot de passe principal déconnecte les sessions administrateur à la prochaine ouverture du router. Un changement de mot de passe secondaire déconnecte immédiatement toutes ses sessions.
-5. Le chiffrement de la base ne chiffre pas le protocole RCON UDP du jeu. FTPS est optionnel parce que certains hébergeurs ne le proposent pas ; il vérifie le certificat TLS du serveur.
-6. En cas d'échec de restauration automatique, conserver la sauvegarde signalée pour diagnostic, la déplacer hors du nom du jour, puis laisser le monitor réessayer. Les anciennes sauvegardes restent présentes tant qu'une nouvelle sauvegarde n'a pas été validée.
-7. Les anciennes copies de la base réalisées avant cette migration peuvent encore contenir des secrets en clair. Les traiter comme l'ancien fichier `.env`.
+Automatic deployment from GitHub remains optional (README, "Automatic deployment from GitHub"). No new required variable is needed for an installation with an admin account and the provided production compose file.
 
-### Vérification locale
+1. At the first start, the monitor creates `DB_PATH.key` next to the database if `MONITOR_SECRET_KEY` is not set, then encrypts the existing settings. With Docker, the file is kept in the `/data` volume.
+2. Keep a copy of this key in a secrets manager or a protected backup **separate** from the `.db` files. SQLite backups alone can no longer recover the FTP/RCON passwords.
+3. To restore: stop the monitor, restore the database and its matching key (or the same `MONITOR_SECRET_KEY` value), remove the old `-wal`/`-shm` files only after stopping and replacing the database, set the permissions to 0600 and restart. Never restore over an open database.
+4. Changing the main password (`DASHBOARD_PASSWORD`) logs out the admin sessions at the next restart of the monitor. Changing a secondary password immediately logs out all of its sessions.
+5. Database encryption does not encrypt the game's UDP RCON protocol. FTPS is optional because some hosts don't offer it; it verifies the server's TLS certificate.
+6. If the automatic restore check fails, keep the reported backup for diagnosis, move it away from the day's file name, then let the monitor try again. Older backups are kept as long as a new backup hasn't been validated.
+7. Old copies of the database made before this migration may still contain secrets in clear text. Treat them like the old `.env` file.
+
+### Local check
 
 ```sh
 go mod verify
@@ -42,4 +44,4 @@ go test -race -count=1 ./...
 CGO_ENABLED=0 go build -trimpath -o monitor ./cmd/monitor
 ```
 
-Les tests utilisent des dossiers temporaires et des données synthétiques, sans accès au serveur COD4 réel.
+The tests use temporary folders and synthetic data, with no access to the real COD4 server.

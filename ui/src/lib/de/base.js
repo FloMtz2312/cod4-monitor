@@ -448,7 +448,7 @@ export default {
   'Préférences': 'Einstellungen',
   'À propos': 'Über',
   'Signaler un bug ou proposer une idée': 'Bug melden oder Idee vorschlagen',
-  'sur GitHub, en français ou en anglais': 'auf GitHub, auf Englisch oder Französisch',
+  'sur GitHub, en français, en anglais ou en allemand': 'auf GitHub, auf Deutsch, Englisch oder Französisch',
   'Code source': 'Quellcode',
   'CoD4 Monitor, logiciel libre (AGPL-3.0)': 'CoD4 Monitor, freie Software (AGPL-3.0)',
   'Installer l\'application': 'App installieren',
