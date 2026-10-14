@@ -1,24 +1,24 @@
-name: 🐞 Bug report / Signaler un bug
-description: Something doesn't work as expected. / Quelque chose ne marche pas comme prévu.
+name: 🐞 Bug report / Signaler un bug / Bug melden
+description: Something doesn't work as expected. / Quelque chose ne marche pas comme prévu. / Etwas funktioniert nicht wie erwartet.
 labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to report it! English or French, both are fine. / Merci de prendre le temps de le signaler ! En anglais ou en français, au choix.
+        Thanks for taking the time to report it! English, French or German, all are fine. / Merci de prendre le temps de le signaler ! En anglais, en français ou en allemand, au choix. / Danke, dass du dir die Zeit nimmst, ihn zu melden! Auf Englisch, Französisch oder Deutsch, wie du willst.
 
-        ⚠️ **Never paste passwords, rcon passwords, tokens, API keys or your `.env`.** Replace them with `***`. / **Ne colle jamais de mot de passe, mot de passe rcon, jeton, clé API ni ton `.env`.** Remplace-les par `***`.
+        ⚠️ **Never paste passwords, rcon passwords, tokens, API keys or your `.env`.** Replace them with `***`. / **Ne colle jamais de mot de passe, mot de passe rcon, jeton, clé API ni ton `.env`.** Remplace-les par `***`. / **Füge nie Passwörter, Rcon-Passwörter, Tokens, API-Keys oder deine `.env` ein.** Ersetze sie durch `***`.
   - type: textarea
     id: what
     attributes:
-      label: What happened? / Que s'est-il passé ?
-      description: What you see, and on which screen (Direct, Players, Moderation, server settings…). Screenshots help a lot. / Ce que tu vois, et sur quel écran. Une capture d'écran aide beaucoup.
+      label: What happened? / Que s'est-il passé ? / Was ist passiert?
+      description: What you see, and on which screen (Direct, Players, Moderation, server settings…). Screenshots help a lot. / Ce que tu vois, et sur quel écran. Une capture d'écran aide beaucoup. / Was du siehst, und auf welcher Ansicht. Ein Screenshot hilft sehr.
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
-      label: Steps to reproduce / Étapes pour reproduire
+      label: Steps to reproduce / Étapes pour reproduire / Schritte zum Nachstellen
       placeholder: |
         1. Open …
         2. Click …
@@ -28,7 +28,7 @@ body:
   - type: textarea
     id: expected
     attributes:
-      label: What did you expect? / Qu'attendais-tu ?
+      label: What did you expect? / Qu'attendais-tu ? / Was hast du erwartet?
     validations:
       required: true
   - type: dropdown
@@ -39,37 +39,37 @@ body:
         - VPS with Docker (docker-compose.prod.yml)
         - PC with Docker (docker-compose.yml)
         - Without Docker (go run / binary)
-        - I only use a dashboard someone else hosts / J'utilise le dashboard de quelqu'un d'autre
+        - I only use a dashboard someone else hosts / J'utilise le dashboard de quelqu'un d'autre / Ich nutze nur das Dashboard von jemand anderem
     validations:
       required: true
   - type: input
     id: version
     attributes:
       label: Version
-      description: "In the install folder / Dans le dossier d'installation : `git log -1 --format='%h %cd'`"
+      description: "In the install folder / Dans le dossier d'installation / Im Installationsordner: `git log -1 --format='%h %cd'`"
       placeholder: "658d784 Tue Oct 13 16:44:00 2026"
   - type: input
     id: device
     attributes:
-      label: Browser and device / Navigateur et appareil
+      label: Browser and device / Navigateur et appareil / Browser und Gerät
       placeholder: "Safari, iPhone 15 (installed app) / Chrome 130, Windows 11"
   - type: textarea
     id: server
     attributes:
-      label: Game server / Serveur de jeu
-      description: CoD4X version, mod, logs read by FTP or on the same machine, B3 (SQLite or MySQL) if it's related. / Version de CoD4X, mod, logs par FTP ou sur la même machine, B3 (SQLite ou MySQL) si c'est lié.
+      label: Game server / Serveur de jeu / Gameserver
+      description: CoD4X version, mod, logs read by FTP or on the same machine, B3 (SQLite or MySQL) if it's related. / Version de CoD4X, mod, logs par FTP ou sur la même machine, B3 (SQLite ou MySQL) si c'est lié. / CoD4X-Version, Mod, Logs per FTP oder auf demselben Rechner, B3 (SQLite oder MySQL), falls es damit zu tun hat.
   - type: textarea
     id: logs
     attributes:
       label: Logs
-      description: "`docker logs cod4-monitor-monitor-1 --tail 100` (VPS) or `docker compose logs monitor --tail 100` (PC). Remove passwords and IPs you want to keep private. / Retire les mots de passe et les IP que tu veux garder privées."
+      description: "`docker logs cod4-monitor-monitor-1 --tail 100` (VPS) or `docker compose logs monitor --tail 100` (PC). Remove passwords and IPs you want to keep private. / Retire les mots de passe et les IP que tu veux garder privées. / Entferne Passwörter und IPs, die privat bleiben sollen."
       render: shell
   - type: checkboxes
     id: checks
     attributes:
-      label: Before sending / Avant d'envoyer
+      label: Before sending / Avant d'envoyer / Vor dem Absenden
       options:
-        - label: I searched the existing issues. / J'ai cherché dans les issues existantes.
+        - label: I searched the existing issues. / J'ai cherché dans les issues existantes. / Ich habe die bestehenden Issues durchsucht.
           required: true
-        - label: I removed every password, token and key from this report. / J'ai retiré tous les mots de passe, jetons et clés de ce rapport.
+        - label: I removed every password, token and key from this report. / J'ai retiré tous les mots de passe, jetons et clés de ce rapport. / Ich habe alle Passwörter, Tokens und Keys aus diesem Bericht entfernt.
           required: true

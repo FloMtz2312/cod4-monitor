@@ -460,7 +460,7 @@ const BASE = {
   'Préférences': 'Preferences',
   'À propos': 'About',
   'Signaler un bug ou proposer une idée': 'Report a bug or suggest an idea',
-  'sur GitHub, en français ou en anglais': 'on GitHub, in English or French',
+  'sur GitHub, en français, en anglais ou en allemand': 'on GitHub, in English, French or German',
   'Code source': 'Source code',
   'CoD4 Monitor, logiciel libre (AGPL-3.0)': 'CoD4 Monitor, free software (AGPL-3.0)',
   'Installer l\'application': 'Install the app',

@@ -1,6 +1,6 @@
 # Comptes, invitations et serveurs
 
-🇬🇧 [English](ACCOUNTS.en.md) · 🇫🇷 **Français**
+🇬🇧 [English](ACCOUNTS.en.md) · 🇫🇷 **Français** · 🇩🇪 [Deutsch](ACCOUNTS.de.md)
 
 Les comptes se créent uniquement sur invitation. Pour le serveur sélectionné, **Plus → Équipe et invitations** contient l'équipe et les invitations ; **Plus → Tous les serveurs** liste les serveurs (réglages de chacun, **+ Ajouter un serveur**).
 
