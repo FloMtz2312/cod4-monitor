@@ -29,6 +29,7 @@
   import Login from './screens/Login.svelte';
   import Invitation from './screens/Invitation.svelte';
   import Accounts from './screens/Accounts.svelte';
+  import MonitorLogs from './screens/MonitorLogs.svelte';
   import Bans from './screens/Bans.svelte';
   import Chat from './screens/Chat.svelte';
   import B3 from './screens/B3.svelte';
@@ -158,6 +159,8 @@
       <Invitation />
     {:else if route.name === 'comptes'}
       <Accounts />
+    {:else if route.name === 'logs-monitor'}
+      <MonitorLogs />
     {:else if route.name === 'bans'}
       <Bans />
     {:else if route.name === 'chat'}

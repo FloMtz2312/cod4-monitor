@@ -174,11 +174,12 @@ type Config struct {
 	User, Password string     // dashboard login, empty password = no login
 	VPS            func() any // health of the machine the monitor runs on (disk, memory, load); nil = unknown
 	TrustedProxies []string
-	Servers        ServerManager // applies a server's settings saved from the dashboard (start, restart, stop)
-	UI             fs.FS         // built interface (ui/dist): the page, maps/<map>.jpg, fonts; nil = not served
-	Push           *push.Sender  // push notifications of the staff; nil = off
-	DemoStatus     DemoStatusOf  // recording status of the server-side demos; nil = unknown
-	DemoViewer     string        // folder of the cod4-demo viewer (GPL-3.0), served on /demo-viewer/; "" = not installed
+	Servers        ServerManager   // applies a server's settings saved from the dashboard (start, restart, stop)
+	UI             fs.FS           // built interface (ui/dist): the page, maps/<map>.jpg, fonts; nil = not served
+	Push           *push.Sender    // push notifications of the staff; nil = off
+	DemoStatus     DemoStatusOf    // recording status of the server-side demos; nil = unknown
+	DemoViewer     string          // folder of the cod4-demo viewer (GPL-3.0), served on /demo-viewer/; "" = not installed
+	MonitorLogs    func() []string // last lines of the monitor's own log (secrets masked); nil = not kept
 }
 
 func init() {
@@ -231,6 +232,7 @@ func Router(cfg Config) *gin.Engine {
 	demoSettingsRoutes(r, st, rcons, cfg.DemoStatus)
 	demoViewerRoutes(r, cfg.DemoViewer)
 	observabilityRoutes(r, st)
+	monitorLogRoutes(r, cfg.MonitorLogs)
 
 	// accounts only (not in visitorRoutes)
 	r.GET("/api/vps", func(c *gin.Context) {

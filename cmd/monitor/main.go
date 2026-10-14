@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
+	"log"
 	"log/slog"
 	"net"
 	"net/http"
@@ -20,6 +22,7 @@ import (
 
 	"cod4monitor/internal/api"
 	"cod4monitor/internal/b3"
+	"cod4monitor/internal/logbuf"
 	"cod4monitor/internal/logtail"
 	"cod4monitor/internal/mail"
 	"cod4monitor/internal/push"
@@ -88,7 +91,10 @@ func main() {
 		fmt.Println("cod4-monitor", version)
 		return
 	}
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+	// the last lines are also kept in memory for the super admin's page (More → Monitor logs)
+	logs := logbuf.New(2000)
+	log.SetOutput(io.MultiWriter(os.Stderr, logs))
+	slog.SetDefault(slog.New(slog.NewJSONHandler(io.MultiWriter(os.Stdout, logs), nil)))
 	slog.Info("cod4-monitor", "version", version)
 	gin.SetMode(gin.ReleaseMode)
 
@@ -229,7 +235,7 @@ func main() {
 	}
 	handler := api.Router(api.Config{
 		Store: st, Hub: hub, UI: uiDist, PollInterval: interval, Rcon: fl.Rcon, ServerLoc: serverLoc, Servers: fl, Push: pusher,
-		DemoStatus: fl.DemoStatus, DemoViewer: os.Getenv("DEMO_VIEWER_DIR"),
+		DemoStatus: fl.DemoStatus, DemoViewer: os.Getenv("DEMO_VIEWER_DIR"), MonitorLogs: logs.Lines,
 		TrustedProxies: proxies,
 		User:           os.Getenv("DASHBOARD_USER"), Password: os.Getenv("DASHBOARD_PASSWORD"),
 		RecentLogs: func(id int64) []string {
