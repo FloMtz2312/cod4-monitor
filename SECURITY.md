@@ -2,7 +2,7 @@
 
 CoD4 Monitor holds rcon passwords, FTP passwords and the accounts of server staff: please report security issues **privately**.
 
-- **How:** on GitHub, *Security* tab → [*Report a vulnerability*](https://github.com/FlorianMartinez01/cod4-monitor/security/advisories/new). Never in a public issue.
+- **How:** on GitHub, *Security* tab → [*Report a vulnerability*](https://github.com/FloMtz2312/cod4-monitor/security/advisories/new). Never in a public issue.
 - **What to include:** what an attacker can do, the steps or a proof of concept, and the version (`git log -1 --format='%h %cd'`).
 - **What happens next:** you get an answer within a week. The fix is released first, then the advisory is published, with credit to you if you want it.
 

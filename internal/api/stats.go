@@ -11,18 +11,21 @@ import (
 // statsRoutes: combat leaderboard, rounds, player profile, shared IPs, activity heatmap, console errors.
 // Players are identified by a key: their GUID, or "n:<clean name>" when the server gave none.
 func statsRoutes(g *gin.RouterGroup, db *sql.DB) {
-	send := func(c *gin.Context, parts map[string]any) {
+	// send runs the queries and answers them with the plain values (kept apart: no request value goes near the SQL)
+	send := func(c *gin.Context, queries map[string]sqlQuery, values ...gin.H) {
 		out := gin.H{}
-		for k, v := range parts {
-			if q, ok := v.(sqlQuery); ok {
-				r, err := rows(db, q.sql, q.args...)
-				if err != nil {
-					c.JSON(500, gin.H{"error": err.Error()})
-					return
-				}
-				v = r
+		for k, q := range queries {
+			r, err := rows(db, q.sql, q.args...)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
 			}
-			out[k] = v
+			out[k] = r
+		}
+		for _, vs := range values {
+			for k, v := range vs {
+				out[k] = v
+			}
 		}
 		c.JSON(200, out)
 	}
@@ -31,7 +34,7 @@ func statsRoutes(g *gin.RouterGroup, db *sql.DB) {
 		from, to := span(c, "30d")
 		const k = `WITH k AS (SELECT * FROM kills WHERE server_id=?1 AND ts>=?2 AND ts<?3) `
 		id := c.Param("id")
-		send(c, map[string]any{
+		send(c, map[string]sqlQuery{
 			"players": sq(k+`, e AS (
 				SELECT killer_key AS key, killer_name AS name, ts, 1-teamkill AS kill, 0 AS death, cause='MOD_HEAD_SHOT' AS hs, teamkill AS tk, 0 AS sui, weapon,
 				  IIF(teamkill=0, ','||COALESCE(tags, '')||',', NULL) AS tg, IIF(teamkill=0, distance, NULL) AS dist
@@ -61,7 +64,7 @@ func statsRoutes(g *gin.RouterGroup, db *sql.DB) {
 		const r = `WITH r AS (SELECT r.*, COUNT(k.id) AS kills FROM rounds r JOIN kills k ON k.round_id=r.id
 			WHERE r.server_id=?1 AND r.started_at>=?2 AND r.started_at<?3 GROUP BY r.id) `
 		id := c.Param("id")
-		send(c, map[string]any{
+		send(c, map[string]sqlQuery{
 			"recent": sq(r+`SELECT id, started_at, ended_at, map, gametype, kills,
 				(SELECT killer_name FROM kills k WHERE k.round_id=r.id AND killer_key IS NOT NULL GROUP BY killer_key ORDER BY COUNT(*) DESC LIMIT 1) AS top_killer,
 				(SELECT COUNT(*) FROM kills k WHERE k.round_id=r.id AND killer_key IS NOT NULL GROUP BY killer_key ORDER BY COUNT(*) DESC LIMIT 1) AS top_kills
@@ -118,9 +121,8 @@ func statsRoutes(g *gin.RouterGroup, db *sql.DB) {
 		if byName {
 			chatCond = `server_id=?1 AND name_clean=?2`
 		}
-		parts := map[string]any{
-			"key":   key,
-			"hours": hours,
+		values := gin.H{"key": key, "hours": hours}
+		parts := map[string]sqlQuery{
 			"names": names,
 			"summary": sq(`SELECT COUNT(*) AS sessions, MIN(joined_at) AS first_seen, MAX(COALESCE(left_at, joined_at)) AS last_seen, MAX(open) AS online,
 				SUM(MAX(0, COALESCE(left_at, IIF(open=1, ?3, joined_at)) - joined_at)) AS playtime_s FROM connections WHERE `+cond, id, who, now),
@@ -176,14 +178,14 @@ func statsRoutes(g *gin.RouterGroup, db *sql.DB) {
 			UNION ALL SELECT killer_name, MAX(ts) FROM kills WHERE server_id=?1 AND killer_key=?2
 			UNION ALL SELECT victim_name, MAX(ts) FROM kills WHERE server_id=?1 AND victim_key=?2)
 			WHERE name_raw IS NOT NULL ORDER BY ts DESC LIMIT 1`, id, key).Scan(&display)
-		parts["name_raw"] = display.String
+		values["name_raw"] = display.String
 		if !display.Valid {
-			parts["name_raw"] = name
+			values["name_raw"] = name
 		}
 		if role(c) == roleAdmin { // the admin's welcome message for this player
 			var msg string
 			db.QueryRow(`SELECT message FROM welcome_messages WHERE server_id=? AND key=?`, id, key).Scan(&msg)
-			parts["welcome"] = msg
+			values["welcome"] = msg
 		}
 		if role(c) == roleVisitor { // private: IPs, sessions, chat, admin notes, bans
 			for _, k := range []string{"ips", "sessions", "chat", "linked", "bans"} {
@@ -193,12 +195,12 @@ func statsRoutes(g *gin.RouterGroup, db *sql.DB) {
 				delete(parts, "note")
 			}
 		}
-		send(c, parts)
+		send(c, parts, values)
 	})
 
 	// IPs used by several GUIDs: alternate accounts, or ban evasion.
 	g.GET("/alts", func(c *gin.Context) {
-		send(c, map[string]any{"alts": sq(`SELECT ip, guid AS key, COUNT(*) AS sessions, MAX(joined_at) AS last_seen,
+		send(c, map[string]sqlQuery{"alts": sq(`SELECT ip, guid AS key, COUNT(*) AS sessions, MAX(joined_at) AS last_seen,
 			(SELECT name_raw FROM connections c3 WHERE c3.server_id=c.server_id AND c3.guid=c.guid ORDER BY joined_at DESC LIMIT 1) AS name_raw
 			FROM connections c WHERE server_id=?1 AND guid IS NOT NULL AND ip IN
 			  (SELECT ip FROM connections WHERE server_id=?1 AND guid IS NOT NULL GROUP BY ip HAVING COUNT(DISTINCT guid)>1)
@@ -258,7 +260,7 @@ func statsRoutes(g *gin.RouterGroup, db *sql.DB) {
 	})
 
 	g.GET("/errors", func(c *gin.Context) {
-		send(c, map[string]any{"errors": sq(`SELECT message, count, first_seen, last_seen FROM console_errors
+		send(c, map[string]sqlQuery{"errors": sq(`SELECT message, count, first_seen, last_seen FROM console_errors
 			WHERE server_id=? ORDER BY last_seen DESC LIMIT 100`, c.Param("id"))})
 	})
 }

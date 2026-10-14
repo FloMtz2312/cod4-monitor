@@ -9,7 +9,7 @@ Un tableau de bord web pour suivre un serveur **Call of Duty 4 / CoD4X** : qui j
 - **Administration** : changement de map, kick et ban, commandes programmées, journal des actions, détection des contournements de ban.
 - **Accès** : super admin, propriétaires de serveurs, modérateurs avec des permissions par serveur, et visiteurs ; comptes sur invitation uniquement. En français et en anglais, utilisable comme une application sur téléphone.
 
-Un bug ou une idée ? [Ouvre une issue](https://github.com/FlorianMartinez01/cod4-monitor/issues/new/choose) : le formulaire te guide.
+Un bug ou une idée ? [Ouvre une issue](https://github.com/FloMtz2312/cod4-monitor/issues/new/choose) : le formulaire te guide.
 
 ---
 
@@ -80,7 +80,7 @@ Installe git, puis clone le projet dans `/opt/cod4-monitor` :
 ```sh
 sudo apt update && sudo apt install -y git
 sudo mkdir -p /opt/cod4-monitor && sudo chown $USER /opt/cod4-monitor
-git clone https://github.com/FlorianMartinez01/cod4-monitor.git /opt/cod4-monitor
+git clone https://github.com/FloMtz2312/cod4-monitor.git /opt/cod4-monitor
 cd /opt/cod4-monitor
 ```
 
@@ -716,7 +716,7 @@ Préviens tes joueurs que les parties sont enregistrées, par exemple dans les r
 
 ## 16. Signaler un bug / Contribuer
 
-- **Un bug ou une idée** : [ouvre une issue](https://github.com/FlorianMartinez01/cod4-monitor/issues/new/choose) et remplis le formulaire, en français ou en anglais. Le lien est aussi dans le dashboard : **Plus → À propos → Signaler un bug ou proposer une idée**. Ne colle jamais de mot de passe, de mot de passe rcon ni ton `.env`.
+- **Un bug ou une idée** : [ouvre une issue](https://github.com/FloMtz2312/cod4-monitor/issues/new/choose) et remplis le formulaire, en français ou en anglais. Le lien est aussi dans le dashboard : **Plus → À propos → Signaler un bug ou proposer une idée**. Ne colle jamais de mot de passe, de mot de passe rcon ni ton `.env`.
 - **Une faille de sécurité** : signale-la en privé, comme expliqué dans [SECURITY.md](SECURITY.md), jamais dans une issue publique.
 - **Une modification du code** : voir [CONTRIBUTING.md](CONTRIBUTING.md) (vérifications à lancer, traductions, pull request).
 
