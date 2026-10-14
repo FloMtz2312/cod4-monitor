@@ -7,7 +7,7 @@
   import { roleLabel } from '../lib/roles.js';
   import { permsOf, isOwner } from '../lib/perms.js';
   import { href } from '../lib/router.svelte.js';
-  import { i18n, setLang, t } from '../lib/i18n.svelte.js';
+  import { i18n, setLang, t, LANGS } from '../lib/i18n.svelte.js';
   import { REPO, NEW_ISSUE } from '../lib/project.js';
   import { post } from '../lib/api.js';
   import { say } from '../lib/toast.svelte.js';
@@ -118,8 +118,8 @@
 <section>
   <h2 class="label group">{t('Préférences')}</h2>
   <div class="card rows">
-    <button class="row" onclick={() => setLang(i18n.lang === 'fr' ? 'en' : 'fr')}>
-      <Icon name="globe" size={20} /><span>{t('Langue')}</span><span class="val">{i18n.lang === 'fr' ? 'Français' : 'English'}</span><Icon name="chevronRight" size={18} />
+    <button class="row" onclick={() => setLang(LANGS[(LANGS.findIndex(([k]) => k === i18n.lang) + 1) % LANGS.length][0])}>
+      <Icon name="globe" size={20} /><span>{t('Langue')}</span><span class="val">{LANGS.find(([k]) => k === i18n.lang)?.[1]}</span><Icon name="chevronRight" size={18} />
     </button>
     {#if r !== 'visitor'}
       <a class="row" href={href('notifications')}><Icon name="bell" size={20} /><span>{t('Notifications')}<small>{t('serveur tombé, signalements, suspects, bans')}</small></span><Icon name="chevronRight" size={18} /></a>

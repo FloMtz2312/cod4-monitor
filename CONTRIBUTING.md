@@ -19,7 +19,7 @@ Security issues: see [SECURITY.md](SECURITY.md). / Failles de sécurité : voir 
    gofmt -l . && go vet ./... && go test ./...
    cd ui && npm ci && npm run check && npm run build
    ```
-4. Every text shown in the dashboard is written in French in the code and translated in `ui/src/lib/i18n.svelte.js` (or `ui/src/lib/en/*.js`): add the English text there too.
+4. Every text shown in the dashboard is written in French in the code and translated in `ui/src/lib/i18n.svelte.js` (or `ui/src/lib/en/*.js`): add the English text there too. The German texts are in `ui/src/lib/de/*.js` (same keys); a text missing there is shown in English.
 5. Open the pull request with what it changes and how you tested it.
 
 The README section *For developers* explains how to run the project locally.

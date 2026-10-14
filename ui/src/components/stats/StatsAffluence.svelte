@@ -64,7 +64,7 @@
   const stripStart = $derived(span && changes[0] ? (100 * Math.max(0, changes[0].ts - hist.from)) / span : 0);
   const recent = $derived(changes.slice().reverse());
 
-  const DAYS = $derived(i18n.lang === 'en' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim']);
+  const DAYS = $derived(({ en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], de: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'] })[i18n.lang] ?? ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim']);
   const cells = $derived(heat?.cells ?? []);
   const heatMax = $derived(Math.max(0, ...cells.flat().map(v => v ?? 0)));
   const best = $derived.by(() => {

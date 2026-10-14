@@ -1,7 +1,5 @@
 // Display helpers of the stats and status screens: durations, dates, shares.
-import { t, i18n } from '../../lib/i18n.svelte.js';
-
-const locale = () => (i18n.lang === 'en' ? 'en-GB' : 'fr-FR');
+import { t, locale } from '../../lib/i18n.svelte.js';
 
 /** Seconds → "45 s", "12 min", "3 h 05", "2 j 4 h". */
 export function dur(s) {

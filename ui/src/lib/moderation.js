@@ -1,7 +1,5 @@
 // Shared bits of the moderation and administration screens: dates, B3 penalty labels, ban evasion clues.
-import { t } from './i18n.svelte.js';
-
-const locale = () => (document.documentElement.lang === 'en' ? 'en-GB' : 'fr-FR');
+import { t, locale } from './i18n.svelte.js';
 
 /** Short date and time of a unix timestamp ("12/10/2026 21:04"). */
 export const dt = ts => (ts ? new Date(ts * 1000).toLocaleString(locale(), { dateStyle: 'short', timeStyle: 'short' }) : '—');

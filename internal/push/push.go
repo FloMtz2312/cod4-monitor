@@ -101,7 +101,7 @@ type Message struct {
 
 func (m Message) text(lang string) (title, body string) {
 	title, body = m.Title, m.Body
-	if lang == "en" {
+	if lang == "en" || lang == "de" { // German: the English text
 		if m.TitleEN != "" {
 			title = m.TitleEN
 		}

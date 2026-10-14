@@ -1,13 +1,13 @@
 // Server-side demos: sizes, durations and the link that opens one in the cod4-demo viewer.
-import { t } from './i18n.svelte.js';
+import { t, i18n, locale } from './i18n.svelte.js';
 
 /** Bytes → "820 Mo", "2,4 Go". */
 export function size(b) {
   if (!b) return '0';
-  const en = document.documentElement.lang === 'en';
-  const fmt = (n, d) => n.toLocaleString(en ? 'en-US' : 'fr-FR', { maximumFractionDigits: d });
-  if (b < 1e9) return `${fmt(b / 1e6, 0)} ${en ? 'MB' : 'Mo'}`;
-  return `${fmt(b / 1e9, 1)} ${en ? 'GB' : 'Go'}`;
+  const fr = i18n.lang === 'fr';
+  const fmt = (n, d) => n.toLocaleString(locale(true), { maximumFractionDigits: d });
+  if (b < 1e9) return `${fmt(b / 1e6, 0)} ${fr ? 'Mo' : 'MB'}`;
+  return `${fmt(b / 1e9, 1)} ${fr ? 'Go' : 'GB'}`;
 }
 
 /** Gigabytes → "2,2 Go". */

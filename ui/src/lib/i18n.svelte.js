@@ -4,6 +4,12 @@ import stats from './en/stats.js';
 import rankings from './en/rankings.js';
 import profile from './en/profile.js';
 import demos from './en/demos.js';
+import deBase from './de/base.js';
+import deModeration from './de/moderation.js';
+import deStats from './de/stats.js';
+import deRankings from './de/rankings.js';
+import deProfile from './de/profile.js';
+import deDemos from './de/demos.js';
 
 const BASE = {
   'Direct': 'Live',
@@ -671,13 +677,18 @@ const BASE = {
 };
 
 const EN = { ...BASE, ...moderation, ...stats, ...rankings, ...profile, ...demos };
+const DE = { ...deBase, ...deModeration, ...deStats, ...deRankings, ...deProfile, ...deDemos };
+
+/** The languages of the interface, in the order of the switch. */
+export const LANGS = [['fr', 'Français'], ['en', 'English'], ['de', 'Deutsch']];
 
 function initial() {
   try {
     const l = localStorage.getItem('lang');
-    if (l === 'fr' || l === 'en') return l;
+    if (LANGS.some(([k]) => k === l)) return l;
   } catch {}
-  return (navigator.language || '').toLowerCase().startsWith('fr') ? 'fr' : 'en';
+  const nav = (navigator.language || '').toLowerCase();
+  return nav.startsWith('fr') ? 'fr' : nav.startsWith('de') ? 'de' : 'en';
 }
 
 export const i18n = $state({ lang: initial() });
@@ -690,7 +701,10 @@ export function setLang(l) {
 
 /** Translates a French text; {name} placeholders are replaced by vars. */
 export function t(fr, vars) {
-  let s = i18n.lang === 'en' ? (EN[fr] ?? fr) : fr;
+  let s = i18n.lang === 'en' ? (EN[fr] ?? fr) : i18n.lang === 'de' ? (DE[fr] ?? EN[fr] ?? fr) : fr;
   if (vars) for (const k in vars) s = s.replaceAll('{' + k + '}', String(vars[k]));
   return s;
 }
+
+/** Locale of the dates and numbers: "fr-FR", "en-GB" or "de-DE" (numbers: "en-US" for English). */
+export const locale = (numbers = false) => ({ fr: 'fr-FR', de: 'de-DE' })[i18n.lang] ?? (numbers ? 'en-US' : 'en-GB');
