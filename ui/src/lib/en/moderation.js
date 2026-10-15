@@ -244,11 +244,9 @@ export default {
   'Mentionner {name}': 'Mention {name}',
   'Mentionner': 'Mention',
   'Messages précédents': 'Earlier messages',
-  'Pas encore de message. Écris @ suivi du numéro B3 d\'un admin pour le prévenir.': 'No message yet. Type @ followed by an admin\'s B3 number to notify them.',
-  'Message aux admins… @12 pour mentionner': 'Message to the admins… @12 to mention',
   'Relié à {name}.': 'Linked to {name}.',
   '{n} admins notifiés': '{n} admins notified',
   '{n} admin notifié': '{n} admin notified',
-  'Pas encore de message. Écris @ suivi de l\'identifiant d\'un admin pour le prévenir.': 'No message yet. Type @ followed by an admin\'s account name to notify them.',
-  'Message aux admins… @nom pour mentionner': 'Message to the admins… @name to mention'
+  'Pas encore de message. Écris @ suivi du pseudo d\'un admin pour le prévenir.': 'No message yet. Type @ followed by an admin\'s name to notify them.',
+  'Message aux admins… @pseudo pour mentionner': 'Message to the admins… @name to mention'
 };

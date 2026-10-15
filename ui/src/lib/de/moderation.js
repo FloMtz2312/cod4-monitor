@@ -244,11 +244,9 @@ export default {
   'Mentionner {name}': '{name} erwähnen',
   'Mentionner': 'Erwähnen',
   'Messages précédents': 'Frühere Nachrichten',
-  'Pas encore de message. Écris @ suivi du numéro B3 d\'un admin pour le prévenir.': 'Noch keine Nachricht. Schreib @ und die B3-Nummer eines Admins, um ihn zu benachrichtigen.',
-  'Message aux admins… @12 pour mentionner': 'Nachricht an die Admins… @12 zum Erwähnen',
   'Relié à {name}.': 'Verknüpft mit {name}.',
   '{n} admins notifiés': '{n} Admins benachrichtigt',
   '{n} admin notifié': '{n} Admin benachrichtigt',
-  'Pas encore de message. Écris @ suivi de l\'identifiant d\'un admin pour le prévenir.': 'Noch keine Nachricht. Schreib @ und den Kontonamen eines Admins, um ihn zu benachrichtigen.',
-  'Message aux admins… @nom pour mentionner': 'Nachricht an die Admins… @Name zum Erwähnen'
+  'Pas encore de message. Écris @ suivi du pseudo d\'un admin pour le prévenir.': 'Noch keine Nachricht. Schreib @ und den Namen eines Admins, um ihn zu benachrichtigen.',
+  'Message aux admins… @pseudo pour mentionner': 'Nachricht an die Admins… @Name zum Erwähnen'
 };

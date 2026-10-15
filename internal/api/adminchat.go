@@ -19,10 +19,10 @@ import (
 )
 
 // Admins' chat of a server (Moderation tab). With B3: for the dashboard accounts of the server whose player in game is a
-// B3 admin (level 20 or more); an account links its player once (!link <code> in game), and @12 mentions the admin with
-// the B3 id 12 (as in B3's commands). Without B3: for the server's team (owner and members), no link. Everywhere @name
-// mentions an admin by account (or player) name and @all everyone; a mention is pushed to the phone of the admin and
-// counted on the Moderation tab until read.
+// B3 admin (level 20 or more); an account links its player once (!link <code> in game). Without B3: for the server's
+// team (owner and members), no link. @pseudo mentions an admin (player name in game with B3, account name without; the
+// account name works too) and @all everyone; a mention is pushed to the phone of the admin and counted on the
+// Moderation tab until read.
 
 const (
 	adminChatLevel   = 20 // B3 moderator
@@ -34,6 +34,7 @@ const (
 type ChatAdmin struct {
 	Username string `json:"username"`
 	Name     string `json:"name"` // player name in game, with colors
+	Tag      string `json:"tag"`  // what follows @ to mention them: the pseudo, typable (see mentionName)
 	B3ID     int64  `json:"b3_id"`
 	Level    int    `json:"level"`
 	Group    string `json:"group"` // B3 group name; without B3, "owner" or "team"
@@ -64,24 +65,43 @@ func mentioned(body, author string, admins []ChatAdmin) []string {
 			}
 			continue
 		}
-		id, numErr := strconv.ParseInt(tag, 10, 64)
-		for _, a := range admins {
-			if numErr == nil && a.B3ID > 0 && a.B3ID == id || strings.ToLower(a.Username) == tag || mentionName(a.Name) == tag {
-				add(a.Username)
-			}
+		// the pseudo shown in the chat first (unique), else an account name, else a player name
+		i := slices.IndexFunc(admins, func(a ChatAdmin) bool { return strings.ToLower(a.Tag) == tag })
+		if i < 0 {
+			i = slices.IndexFunc(admins, func(a ChatAdmin) bool { return strings.ToLower(a.Username) == tag })
+		}
+		if i < 0 {
+			i = slices.IndexFunc(admins, func(a ChatAdmin) bool { return mentionName(a.Name) == tag })
+		}
+		if i >= 0 {
+			add(admins[i].Username)
 		}
 	}
 	return out
 }
 
-// mentionName: a player name as typed after @ (no colors, no spaces, lower case).
+// mentionName: a player name as typed after @: no colors, only letters, digits and _ . - (UpT# Babou → uptbabou).
 func mentionName(raw string) string {
-	return strings.ToLower(strings.Map(func(r rune) rune {
-		if unicode.IsSpace(r) {
-			return -1
+	return strings.TrimRight(strings.ToLower(strings.Map(func(r rune) rune {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '.' || r == '-' {
+			return r
 		}
-		return r
-	}, query.StripColors(raw)))
+		return -1
+	}, query.StripColors(raw))), ".-")
+}
+
+// withTags gives each admin a pseudo to mention them with, unique in the chat (else their account name).
+func withTags(admins []ChatAdmin) []ChatAdmin {
+	used := map[string]bool{}
+	for i := range admins {
+		tag := mentionName(admins[i].Name)
+		if tag == "" || used[tag] || len([]rune(tag)) > 32 {
+			tag = strings.ToLower(admins[i].Username)
+		}
+		used[tag] = true
+		admins[i].Tag = tag
+	}
+	return admins
 }
 
 // cleanBody: the text of a message, without control characters (line breaks kept), at most adminChatMaxBody characters.
@@ -175,6 +195,7 @@ func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *
 				}
 			}
 		}
+		cur.admins = withTags(cur.admins)
 		mu.Lock()
 		cache[id] = cur
 		mu.Unlock()
@@ -184,7 +205,7 @@ func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *
 	self := func(list chatAdmins, user string) (ChatAdmin, bool) {
 		i := slices.IndexFunc(list.admins, func(a ChatAdmin) bool { return a.Username == user })
 		if i < 0 {
-			return ChatAdmin{Username: user, Name: user, Group: "team"}, !list.b3
+			return ChatAdmin{Username: user, Name: user, Tag: strings.ToLower(user), Group: "team"}, !list.b3
 		}
 		return list.admins[i], true
 	}

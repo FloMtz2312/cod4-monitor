@@ -95,10 +95,10 @@ func TestAdminChat(t *testing.T) {
 		t.Fatalf("admins: %d %v", code, out)
 	}
 
-	// @2 = B3 id of omni; @babou (the author) is not notified
-	if code, out := do("babou", "POST", base, `{"body":"  salut @2, regarde ça @babou\u0007 "}`); code != 200 {
+	// @OmniMax = pseudo of omni (spaces removed); @babou (the author) is not notified
+	if code, out := do("babou", "POST", base, `{"body":"  salut @OmniMax, regarde ça @babou\u0007 "}`); code != 200 {
 		t.Fatalf("send: %d %v", code, out)
-	} else if m := out["message"].(map[string]any); m["body"] != "salut @2, regarde ça @babou" || len(m["mentions"].([]any)) != 1 || m["mentions"].([]any)[0] != "omni" {
+	} else if m := out["message"].(map[string]any); m["body"] != "salut @OmniMax, regarde ça @babou" || len(m["mentions"].([]any)) != 1 || m["mentions"].([]any)[0] != "omni" {
 		t.Fatalf("message: %v", m)
 	}
 	if _, out := do("omni", "GET", base+"/unread", ""); out["unread"] != float64(1) || out["mentions"] != float64(1) {
@@ -155,17 +155,21 @@ func TestAdminChat(t *testing.T) {
 }
 
 func TestMentioned(t *testing.T) {
-	admins := []ChatAdmin{{Username: "babou", Name: "^1Babou", B3ID: 1}, {Username: "omni", Name: "Omni Max", B3ID: 12}, {Username: "zed", Name: "Zed", B3ID: 3}}
+	admins := withTags([]ChatAdmin{{Username: "babou", Name: "^1Babou", B3ID: 1}, {Username: "omni", Name: "^3UpT# Omni Max", B3ID: 12},
+		{Username: "zed", Name: "Zed", B3ID: 3}, {Username: "zed2", Name: "^2zed", B3ID: 4}})
+	if tags := []string{admins[0].Tag, admins[1].Tag, admins[2].Tag, admins[3].Tag}; !slices.Equal(tags, []string{"babou", "uptomnimax", "zed", "zed2"}) {
+		t.Fatalf("tags: %v", tags) // the second "zed" gets its account name
+	}
 	for _, c := range []struct {
 		body string
 		want []string
 	}{
-		{"@12 viens", []string{"omni"}},
-		{"@1, @omnimax et @ZED.", []string{"omni", "zed"}}, // @1 is the author
-		{"mail@12.fr", nil},
-		{"@all urgent", []string{"omni", "zed"}},
-		{"@99 @inconnu", nil},
-		{"@0", nil}, // no B3 id
+		{"@UpTOmniMax viens", []string{"omni"}},
+		{"@babou, @omni et @ZED.", []string{"omni", "zed"}}, // @babou is the author; account names work too
+		{"@zed2", []string{"zed2"}},
+		{"mail@zed.fr", nil},
+		{"@all urgent", []string{"omni", "zed", "zed2"}},
+		{"@12 @inconnu", nil}, // B3 numbers don't mention
 	} {
 		if got := mentioned(c.body, "babou", admins); !slices.Equal(got, c.want) {
 			t.Errorf("%q: %v, want %v", c.body, got, c.want)

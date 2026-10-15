@@ -442,11 +442,11 @@ Une commande toutes les 3 secondes par joueur, un signalement par minute.
 
 ### Tchat des admins
 
-**Modération → Tchat des admins** : un tchat entre les admins du serveur, sur le site. Il faut la connexion par compte. **Sans B3**, il est ouvert à toute l'équipe du serveur (propriétaire et modérateurs), sans rien à relier, et on mentionne avec `@identifiant` du compte. **Avec B3**, il est réservé aux comptes de l'équipe dont le joueur en jeu est **admin B3 de niveau 20 ou plus** :
+**Modération → Tchat des admins** : un tchat entre les admins du serveur, sur le site. Il faut la connexion par compte. **Sans B3**, il est ouvert à toute l'équipe du serveur (propriétaire et modérateurs), sans rien à relier. **Avec B3**, il est réservé aux comptes de l'équipe dont le joueur en jeu est **admin B3 de niveau 20 ou plus** :
 
 1. La première fois, *Obtenir un code*, puis taper `!link CODE` dans le chat du jeu sur ce serveur (10 minutes). Le GUID vient du log du serveur : le compte est relié à ce joueur. *Délier* pour changer de joueur.
 2. Le grade est relu dans B3 : un admin rétrogradé sous le niveau 20 perd l'accès.
-3. **Mentions** : `@12` prévient l'admin dont le numéro B3 est 12 (le `@id` de B3, affiché à côté de chaque admin), `@pseudo` par compte ou pseudo en jeu, `@all` tout le monde. Taper `@` propose la liste.
+3. **Mentions** : `@pseudo` prévient un admin : son pseudo en jeu avec B3 (sans couleurs, espaces ni symboles : `^1UpT# Babou` → `@uptbabou`), son identifiant de compte sans B3 ; l'identifiant marche aussi. `@all` prévient tout le monde. Taper `@` propose la liste avec le pseudo à écrire.
 4. L'admin mentionné reçoit une **notification push** (s'il a activé les notifications sur son téléphone, quels que soient ses choix d'alertes) et une **pastille** sur l'onglet Modération et la cloche, jusqu'à ce qu'il lise le message.
 
 ### Contournements de ban (spoofer de GUID)

@@ -442,11 +442,11 @@ Ein Befehl alle 3 Sekunden pro Spieler, eine Meldung pro Minute.
 
 ### Admin-Chat
 
-**Moderation → Admin-Chat**: ein Chat zwischen den Admins des Servers, auf dem Dashboard. Anmeldung mit Konten nötig. **Ohne B3** steht er dem ganzen Team des Servers offen (Besitzer und Moderatoren), ohne Verknüpfung, erwähnt wird mit `@Konto`. **Mit B3** ist er den Konten des Teams vorbehalten, deren Spieler im Spiel **B3-Admin ab Level 20** ist:
+**Moderation → Admin-Chat**: ein Chat zwischen den Admins des Servers, auf dem Dashboard. Anmeldung mit Konten nötig. **Ohne B3** steht er dem ganzen Team des Servers offen (Besitzer und Moderatoren), ohne Verknüpfung. **Mit B3** ist er den Konten des Teams vorbehalten, deren Spieler im Spiel **B3-Admin ab Level 20** ist:
 
 1. Beim ersten Mal *Code anfordern*, dann `!link CODE` im Spielchat auf diesem Server eingeben (10 Minuten). Die GUID kommt aus dem Server-Log: das Konto wird mit diesem Spieler verknüpft. *Trennen*, um den Spieler zu wechseln.
 2. Der Rang wird erneut aus B3 gelesen: ein Admin, der unter Level 20 herabgestuft wird, verliert den Zugang.
-3. **Erwähnungen**: `@12` benachrichtigt den Admin mit der B3-Nummer 12 (die `@id` von B3, neben jedem Admin angezeigt), `@name` per Konto oder Spielername, `@all` alle. Ein getipptes `@` schlägt die Liste vor.
+3. **Erwähnungen**: `@Name` benachrichtigt einen Admin: mit B3 sein Spielername (ohne Farben, Leerzeichen und Symbole: `^1UpT# Babou` → `@uptbabou`), ohne B3 sein Kontoname; der Kontoname geht auch. `@all` benachrichtigt alle. Ein getipptes `@` schlägt die Liste mit dem zu schreibenden Namen vor.
 4. Der erwähnte Admin erhält eine **Push-Benachrichtigung** (wenn Benachrichtigungen auf seinem Handy aktiv sind, unabhängig von den gewählten Alarmen) und ein **Abzeichen** auf dem Moderation-Tab und der Glocke, bis er die Nachricht liest.
 
 ### Ban-Umgehung (GUID-Spoofer)

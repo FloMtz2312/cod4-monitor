@@ -1,8 +1,8 @@
 <script>
   // Admins' chat of the server. With B3: for the accounts of its staff whose player in game is a B3 admin (level 20 or
-  // more), linked once to their player with a code typed in game (!link <code>); @12 mentions the admin with the B3 id
-  // 12. Without B3: the team of the server. @name mentions by account or player name, @all everyone: the admin gets a
-  // push notification and a badge.
+  // more), linked once to their player with a code typed in game (!link <code>). Without B3: the team of the server.
+  // @pseudo mentions an admin (player name, or account name without B3), @all everyone: the admin gets a push
+  // notification and a badge.
   import { untrack } from 'svelte';
   import BackTitle from '../components/BackTitle.svelte';
   import CodName from '../components/CodName.svelte';
@@ -152,7 +152,7 @@
     return m ? m[2].toLowerCase() : null;
   });
   const others = $derived((info?.admins ?? []).filter(a => a.username !== info?.me));
-  const suggest = $derived(partial === null ? [] : others.filter(a => !partial || a.b3_id && String(a.b3_id).startsWith(partial)
+  const suggest = $derived(partial === null ? [] : others.filter(a => !partial || a.tag.startsWith(partial)
     || a.username.toLowerCase().startsWith(partial) || clean(a.name).toLowerCase().replace(/\s+/g, '').startsWith(partial)));
 
   function mention(a) {
@@ -166,7 +166,7 @@
   const track = e => { caret = e.target.selectionStart ?? text.length; };
 
   // the text of a message, with its @ mentions shown (mine stand out)
-  const myTags = $derived(info?.self ? [info.self.b3_id ? '@' + info.self.b3_id : '', '@' + info.self.username.toLowerCase(), '@' + clean(info.self.name).toLowerCase().replace(/\s+/g, ''), '@all', '@tous', '@alle'] : []);
+  const myTags = $derived(info?.self ? ['@' + info.self.tag, '@' + info.self.username.toLowerCase(), '@all', '@tous', '@alle'] : []);
   function parts(body) {
     const out = [];
     let last = 0;
@@ -181,8 +181,8 @@
     return out;
   }
   const mine = m => m.username === info?.me;
-  // how an admin is mentioned: their B3 number, else (no B3) their account name
-  const tagOf = a => '@' + (a.b3_id || a.username);
+  // how an admin is mentioned: their pseudo (given by the monitor, unique in the chat)
+  const tagOf = a => '@' + a.tag;
   const GROUP = { owner: 'Propriétaire', team: 'Équipe' };
   const left = $derived(code ? Math.max(0, Math.ceil((code.until - now) / 60000)) : 0);
 </script>
@@ -221,7 +221,7 @@
   <div class="admins" role="group" aria-label={t('Admins du tchat')}>
     {#each info.admins as a (a.username)}
       <button class="adm" class:me={a.username === info.me} disabled={a.username === info.me} onclick={() => mention(a)} title={t('Mentionner {name}', { name: clean(a.name) })}>
-        <span class="id">{tagOf(a)}</span>{#if a.b3_id}<CodName raw={a.name} />{/if}<span class="muted lvl">{GROUP[a.group] ? t(GROUP[a.group]) : a.group}</span>
+        <CodName raw={a.name} /><span class="muted lvl">{GROUP[a.group] ? t(GROUP[a.group]) : a.group}</span>
       </button>
     {/each}
   </div>
@@ -232,27 +232,26 @@
       {#each messages as m (m.id)}
         <div class="msg" class:mine={mine(m)} class:hit={!mine(m) && m.mentions?.includes(info.me)}>
           <div class="meta">
-            {#if m.b3_id}<span class="id">@{m.b3_id}</span>{/if}
             <CodName raw={m.name_raw || m.username} />
             <span class="muted when">{dt(m.ts)}</span>
           </div>
           <p>{#each parts(m.body) as p, j (j)}{#if p.at}<span class="tag" class:me={p.me}>{p.text}</span>{:else}{p.text}{/if}{/each}</p>
         </div>
       {:else}
-        <p class="muted empty">{info.b3 ? t('Pas encore de message. Écris @ suivi du numéro B3 d\'un admin pour le prévenir.') : t('Pas encore de message. Écris @ suivi de l\'identifiant d\'un admin pour le prévenir.')}</p>
+        <p class="muted empty">{t('Pas encore de message. Écris @ suivi du pseudo d\'un admin pour le prévenir.')}</p>
       {/each}
     </div>
 
     {#if suggest.length}
       <div class="suggest" role="listbox" aria-label={t('Mentionner')}>
         {#each suggest.slice(0, 6) as a (a.username)}
-          <button role="option" aria-selected="false" onmousedown={e => e.preventDefault()} onclick={() => mention(a)}><span class="id">{tagOf(a)}</span>{#if a.b3_id}<CodName raw={a.name} />{/if}</button>
+          <button role="option" aria-selected="false" onmousedown={e => e.preventDefault()} onclick={() => mention(a)}><b>{tagOf(a)}</b>{#if a.b3_id}<CodName raw={a.name} />{/if}</button>
         {/each}
       </div>
     {/if}
     <form class="write" onsubmit={e => { e.preventDefault(); send(); }}>
       <label class="sr-only" for="ac-text">{t('Message')}</label>
-      <textarea id="ac-text" bind:this={box} bind:value={text} rows="1" maxlength="1000" placeholder={info.b3 ? t('Message aux admins… @12 pour mentionner') : t('Message aux admins… @nom pour mentionner')}
+      <textarea id="ac-text" bind:this={box} bind:value={text} rows="1" maxlength="1000" placeholder={t('Message aux admins… @pseudo pour mentionner')}
         onkeydown={keydown} onkeyup={track} onclick={track} oninput={track}></textarea>
       <button class="btn primary" type="submit" disabled={sending || !text.trim()} aria-label={t('Envoyer')}><Icon name="send" size={18} /></button>
     </form>
@@ -271,7 +270,6 @@
   .adm { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font-weight: 700; font-size: 13px; }
   .adm.me { opacity: .6; }
   .lvl { font-size: 11px; font-weight: 600; }
-  .id { font-size: 11px; font-weight: 800; padding: 1px 6px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); flex: none; }
   .chat { display: flex; flex-direction: column; overflow: hidden; }
   .list { height: max(220px, calc(100dvh - 450px - env(safe-area-inset-bottom))); overflow-y: auto; padding: 8px 0; display: flex; flex-direction: column; }
   .oldb { align-self: center; margin: 4px 0 8px; }
@@ -287,6 +285,7 @@
   .suggest { display: flex; gap: 6px; overflow-x: auto; padding: 8px 12px 0; border-top: 1px solid var(--line-soft); scrollbar-width: none; }
   .suggest button { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font-weight: 700; font-size: 13px; }
   .write { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line-soft); align-items: flex-end; }
+  .suggest b { color: var(--accent); }
   .suggest + .write { border-top: 0; }
   textarea { flex: 1; min-width: 0; min-height: 44px; max-height: 140px; resize: none; field-sizing: content; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); padding: 11px 12px; font: inherit; font-size: 16px; }
   .write .btn { width: 48px; height: 44px; padding: 0; flex: none; }
