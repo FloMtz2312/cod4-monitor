@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"math"
+	"path"
 	"slices"
 	"strconv"
 	"strings"
@@ -191,6 +192,26 @@ func (t *Tail) importHistory(ctx context.Context, st *store.Store) {
 	}
 	defer fs.Close()
 	open := func() (io.ReadCloser, error) { return fs.Open(t.path(games)) }
+	// over FTP the whole file is downloaded twice: not for a big file (HISTORY_FTP_MAX_MB)
+	if !IsLocal(t.Dir) && t.HistoryFTPMax != 0 {
+		var size int64 = -1
+		if es, err := fs.Entries(path.Dir(t.path(games))); err == nil {
+			for _, e := range es {
+				if e.Name == path.Base(t.path(games)) {
+					size = e.Size
+				}
+			}
+		}
+		if t.HistoryFTPMax < 0 || size > t.HistoryFTPMax {
+			log.Info("history: not imported over FTP", "size", size, "max", t.HistoryFTPMax)
+			state.Done = true
+			raw, _ := json.Marshal(state)
+			if err := st.SetCheckpoint(t.ServerID, name, string(raw)); err != nil {
+				log.Error("history: save", "err", err)
+			}
+			return
+		}
+	}
 	rd, err := open()
 	if err != nil {
 		log.Warn("history: open", "err", err)

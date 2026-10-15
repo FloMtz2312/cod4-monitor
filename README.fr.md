@@ -259,6 +259,8 @@ SERVERS=Mon Serveur|203.0.113.10:55555|ftp://user:motdepasse@203.0.113.10:21/mod
 | `QUERY_TIMEOUT` | `2s` | Délai d'attente d'une réponse |
 | `OFFLINE_AFTER` | `45s` | Durée sans réponse avant d'afficher « hors ligne » (un changement de map ne répond pas pendant 20 à 40 s) |
 | `LOG_POLL_INTERVAL` | `2s` | Fréquence de lecture des logs par FTP |
+| `LOG_FTP_SESSION` | `60s` | La connexion FTP est renouvelée après cette durée : certains serveurs FTP montrent un fichier tel qu'il était à l'ouverture de la connexion, le chat n'arrivait alors qu'à la coupure de la connexion par le serveur. `0` = jamais |
+| `HISTORY_FTP_MAX_MB` | `50` | Taille maximale du `games_mp.log` dont le passé est importé par FTP au premier démarrage (il est téléchargé deux fois). `0` = jamais par FTP |
 | `SERVER_LOG_TZ` | `UTC` | Fuseau horaire de l'horloge du serveur de jeu |
 | `HTTP_PORT` | `8080` | Port d'écoute du monitor (sur un VPS, Caddy lui transmet les requêtes) |
 | `HTTP_BIND` | vide (toutes les adresses) | Adresse d'écoute du monitor. Forcée à `127.0.0.1` quand `DASHBOARD_PASSWORD` est vide |

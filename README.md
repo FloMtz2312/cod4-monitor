@@ -259,6 +259,8 @@ SERVERS=My Server|203.0.113.10:55555|ftp://user:password@203.0.113.10:21/mods/my
 | `QUERY_TIMEOUT` | `2s` | How long to wait for a reply |
 | `OFFLINE_AFTER` | `45s` | Time without a reply before showing "offline" (a map change doesn't reply for 20–40 s) |
 | `LOG_POLL_INTERVAL` | `2s` | How often the logs are read over FTP |
+| `LOG_FTP_SESSION` | `60s` | The FTP connection is renewed after this long: some FTP servers show a file as it was when the connection started, so new chat lines only appeared after the server dropped the connection. `0` = never |
+| `HISTORY_FTP_MAX_MB` | `50` | Biggest `games_mp.log` whose past is imported over FTP on first start (it is downloaded twice). `0` = never over FTP |
 | `SERVER_LOG_TZ` | `UTC` | Time zone of the game server's clock |
 | `HTTP_PORT` | `8080` | Port the monitor listens on (on a VPS, Caddy forwards to it) |
 | `HTTP_BIND` | empty (all addresses) | Address the monitor listens on. Forced to `127.0.0.1` when `DASHBOARD_PASSWORD` is empty |
