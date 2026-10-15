@@ -41,7 +41,7 @@
   import { tabsFor } from './lib/roles.js';
   import { permsOf } from './lib/perms.js';
   import { loadInbox } from './lib/inbox.svelte.js';
-  import { loadAdminChat } from './lib/adminchat.svelte.js';
+  import { loadAdminChat, chatTab } from './lib/adminchat.svelte.js';
   import { applyAccent } from './lib/brand.js';
   import { currentServer } from './lib/state.svelte.js';
   import { route, go } from './lib/router.svelte.js';
@@ -57,7 +57,7 @@
     if ((e.key === 'k' || e.key === 'K') && (e.ctrlKey || e.metaKey)) { e.preventDefault(); searchOpen = true; }
     else if (e.key === '/' && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); searchOpen = true; }
   }
-  const tabs = $derived(tabsFor(role()));
+  const tabs = $derived(tabsFor(role(), chatTab(app.serverId)));
 
   // a tapped notification opens /?s=<server>#/<screen>: select that server, then forget the parameter
   const opened = Number(new URLSearchParams(location.search).get('s'));
