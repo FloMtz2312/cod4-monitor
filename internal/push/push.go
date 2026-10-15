@@ -92,6 +92,7 @@ type Message struct {
 	Kind            string   // one of Kinds: only to the subscribers who chose it ("test": to the one browser)
 	Server          int64    // server concerned: muted servers and permissions are checked against it
 	Need            []string // one of these permissions is needed on the server (an owner has them all); none = any access
+	To              []string // only these accounts, whatever kinds they chose (a mention in the admins' chat); checked by the sender
 	Title, Body     string   // French
 	TitleEN, BodyEN string   // English ("" = the French text)
 	Path            string   // screen of the app opened by a tap: "moderation", "etat"... ("" = the live screen)
@@ -133,6 +134,9 @@ func (m Message) payload(lang string) []byte {
 
 // Allowed: the subscriber wants this kind, didn't mute the server, and has the rights to see it.
 func (s *Sender) Allowed(sub store.PushSub, m Message) bool {
+	if len(m.To) > 0 {
+		return slices.Contains(m.To, sub.Username) && !slices.Contains(sub.Muted, m.Server)
+	}
 	if !slices.Contains(sub.Types, m.Kind) || slices.Contains(sub.Muted, m.Server) {
 		return false
 	}

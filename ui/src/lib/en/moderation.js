@@ -227,5 +227,26 @@ export default {
   'hôte MySQL refusé : une adresse locale ou privée (seul le super administrateur peut l\'utiliser)': 'MySQL host refused: a local or private address (only the super administrator can use it)',
   'les fichiers locaux (logs, base B3 SQLite) sont réservés au super administrateur': 'local files (logs, SQLite B3 database) are reserved to the super administrator',
   'MariaDB sur cette machine (projet cod4-server) : mets le chemin de son socket, {path}.': 'MariaDB on this machine (cod4-server project): enter the path of its socket, {path}.',
-  'socket MySQL refusé : un fichier dans le dossier B3_ROOT': 'MySQL socket refused: a file in the B3_ROOT folder'
+  'socket MySQL refusé : un fichier dans le dossier B3_ROOT': 'MySQL socket refused: a file in the B3_ROOT folder',
+
+  // admins' chat
+  'Tchat des admins': 'Admins\' chat',
+  'Le tchat des admins utilise les grades de B3 : configure la base B3 de ce serveur (Réglages du serveur → réglages avancés).': 'The admins\' chat uses the B3 ranks: set up the B3 database of this server (Server settings → advanced settings).',
+  'Relie ton compte à ton joueur': 'Link your account to your player',
+  'Le tchat est réservé aux admins B3 de niveau {n} ou plus. Pour savoir quel joueur tu es, tape un code en jeu, une seule fois.': 'The chat is for B3 admins of level {n} or more. To know which player you are, type a code in game, only once.',
+  'Tape cette commande dans le chat du jeu sur ce serveur (valable {n} min). Cette page se met à jour toute seule.': 'Type this command in the game chat on this server (valid {n} min). This page updates by itself.',
+  'Obtenir un code': 'Get a code',
+  'Accès réservé aux admins': 'Admins only',
+  'Ton compte est relié à {name}, qui n\'est pas admin B3 de niveau {n} ou plus sur ce serveur.': 'Your account is linked to {name}, who is not a B3 admin of level {n} or more on this server.',
+  'Relier un autre joueur': 'Link another player',
+  'Délier': 'Unlink',
+  'Admins du tchat': 'Admins of the chat',
+  'Mentionner {name}': 'Mention {name}',
+  'Mentionner': 'Mention',
+  'Messages précédents': 'Earlier messages',
+  'Pas encore de message. Écris @ suivi du numéro B3 d\'un admin pour le prévenir.': 'No message yet. Type @ followed by an admin\'s B3 number to notify them.',
+  'Message aux admins… @12 pour mentionner': 'Message to the admins… @12 to mention',
+  'Relié à {name}.': 'Linked to {name}.',
+  '{n} admins notifiés': '{n} admins notified',
+  '{n} admin notifié': '{n} admin notified'
 };

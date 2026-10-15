@@ -117,6 +117,9 @@ func tenantAllowed(db *sql.DB, c *gin.Context) bool {
 		return true
 	}
 	suffix := strings.TrimPrefix(path, "/api/servers/:id")
+	if suffix == "/adminchat" || strings.HasPrefix(suffix, "/adminchat/") { // members only, B3 level checked by adminchat.go
+		return true
+	}
 	ps := grants(db, user, id)
 	if method == "GET" {
 		switch suffix {

@@ -4,6 +4,7 @@
   import { app, role, currentServer, mapName } from '../lib/state.svelte.js';
   import { t } from '../lib/i18n.svelte.js';
   import { inboxCount } from '../lib/inbox.svelte.js';
+  import { chatMentions } from '../lib/adminchat.svelte.js';
 
   /** @type {{ onservers: () => void, onsearch: () => void }} */
   let { onservers, onsearch } = $props();
@@ -17,7 +18,8 @@
       : srv.online ? `${t('En ligne')} · ${srv.players ?? 0}/${srv.max_players ?? '?'} · ${mapName(srv.map)}`
       : t('Hors ligne')
   );
-  const todo = $derived(inboxCount(app.serverId));
+  const mentions = $derived(chatMentions(app.serverId));
+  const todo = $derived(inboxCount(app.serverId) + mentions);
   const initial = $derived((app.me?.username || 'A').charAt(0).toUpperCase());
 </script>
 
@@ -34,7 +36,7 @@
   {#if r === 'visitor'}
     <a class="iconbtn" href="#/connexion" aria-label={t('Se connecter')}><Icon name="user" /></a>
   {:else}
-    <a class="iconbtn bell" href="#/moderation" aria-label={todo ? t('Modération : {n} à traiter', { n: todo }) : t('Modération')}><Icon name="bell" />{#if todo}<span class="badge">{todo > 9 ? '9+' : todo}</span>{/if}</a>
+    <a class="iconbtn bell" href={mentions && todo === mentions ? '#/tchat-admins' : '#/moderation'} aria-label={todo ? t('Modération : {n} à traiter', { n: todo }) : t('Modération')}><Icon name="bell" />{#if todo}<span class="badge">{todo > 9 ? '9+' : todo}</span>{/if}</a>
     <a class="iconbtn account" href="#/plus" aria-label={t('Mon compte')}>{initial}</a>
   {/if}
 </header>

@@ -435,9 +435,19 @@ With the `rcon_password` in `SERVERS`, the monitor answers players with a privat
 | `!top` | Top 5 killers of the last 7 days |
 | `!report name reason` | Report sent to the admins: it shows up in **Moderation** (and as a push notification) |
 | `!me` | A short link to type on a phone (`your-domain/me/K7QPX`, or a code without `DOMAIN`): it opens the player's profile and pins it (**It's me**). Valid 24 hours |
+| `!link CODE` | Links the player to the dashboard account that showed this code (admins' chat, see below). Valid 10 minutes, once |
 | `!help` | List of commands (on a server with B3, B3 answers: its list includes these commands) |
 
 One command every 3 seconds per player, one report per minute.
+
+### Admins' chat
+
+**Moderation → Admins' chat**: a chat between the server's admins, on the dashboard. It is open to the accounts of the server's team whose player in game is a **B3 admin of level 20 or more** (needs B3 and sign-in with accounts).
+
+1. The first time, *Get a code*, then type `!link CODE` in the game chat on this server (10 minutes). The GUID comes from the server's log: the account is linked to that player. *Unlink* to change player.
+2. The rank is read again from B3: an admin demoted below level 20 loses access.
+3. **Mentions**: `@12` notifies the admin whose B3 number is 12 (B3's `@id`, shown next to each admin), `@name` by account or player name, `@all` everyone. Typing `@` suggests the list.
+4. The mentioned admin gets a **push notification** (if notifications are on on their phone, whatever alerts they chose) and a **badge** on the Moderation tab and the bell until they read it.
 
 ### Ban evasion (GUID spoofer)
 

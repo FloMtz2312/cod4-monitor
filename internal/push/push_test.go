@@ -231,6 +231,10 @@ func TestAnyAccess(t *testing.T) {
 	if !s.Allowed(sub, Message{Kind: "b3ban", Server: 2, Need: []string{"private"}}) {
 		t.Fatal("an owner gets everything")
 	}
+	mention := Message{Kind: "mention", Server: 1, To: []string{"omni"}}
+	if s.Allowed(sub, mention) || !s.Allowed(store.PushSub{Username: "omni"}, mention) || s.Allowed(store.PushSub{Username: "omni", Muted: []int64{1}}, mention) {
+		t.Fatal("a mention goes to its accounts only, whatever their kinds, unless the server is muted")
+	}
 }
 
 func TestValidEndpoint(t *testing.T) {
