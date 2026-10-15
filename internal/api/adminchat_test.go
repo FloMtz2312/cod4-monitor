@@ -101,7 +101,10 @@ func TestAdminChat(t *testing.T) {
 	} else if m := out["message"].(map[string]any); m["body"] != "salut @OmniMax, regarde ça @babou" || len(m["mentions"].([]any)) != 1 || m["mentions"].([]any)[0] != "omni" {
 		t.Fatalf("message: %v", m)
 	}
-	if _, out := do("omni", "GET", base+"/unread", ""); out["unread"] != float64(1) || out["mentions"] != float64(1) {
+	if _, out := do("pleb", "GET", base+"/unread", ""); out["admin"] != false {
+		t.Fatalf("pleb in the chat: %v", out)
+	}
+	if _, out := do("omni", "GET", base+"/unread", ""); out["admin"] != true || out["unread"] != float64(1) || out["mentions"] != float64(1) {
 		t.Fatalf("omni unread: %v", out)
 	}
 	if _, out := do("babou", "GET", base+"/unread", ""); out["unread"] != float64(0) {

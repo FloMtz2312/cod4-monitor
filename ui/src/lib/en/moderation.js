@@ -248,5 +248,8 @@ export default {
   '{n} admins notifiés': '{n} admins notified',
   '{n} admin notifié': '{n} admin notified',
   'Pas encore de message. Écris @ suivi du pseudo d\'un admin pour le prévenir.': 'No message yet. Type @ followed by an admin\'s name to notify them.',
-  'Message aux admins… @pseudo pour mentionner': 'Message to the admins… @name to mention'
+  'Message aux admins… @pseudo pour mentionner': 'Message to the admins… @name to mention',
+  'Tchat': 'Chat',
+  '{n} mentions': '{n} mentions',
+  '{n} non lus': '{n} unread'
 };

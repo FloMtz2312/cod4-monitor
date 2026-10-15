@@ -9,7 +9,7 @@
   import Icon from '../components/Icon.svelte';
   import { api, get, post } from '../lib/api.js';
   import { app, currentServer } from '../lib/state.svelte.js';
-  import { loadAdminChat } from '../lib/adminchat.svelte.js';
+  import { loadAdminChat, chatTab } from '../lib/adminchat.svelte.js';
   import { clean } from '../lib/format.js';
   import { dt } from '../lib/moderation.js';
   import { say } from '../lib/toast.svelte.js';
@@ -187,7 +187,12 @@
   const left = $derived(code ? Math.max(0, Math.ceil((code.until - now) / 60000)) : 0);
 </script>
 
-<BackTitle title={t('Tchat des admins')} sub={srv ? clean(srv.name) : ''} fallback="moderation" />
+{#if chatTab(id)}
+  <h1 class="title">{t('Tchat des admins')}</h1>
+  {#if srv}<p class="muted srv">{clean(srv.name)}</p>{/if}
+{:else}
+  <BackTitle title={t('Tchat des admins')} sub={srv ? clean(srv.name) : ''} fallback="moderation" />
+{/if}
 
 {#if error}
   <p class="muted">{error}</p>
@@ -260,6 +265,8 @@
 {/if}
 
 <style>
+  .title { margin-bottom: 4px; }
+  .srv { margin: 0 0 14px; font-size: 14px; }
   .box { padding: 16px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
   .box p, .box h2 { margin: 0; }
   .box h2 { font-size: 16px; font-weight: 800; }

@@ -261,10 +261,10 @@ func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *
 		c.JSON(200, out)
 	})
 
-	// unread messages and mentions, for the badge of the Moderation tab (0 when not an admin of the chat)
+	// whether the account is in the chat (its tab in the menu), unread messages and mentions (its badge)
 	g.GET("/adminchat/unread", func(c *gin.Context) {
 		id, user := mustID(c), c.GetString("user")
-		out := gin.H{"unread": 0, "mentions": 0}
+		out := gin.H{"admin": false, "unread": 0, "mentions": 0}
 		if !c.GetBool("loginmode") || user == "" || !member(user, id) {
 			c.JSON(200, out)
 			return
@@ -279,7 +279,7 @@ func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *
 			if fail(c, err) {
 				return
 			}
-			out["unread"], out["mentions"] = unread, mentions
+			out["admin"], out["unread"], out["mentions"] = true, unread, mentions
 		}
 		c.JSON(200, out)
 	})
