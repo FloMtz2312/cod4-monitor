@@ -1,7 +1,8 @@
 <script>
-  // Admins' chat of the server: for the accounts of its staff whose player in game is a B3 admin (level 20 or more).
-  // The account is linked once to its player with a code typed in game (!link <code>). @12 mentions the admin with
-  // the B3 id 12, @name by account or player name, @all everyone: the admin gets a push notification and a badge.
+  // Admins' chat of the server. With B3: for the accounts of its staff whose player in game is a B3 admin (level 20 or
+  // more), linked once to their player with a code typed in game (!link <code>); @12 mentions the admin with the B3 id
+  // 12. Without B3: the team of the server. @name mentions by account or player name, @all everyone: the admin gets a
+  // push notification and a badge.
   import { untrack } from 'svelte';
   import BackTitle from '../components/BackTitle.svelte';
   import CodName from '../components/CodName.svelte';
@@ -151,13 +152,13 @@
     return m ? m[2].toLowerCase() : null;
   });
   const others = $derived((info?.admins ?? []).filter(a => a.username !== info?.me));
-  const suggest = $derived(partial === null ? [] : others.filter(a => !partial || String(a.b3_id).startsWith(partial)
+  const suggest = $derived(partial === null ? [] : others.filter(a => !partial || a.b3_id && String(a.b3_id).startsWith(partial)
     || a.username.toLowerCase().startsWith(partial) || clean(a.name).toLowerCase().replace(/\s+/g, '').startsWith(partial)));
 
   function mention(a) {
     const before = text.slice(0, caret), after = text.slice(caret);
     const start = partial === null ? before.length : before.length - partial.length - 1;
-    const ins = (start > 0 && !/\s$/.test(before.slice(0, start)) ? ' ' : '') + '@' + a.b3_id + ' ';
+    const ins = (start > 0 && !/\s$/.test(before.slice(0, start)) ? ' ' : '') + tagOf(a) + ' ';
     text = before.slice(0, start) + ins + after;
     caret = start + ins.length;
     requestAnimationFrame(() => { box?.focus(); box?.setSelectionRange(caret, caret); });
@@ -165,7 +166,7 @@
   const track = e => { caret = e.target.selectionStart ?? text.length; };
 
   // the text of a message, with its @ mentions shown (mine stand out)
-  const myTags = $derived(info?.self ? ['@' + info.self.b3_id, '@' + info.self.username.toLowerCase(), '@' + clean(info.self.name).toLowerCase().replace(/\s+/g, ''), '@all', '@tous', '@alle'] : []);
+  const myTags = $derived(info?.self ? [info.self.b3_id ? '@' + info.self.b3_id : '', '@' + info.self.username.toLowerCase(), '@' + clean(info.self.name).toLowerCase().replace(/\s+/g, ''), '@all', '@tous', '@alle'] : []);
   function parts(body) {
     const out = [];
     let last = 0;
@@ -180,6 +181,9 @@
     return out;
   }
   const mine = m => m.username === info?.me;
+  // how an admin is mentioned: their B3 number, else (no B3) their account name
+  const tagOf = a => '@' + (a.b3_id || a.username);
+  const GROUP = { owner: 'Propriétaire', team: 'Équipe' };
   const left = $derived(code ? Math.max(0, Math.ceil((code.until - now) / 60000)) : 0);
 </script>
 
@@ -189,11 +193,7 @@
   <p class="muted">{error}</p>
 {:else if info === null}
   <p class="muted">{t('Chargement…')}</p>
-{:else if !info.b3}
-  <section class="card box">
-    <p>{t('Le tchat des admins utilise les grades de B3 : configure la base B3 de ce serveur (Réglages du serveur → réglages avancés).')}</p>
-  </section>
-{:else if !info.linked}
+{:else if info.b3 && !info.linked}
   <section class="card box">
     <h2>{t('Relie ton compte à ton joueur')}</h2>
     <p class="muted">{t('Le tchat est réservé aux admins B3 de niveau {n} ou plus. Pour savoir quel joueur tu es, tape un code en jeu, une seule fois.', { n: info.level_min })}</p>
@@ -221,7 +221,7 @@
   <div class="admins" role="group" aria-label={t('Admins du tchat')}>
     {#each info.admins as a (a.username)}
       <button class="adm" class:me={a.username === info.me} disabled={a.username === info.me} onclick={() => mention(a)} title={t('Mentionner {name}', { name: clean(a.name) })}>
-        <span class="id">@{a.b3_id}</span><CodName raw={a.name} /><span class="muted lvl">{a.group}</span>
+        <span class="id">{tagOf(a)}</span>{#if a.b3_id}<CodName raw={a.name} />{/if}<span class="muted lvl">{GROUP[a.group] ? t(GROUP[a.group]) : a.group}</span>
       </button>
     {/each}
   </div>
@@ -232,32 +232,32 @@
       {#each messages as m (m.id)}
         <div class="msg" class:mine={mine(m)} class:hit={!mine(m) && m.mentions?.includes(info.me)}>
           <div class="meta">
-            <span class="id">@{m.b3_id}</span>
+            {#if m.b3_id}<span class="id">@{m.b3_id}</span>{/if}
             <CodName raw={m.name_raw || m.username} />
             <span class="muted when">{dt(m.ts)}</span>
           </div>
           <p>{#each parts(m.body) as p, j (j)}{#if p.at}<span class="tag" class:me={p.me}>{p.text}</span>{:else}{p.text}{/if}{/each}</p>
         </div>
       {:else}
-        <p class="muted empty">{t('Pas encore de message. Écris @ suivi du numéro B3 d\'un admin pour le prévenir.')}</p>
+        <p class="muted empty">{info.b3 ? t('Pas encore de message. Écris @ suivi du numéro B3 d\'un admin pour le prévenir.') : t('Pas encore de message. Écris @ suivi de l\'identifiant d\'un admin pour le prévenir.')}</p>
       {/each}
     </div>
 
     {#if suggest.length}
       <div class="suggest" role="listbox" aria-label={t('Mentionner')}>
         {#each suggest.slice(0, 6) as a (a.username)}
-          <button role="option" aria-selected="false" onmousedown={e => e.preventDefault()} onclick={() => mention(a)}><span class="id">@{a.b3_id}</span><CodName raw={a.name} /></button>
+          <button role="option" aria-selected="false" onmousedown={e => e.preventDefault()} onclick={() => mention(a)}><span class="id">{tagOf(a)}</span>{#if a.b3_id}<CodName raw={a.name} />{/if}</button>
         {/each}
       </div>
     {/if}
     <form class="write" onsubmit={e => { e.preventDefault(); send(); }}>
       <label class="sr-only" for="ac-text">{t('Message')}</label>
-      <textarea id="ac-text" bind:this={box} bind:value={text} rows="1" maxlength="1000" placeholder={t('Message aux admins… @12 pour mentionner')}
+      <textarea id="ac-text" bind:this={box} bind:value={text} rows="1" maxlength="1000" placeholder={info.b3 ? t('Message aux admins… @12 pour mentionner') : t('Message aux admins… @nom pour mentionner')}
         onkeydown={keydown} onkeyup={track} onclick={track} oninput={track}></textarea>
       <button class="btn primary" type="submit" disabled={sending || !text.trim()} aria-label={t('Envoyer')}><Icon name="send" size={18} /></button>
     </form>
   </section>
-  <p class="muted foot">{t('Relié à {name}.', { name: clean(info.player) })} <button class="link" onclick={unlink}>{t('Délier')}</button></p>
+  {#if info.b3}<p class="muted foot">{t('Relié à {name}.', { name: clean(info.player) })} <button class="link" onclick={unlink}>{t('Délier')}</button></p>{/if}
 {/if}
 
 <style>

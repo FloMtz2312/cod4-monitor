@@ -248,5 +248,7 @@ export default {
   'Message aux admins… @12 pour mentionner': 'Nachricht an die Admins… @12 zum Erwähnen',
   'Relié à {name}.': 'Verknüpft mit {name}.',
   '{n} admins notifiés': '{n} Admins benachrichtigt',
-  '{n} admin notifié': '{n} Admin benachrichtigt'
+  '{n} admin notifié': '{n} Admin benachrichtigt',
+  'Pas encore de message. Écris @ suivi de l\'identifiant d\'un admin pour le prévenir.': 'Noch keine Nachricht. Schreib @ und den Kontonamen eines Admins, um ihn zu benachrichtigen.',
+  'Message aux admins… @nom pour mentionner': 'Nachricht an die Admins… @Name zum Erwähnen'
 };

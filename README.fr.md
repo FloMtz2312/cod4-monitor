@@ -442,7 +442,7 @@ Une commande toutes les 3 secondes par joueur, un signalement par minute.
 
 ### Tchat des admins
 
-**Modération → Tchat des admins** : un tchat entre les admins du serveur, sur le site. Il est ouvert aux comptes de l'équipe du serveur dont le joueur en jeu est **admin B3 de niveau 20 ou plus** (il faut B3 et la connexion par compte).
+**Modération → Tchat des admins** : un tchat entre les admins du serveur, sur le site. Il faut la connexion par compte. **Sans B3**, il est ouvert à toute l'équipe du serveur (propriétaire et modérateurs), sans rien à relier, et on mentionne avec `@identifiant` du compte. **Avec B3**, il est réservé aux comptes de l'équipe dont le joueur en jeu est **admin B3 de niveau 20 ou plus** :
 
 1. La première fois, *Obtenir un code*, puis taper `!link CODE` dans le chat du jeu sur ce serveur (10 minutes). Le GUID vient du log du serveur : le compte est relié à ce joueur. *Délier* pour changer de joueur.
 2. Le grade est relu dans B3 : un admin rétrogradé sous le niveau 20 perd l'accès.

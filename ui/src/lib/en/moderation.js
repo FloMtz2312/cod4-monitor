@@ -248,5 +248,7 @@ export default {
   'Message aux admins… @12 pour mentionner': 'Message to the admins… @12 to mention',
   'Relié à {name}.': 'Linked to {name}.',
   '{n} admins notifiés': '{n} admins notified',
-  '{n} admin notifié': '{n} admin notified'
+  '{n} admin notifié': '{n} admin notified',
+  'Pas encore de message. Écris @ suivi de l\'identifiant d\'un admin pour le prévenir.': 'No message yet. Type @ followed by an admin\'s account name to notify them.',
+  'Message aux admins… @nom pour mentionner': 'Message to the admins… @name to mention'
 };

@@ -442,7 +442,7 @@ One command every 3 seconds per player, one report per minute.
 
 ### Admins' chat
 
-**Moderation → Admins' chat**: a chat between the server's admins, on the dashboard. It is open to the accounts of the server's team whose player in game is a **B3 admin of level 20 or more** (needs B3 and sign-in with accounts).
+**Moderation → Admins' chat**: a chat between the server's admins, on the dashboard. Needs sign-in with accounts. **Without B3**, it is open to the whole team of the server (owner and moderators), nothing to link, and you mention with `@account`. **With B3**, it is for the team's accounts whose player in game is a **B3 admin of level 20 or more**:
 
 1. The first time, *Get a code*, then type `!link CODE` in the game chat on this server (10 minutes). The GUID comes from the server's log: the account is linked to that player. *Unlink* to change player.
 2. The rank is read again from B3: an admin demoted below level 20 loses access.

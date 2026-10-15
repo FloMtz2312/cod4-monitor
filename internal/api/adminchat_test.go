@@ -127,6 +127,31 @@ func TestAdminChat(t *testing.T) {
 	if code, _ := do("omni", "POST", base, `{"body":"x"}`); code != 403 {
 		t.Fatalf("unlinked account wrote: %d", code)
 	}
+
+	// without B3: the team of the server (owner and members), no link, mentions by account name
+	other, _ := st.SaveServerConf(store.ServerConf{Name: "No B3", Host: "127.0.0.1", Port: 28961, Enabled: true, Owner: "omni"})
+	st.DB.Exec(`UPDATE servers SET owner='omni' WHERE id=?`, other)
+	st.DB.Exec(`UPDATE users SET account_role='admin' WHERE username='omni'`)
+	st.DB.Exec(`INSERT INTO server_members VALUES(?, 'pleb', '["kick"]')`, other)
+	nb := "/api/servers/" + itoa(other) + "/adminchat"
+	if code, out := do("pleb", "GET", nb, ""); code != 200 || out["admin"] != true || out["b3"] != false || len(out["admins"].([]any)) != 2 {
+		t.Fatalf("team chat: %d %v", code, out)
+	}
+	if code, _ := do("babou", "GET", nb, ""); code != 403 {
+		t.Fatalf("not in the team: %d", code)
+	}
+	if code, _ := do("pleb", "POST", nb+"/link", "{}"); code != 400 {
+		t.Fatalf("link code without B3: %d", code)
+	}
+	if code, out := do("pleb", "POST", nb, `{"body":"@omni regarde"}`); code != 200 || out["message"].(map[string]any)["mentions"].([]any)[0] != "omni" {
+		t.Fatalf("team mention: %d %v", code, out)
+	}
+	if _, out := do("omni", "GET", nb+"/unread", ""); out["mentions"] != float64(1) {
+		t.Fatalf("owner unread: %v", out)
+	}
+	if code, _ := do("boss", "POST", nb, `{"body":"hello"}`); code != 200 {
+		t.Fatalf("super admin without B3: %d", code)
+	}
 }
 
 func TestMentioned(t *testing.T) {
@@ -140,6 +165,7 @@ func TestMentioned(t *testing.T) {
 		{"mail@12.fr", nil},
 		{"@all urgent", []string{"omni", "zed"}},
 		{"@99 @inconnu", nil},
+		{"@0", nil}, // no B3 id
 	} {
 		if got := mentioned(c.body, "babou", admins); !slices.Equal(got, c.want) {
 			t.Errorf("%q: %v, want %v", c.body, got, c.want)

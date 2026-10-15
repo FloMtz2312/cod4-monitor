@@ -18,10 +18,11 @@ import (
 	"cod4monitor/internal/store"
 )
 
-// Admins' chat of a server (Moderation tab): for the dashboard accounts of the server whose player in game is a B3 admin
-// (level 20 or more). An account links its player once (!link <code> in game). @12 mentions the admin with the B3 id
-// 12 (as in B3's commands), @name an admin by account or player name, @all everyone; a mention is pushed to the phone
-// of the admin and counted on the Moderation tab until read.
+// Admins' chat of a server (Moderation tab). With B3: for the dashboard accounts of the server whose player in game is a
+// B3 admin (level 20 or more); an account links its player once (!link <code> in game), and @12 mentions the admin with
+// the B3 id 12 (as in B3's commands). Without B3: for the server's team (owner and members), no link. Everywhere @name
+// mentions an admin by account (or player) name and @all everyone; a mention is pushed to the phone of the admin and
+// counted on the Moderation tab until read.
 
 const (
 	adminChatLevel   = 20 // B3 moderator
@@ -35,7 +36,7 @@ type ChatAdmin struct {
 	Name     string `json:"name"` // player name in game, with colors
 	B3ID     int64  `json:"b3_id"`
 	Level    int    `json:"level"`
-	Group    string `json:"group"`
+	Group    string `json:"group"` // B3 group name; without B3, "owner" or "team"
 	guid     string
 }
 
@@ -65,7 +66,7 @@ func mentioned(body, author string, admins []ChatAdmin) []string {
 		}
 		id, numErr := strconv.ParseInt(tag, 10, 64)
 		for _, a := range admins {
-			if numErr == nil && a.B3ID == id || numErr != nil && (strings.ToLower(a.Username) == tag || mentionName(a.Name) == tag) {
+			if numErr == nil && a.B3ID > 0 && a.B3ID == id || strings.ToLower(a.Username) == tag || mentionName(a.Name) == tag {
 				add(a.Username)
 			}
 		}
@@ -117,7 +118,8 @@ func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *
 	}
 	var mu sync.Mutex
 	cache := map[int64]chatAdmins{}
-	// the admins of the chat: linked accounts that still have access to the server, whose player is a B3 admin
+	// the admins of the chat: linked accounts that still have access to the server, whose player is a B3 admin; without
+	// B3, the owner and the members of the server
 	admins := func(id int64, fresh bool) (chatAdmins, error) {
 		mu.Lock()
 		cur, ok := cache[id]
@@ -159,18 +161,32 @@ func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *
 						Group: staff[i].Group.Name, guid: l.GUID})
 				}
 			}
+		} else if found {
+			team, err := rows(st.DB, `SELECT username, 'team' AS grp FROM server_members WHERE server_id=? UNION SELECT owner, 'owner' FROM servers WHERE id=? AND owner<>''
+				ORDER BY 2, 1`, id, id)
+			if err != nil {
+				return cur, err
+			}
+			for _, r := range team { // read before member(): one connection to the database
+				a := ChatAdmin{Username: fmt.Sprint(r["username"]), Group: fmt.Sprint(r["grp"])}
+				if member(a.Username, id) && !slices.ContainsFunc(cur.admins, func(b ChatAdmin) bool { return b.Username == a.Username }) {
+					a.Name = a.Username
+					cur.admins = append(cur.admins, a)
+				}
+			}
 		}
 		mu.Lock()
 		cache[id] = cur
 		mu.Unlock()
 		return cur, nil
 	}
-	self := func(list []ChatAdmin, user string) (ChatAdmin, bool) {
-		i := slices.IndexFunc(list, func(a ChatAdmin) bool { return a.Username == user })
+	// the account in the chat; without B3 any member of the server (the super administrator is in no team)
+	self := func(list chatAdmins, user string) (ChatAdmin, bool) {
+		i := slices.IndexFunc(list.admins, func(a ChatAdmin) bool { return a.Username == user })
 		if i < 0 {
-			return ChatAdmin{}, false
+			return ChatAdmin{Username: user, Name: user, Group: "team"}, !list.b3
 		}
-		return list[i], true
+		return list.admins[i], true
 	}
 	// loginOnly: the chat needs accounts (who wrote, who is mentioned); not on a dashboard without login
 	loginOnly := func(c *gin.Context) bool {
@@ -209,7 +225,7 @@ func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *
 		if linked {
 			out["player"] = link.NameRaw
 		}
-		me, ok := self(list.admins, user)
+		me, ok := self(list, user)
 		if !ok {
 			c.JSON(200, out)
 			return
@@ -232,16 +248,12 @@ func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *
 			c.JSON(200, out)
 			return
 		}
-		if _, linked, err := st.AdminLinkOf(user, id); err != nil || !linked {
-			c.JSON(200, out)
-			return
-		}
 		list, err := admins(id, false)
 		if err != nil {
 			c.JSON(200, out)
 			return
 		}
-		if _, ok := self(list.admins, user); ok {
+		if _, ok := self(list, user); ok {
 			unread, mentions, err := st.AdminChatUnread(user, id)
 			if fail(c, err) {
 				return
@@ -254,6 +266,10 @@ func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *
 	// a code to type in game (!link <code>) to link the account to its player
 	g.POST("/adminchat/link", sameOrigin, func(c *gin.Context) {
 		if !loginOnly(c) {
+			return
+		}
+		if list, err := admins(mustID(c), false); err == nil && !list.b3 {
+			c.JSON(400, gin.H{"error": "pas de B3 sur ce serveur : rien à relier"})
 			return
 		}
 		code, err := st.AdminLinkCode(c.GetString("user"), mustID(c), time.Now())
@@ -314,7 +330,7 @@ func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *
 		if fail(c, err) {
 			return
 		}
-		me, ok := self(list.admins, user)
+		me, ok := self(list, user)
 		if !ok {
 			c.JSON(403, gin.H{"error": fmt.Sprintf("réservé aux admins B3 (niveau %d ou plus) dont le compte est relié à leur joueur", adminChatLevel)})
 			return
