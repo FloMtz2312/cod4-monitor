@@ -159,10 +159,15 @@ type Tail struct {
 	Dir      *url.URL       // ftp://user:pass@host:21/mods/<mod>/ or file:///<folder>/ — folder holding the logs
 	Files    store.LogFiles // names or paths of the logs, empty = default
 	Every    time.Duration
-	Loc      *time.Location                   // server clock, for enterleave.log
-	Rcon     func(cmd string) (string, error) // nil without rcon: no answer to chat commands, no welcome message
-	OnJoin   func(guid, nameRaw string)       // a player connects (live lines only): player alerts by mail
-	SiteURL  string                           // public address of the dashboard (DOMAIN), for the !me link
+	// SessionMaxAge: an FTP session is renewed after this long (0 = never), for the servers that show a file as it
+	// was when the session started
+	SessionMaxAge time.Duration
+	// HistoryFTPMax: biggest games_mp.log whose history is imported over FTP, in bytes (0 = no limit, <0 = never)
+	HistoryFTPMax int64
+	Loc           *time.Location                   // server clock, for enterleave.log
+	Rcon          func(cmd string) (string, error) // nil without rcon: no answer to chat commands, no welcome message
+	OnJoin        func(guid, nameRaw string)       // a player connects (live lines only): player alerts by mail
+	SiteURL       string                           // public address of the dashboard (DOMAIN), for the !me link
 
 	mu      sync.Mutex
 	last    []string
@@ -180,6 +185,9 @@ func (t *Tail) Recent() []string {
 	return append([]string{}, t.last...) // non-nil: "log configured, nothing yet"
 }
 
+// errRenew ends an FTP session on purpose: the tail reconnects at once.
+var errRenew = errors.New("ftp session renewed")
+
 // file is one followed log. persist=false: start near the end on every (re)connect.
 type file struct {
 	name       string
@@ -192,6 +200,7 @@ type file struct {
 	missing    bool
 	checkpoint checkpoint
 	catching   bool
+	skipLine   bool // inside a line too long to keep (junk, NUL bytes after a crash): dropped up to its end
 }
 
 // Run reconnects forever until ctx is cancelled.
@@ -322,6 +331,9 @@ func (t *Tail) Run(ctx context.Context, st *store.Store, publish func([]byte)) {
 		if ctx.Err() != nil {
 			return
 		}
+		if errors.Is(err, errRenew) {
+			continue
+		}
 		t.recordError(st, "connection")
 		log.Error("log tail failed, retrying in 15s", "err", err)
 		select {
@@ -402,13 +414,35 @@ func (t *Tail) follow(ctx context.Context, st *store.Store, files []*file) error
 
 	tick := time.NewTicker(t.Every)
 	defer tick.Stop()
+	since := time.Now()
+	failing := map[string]bool{}
 	for {
-		caughtUp := true
+		caughtUp, ok := true, 0
+		var lastErr error
 		for _, f := range files {
+			// a file in error doesn't stop the others (the chat goes on if enterleave.log is broken); when they all
+			// fail, the connection is the problem: reconnect
 			if err := t.poll(c, st, f); err != nil {
-				return err
+				if !failing[f.name] {
+					slog.Warn("log file failed", "server_id", t.ServerID, "file", f.name, "err", err)
+				}
+				failing[f.name], lastErr = true, err
+				caughtUp = false
+				continue
 			}
+			if failing[f.name] {
+				slog.Info("log file read again", "server_id", t.ServerID, "file", f.name)
+				delete(failing, f.name)
+			}
+			ok++
 			caughtUp = caughtUp && (f.missing || f.loaded && !f.catching)
+		}
+		if ok == 0 && lastErr != nil {
+			return lastErr
+		}
+		// some FTP servers show a file as it was when the session started: a new session sees the new lines
+		if t.SessionMaxAge > 0 && !IsLocal(t.Dir) && time.Since(since) > t.SessionMaxAge {
+			return errRenew
 		}
 		// once enterleave.log is read (it dates the history), the part of games_mp.log written before the monitor
 		if caughtUp && !t.history {
@@ -546,11 +580,24 @@ func (t *Tail) poll(c source, st *store.Store, f *file) (retErr error) {
 	lines := strings.Split(f.partial+string(b), "\n")
 	partial := lines[len(lines)-1]
 	lines = lines[:len(lines)-1]
+	rejected := 0
+	skipLine := f.skipLine
+	if skipLine { // the end of a line too long to keep
+		if len(lines) > 0 {
+			lines, skipLine = lines[1:], false
+		} else {
+			partial = ""
+		}
+	}
+	// A line too long to keep never blocks the file: it is dropped (counted as rejected) up to its end.
+	if len(partial) > maxLine {
+		partial, skipLine = "", true
+		rejected++
+	}
 	if skipFirst && len(lines) > 0 {
 		lines = lines[1:]
 	}
 	out := make([]string, 0, len(lines))
-	rejected := 0
 	for _, l := range lines {
 		l = strings.TrimRight(l, "\r")
 		if len(l) > maxLine {
@@ -564,10 +611,6 @@ func (t *Tail) poll(c source, st *store.Store, f *file) (retErr error) {
 			}
 			out = append(out, l)
 		}
-	}
-	// Do not checkpoint a fragment: even oversized input remains restart-safe.
-	if len(partial) > maxLine {
-		return fmt.Errorf("log line exceeds %d bytes", maxLine)
 	}
 	nextCommitted := nextOff - int64(len(partial))
 	fp, err := fingerprint(c, p, nextCommitted)
@@ -589,7 +632,7 @@ func (t *Tail) poll(c source, st *store.Store, f *file) (retErr error) {
 			}
 		}
 	}
-	f.off, f.partial = nextOff, partial
+	f.off, f.partial, f.skipLine = nextOff, partial, skipLine
 	handle := func(batch *store.Store) {
 		f.handle(batch, out, f.catching)
 		t.recordRead(batch, f.name, size-nextCommitted, len(out), rejected)

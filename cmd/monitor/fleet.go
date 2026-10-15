@@ -34,6 +34,8 @@ type fleet struct {
 	push    *push.Sender
 
 	interval, timeout, logEvery time.Duration
+	ftpSession                  time.Duration // FTP sessions renewed after this long (LOG_FTP_SESSION)
+	historyFTPMax               int64         // HISTORY_FTP_MAX_MB in bytes, <0 = no history over FTP
 	offlineAfter, threshold     int
 	loc                         *time.Location
 	discord, siteURL            string
@@ -109,7 +111,7 @@ func (f *fleet) start(c store.ServerConf) error {
 	srv := watch.Server{ID: c.ID, Name: c.Name}
 	crash := &watch.Crash{Mail: f.mailer, Store: f.st, Server: srv, SiteURL: f.siteURL, Push: f.push}
 	if dir != nil {
-		t := &logtail.Tail{ServerID: c.ID, Dir: dir, Files: c.Logs, Every: f.logEvery, Loc: loc, Rcon: r.rcon, SiteURL: f.siteURL,
+		t := &logtail.Tail{ServerID: c.ID, Dir: dir, Files: c.Logs, Every: f.logEvery, SessionMaxAge: f.ftpSession, HistoryFTPMax: f.historyFTPMax, Loc: loc, Rcon: r.rcon, SiteURL: f.siteURL,
 			OnJoin: func(guid, nameRaw string) { f.players.Joined(srv, guid, nameRaw, time.Now()) }}
 		r.tail = t
 		crash.Recent = t.Recent

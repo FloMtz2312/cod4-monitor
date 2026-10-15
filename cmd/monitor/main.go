@@ -38,6 +38,15 @@ func env(k, def string) string {
 	return def
 }
 
+// historyFTPMax: HISTORY_FTP_MAX_MB (50 by default; 0 = the history of games_mp.log is never imported over FTP).
+func historyFTPMax() int64 {
+	mb, err := strconv.Atoi(env("HISTORY_FTP_MAX_MB", "50"))
+	if err != nil || mb <= 0 {
+		return -1
+	}
+	return int64(mb) << 20
+}
+
 func dur(k, def string) time.Duration {
 	d, err := time.ParseDuration(env(k, def))
 	if err != nil {
@@ -164,7 +173,7 @@ func main() {
 		slog.Info("SERVERS is ignored: the servers are managed from the dashboard (Admin tab)")
 	}
 	fl := &fleet{ctx: ctx, st: st, hub: hub, mailer: mailer, players: players, push: pusher, interval: interval, timeout: timeout,
-		logEvery: dur("LOG_POLL_INTERVAL", "2s"), offlineAfter: offlineAfter, threshold: threshold, loc: serverLoc,
+		logEvery: dur("LOG_POLL_INTERVAL", "2s"), ftpSession: dur("LOG_FTP_SESSION", "60s"), historyFTPMax: historyFTPMax(), offlineAfter: offlineAfter, threshold: threshold, loc: serverLoc,
 		discord: os.Getenv("DISCORD_WEBHOOK_URL"), siteURL: siteURL, run: map[int64]*running{}}
 	confs, err := st.ServerConfs()
 	if err != nil {
