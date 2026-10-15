@@ -16,6 +16,7 @@ import (
 //   !top           top 5 killers of the last 7 days
 //   !report <name> <reason>  stored for the admins (Admin tab), with a live alert on the dashboard
 //   !me            a short link (or code) to open and pin the sender's profile on the dashboard
+//   !link <code>   links the sender to the dashboard account that showed the code (admins' chat)
 //   !help          (left to B3 when the server has one: its !help lists these commands)
 // Only live lines are answered (not the lines caught up after a monitor restart).
 
@@ -50,7 +51,7 @@ func (t *Tail) command(st *store.Store, c Chat, emit func(map[string]any)) bool 
 	name, arg, _ := strings.Cut(strings.TrimSpace(c.Message), " ")
 	name, arg = strings.ToLower(name), strings.TrimSpace(arg)
 	switch name {
-	case "!stats", "!top", "!report", "!me":
+	case "!stats", "!top", "!report", "!me", "!link":
 	case "!help":
 		if t.Files.B3DB != "" { // B3 runs on this server: its !help already lists !stats, !top, !report and !me
 			return false
@@ -88,6 +89,17 @@ func (t *Tail) command(st *store.Store, c Chat, emit func(map[string]any)) bool 
 			return true
 		}
 		t.tell(c.Slot, meLine(t.SiteURL, code))
+	case "!link":
+		user, ok, err := st.UseAdminLinkCode(t.ServerID, arg, c.GUID, c.NameRaw, time.Now())
+		switch {
+		case err != nil:
+			slog.Error("store admin link", "err", err)
+		case !ok:
+			t.tell(c.Slot, "^1Unknown or expired code.^7 Get a new one on the dashboard (Moderation, Admins' chat).")
+		default:
+			t.tell(c.Slot, "^2Linked to the dashboard account ^3"+user+"^2.")
+			emit(map[string]any{"type": "adminlink"})
+		}
 	case "!report":
 		target, reason, _ := strings.Cut(arg, " ")
 		if target == "" {

@@ -4,6 +4,7 @@
   import { route } from '../lib/router.svelte.js';
   import { app } from '../lib/state.svelte.js';
   import { inboxCount } from '../lib/inbox.svelte.js';
+  import { chatMentions } from '../lib/adminchat.svelte.js';
   import { t } from '../lib/i18n.svelte.js';
 
   /** @type {{ tabs: string[] }} */
@@ -14,7 +15,7 @@
     serveurs: 'plus', personnalisation: 'plus', equipe: 'plus', console: 'plus', programmes: 'plus', journal: 'plus',
     motdepasse: 'plus', etat: 'plus', reglages: 'plus', notifications: 'plus',
     connexion: 'plus', invitation: 'plus', comptes: 'plus', 'logs-monitor': 'plus',
-    bans: 'moderation', chat: 'moderation', b3: 'moderation', contournements: 'moderation', 'comptes-lies': 'moderation', demos: 'moderation'
+    bans: 'moderation', chat: 'moderation', 'tchat-admins': 'moderation', b3: 'moderation', contournements: 'moderation', 'comptes-lies': 'moderation', demos: 'moderation'
   };
   // screens linked from several tabs keep lit the tab they were opened from (Stats from Plus lights Plus)
   const from = { stats: ['classements', 'plus'], duel: ['classements', 'joueurs'], matchs: ['classements', 'plus'], match: ['classements', 'plus'] };
@@ -23,7 +24,7 @@
     const p = parent[route.name] ?? route.name;
     if (!from[route.name] && tabs.includes(p)) last = p;
   });
-  const todo = $derived(inboxCount(app.serverId));
+  const todo = $derived(inboxCount(app.serverId) + chatMentions(app.serverId)); // mentions in the admins' chat count too
   const active = $derived.by(() => {
     const p = parent[route.name] ?? route.name;
     if (tabs.includes(p)) return p;

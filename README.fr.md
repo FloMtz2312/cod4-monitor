@@ -435,9 +435,19 @@ Avec le `rcon_password` dans `SERVERS`, le monitor répond aux joueurs en messag
 | `!top` | Les 5 meilleurs tueurs des 7 derniers jours |
 | `!report pseudo raison` | Signalement envoyé aux admins : il apparaît dans **Modération** (et en notification push) |
 | `!me` | Un lien court à taper sur le téléphone (`ton-domaine/me/K7QPX`, ou un code sans `DOMAIN`) : il ouvre la fiche du joueur et l'épingle (**C'est moi**). Valable 24 heures |
+| `!link CODE` | Relie le joueur au compte du site qui a affiché ce code (tchat des admins, voir plus bas). Valable 10 minutes, une seule fois |
 | `!help` | Liste des commandes (si le serveur a B3, c'est B3 qui répond : sa liste inclut ces commandes) |
 
 Une commande toutes les 3 secondes par joueur, un signalement par minute.
+
+### Tchat des admins
+
+**Modération → Tchat des admins** : un tchat entre les admins du serveur, sur le site. Il faut la connexion par compte. **Sans B3**, il est ouvert à toute l'équipe du serveur (propriétaire et modérateurs), sans rien à relier, et on mentionne avec `@identifiant` du compte. **Avec B3**, il est réservé aux comptes de l'équipe dont le joueur en jeu est **admin B3 de niveau 20 ou plus** :
+
+1. La première fois, *Obtenir un code*, puis taper `!link CODE` dans le chat du jeu sur ce serveur (10 minutes). Le GUID vient du log du serveur : le compte est relié à ce joueur. *Délier* pour changer de joueur.
+2. Le grade est relu dans B3 : un admin rétrogradé sous le niveau 20 perd l'accès.
+3. **Mentions** : `@12` prévient l'admin dont le numéro B3 est 12 (le `@id` de B3, affiché à côté de chaque admin), `@pseudo` par compte ou pseudo en jeu, `@all` tout le monde. Taper `@` propose la liste.
+4. L'admin mentionné reçoit une **notification push** (s'il a activé les notifications sur son téléphone, quels que soient ses choix d'alertes) et une **pastille** sur l'onglet Modération et la cloche, jusqu'à ce qu'il lise le message.
 
 ### Contournements de ban (spoofer de GUID)
 

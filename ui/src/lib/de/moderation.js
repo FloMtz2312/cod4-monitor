@@ -227,5 +227,28 @@ export default {
   'hôte MySQL refusé : une adresse locale ou privée (seul le super administrateur peut l\'utiliser)': 'MySQL-Host abgelehnt: eine lokale oder private Adresse (nur der Super-Administrator darf sie nutzen)',
   'les fichiers locaux (logs, base B3 SQLite) sont réservés au super administrateur': 'lokale Dateien (Logs, SQLite-B3-Datenbank) sind dem Super-Administrator vorbehalten',
   'MariaDB sur cette machine (projet cod4-server) : mets le chemin de son socket, {path}.': 'MariaDB auf diesem Rechner (Projekt cod4-server): gib den Pfad seines Sockets an, {path}.',
-  'socket MySQL refusé : un fichier dans le dossier B3_ROOT': 'MySQL-Socket abgelehnt: eine Datei im Ordner B3_ROOT'
+  'socket MySQL refusé : un fichier dans le dossier B3_ROOT': 'MySQL-Socket abgelehnt: eine Datei im Ordner B3_ROOT',
+
+  // admins' chat
+  'Tchat des admins': 'Admin-Chat',
+  'Le tchat des admins utilise les grades de B3 : configure la base B3 de ce serveur (Réglages du serveur → réglages avancés).': 'Der Admin-Chat nutzt die B3-Ränge: richte die B3-Datenbank dieses Servers ein (Servereinstellungen → erweiterte Einstellungen).',
+  'Relie ton compte à ton joueur': 'Verknüpfe dein Konto mit deinem Spieler',
+  'Le tchat est réservé aux admins B3 de niveau {n} ou plus. Pour savoir quel joueur tu es, tape un code en jeu, une seule fois.': 'Der Chat ist B3-Admins ab Level {n} vorbehalten. Damit wir wissen, welcher Spieler du bist, gib einmalig einen Code im Spiel ein.',
+  'Tape cette commande dans le chat du jeu sur ce serveur (valable {n} min). Cette page se met à jour toute seule.': 'Gib diesen Befehl im Spielchat auf diesem Server ein (gültig {n} Min.). Diese Seite aktualisiert sich von selbst.',
+  'Obtenir un code': 'Code anfordern',
+  'Accès réservé aux admins': 'Nur für Admins',
+  'Ton compte est relié à {name}, qui n\'est pas admin B3 de niveau {n} ou plus sur ce serveur.': 'Dein Konto ist mit {name} verknüpft, der auf diesem Server kein B3-Admin ab Level {n} ist.',
+  'Relier un autre joueur': 'Anderen Spieler verknüpfen',
+  'Délier': 'Trennen',
+  'Admins du tchat': 'Admins im Chat',
+  'Mentionner {name}': '{name} erwähnen',
+  'Mentionner': 'Erwähnen',
+  'Messages précédents': 'Frühere Nachrichten',
+  'Pas encore de message. Écris @ suivi du numéro B3 d\'un admin pour le prévenir.': 'Noch keine Nachricht. Schreib @ und die B3-Nummer eines Admins, um ihn zu benachrichtigen.',
+  'Message aux admins… @12 pour mentionner': 'Nachricht an die Admins… @12 zum Erwähnen',
+  'Relié à {name}.': 'Verknüpft mit {name}.',
+  '{n} admins notifiés': '{n} Admins benachrichtigt',
+  '{n} admin notifié': '{n} Admin benachrichtigt',
+  'Pas encore de message. Écris @ suivi de l\'identifiant d\'un admin pour le prévenir.': 'Noch keine Nachricht. Schreib @ und den Kontonamen eines Admins, um ihn zu benachrichtigen.',
+  'Message aux admins… @nom pour mentionner': 'Nachricht an die Admins… @Name zum Erwähnen'
 };

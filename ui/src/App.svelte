@@ -30,6 +30,7 @@
   import Invitation from './screens/Invitation.svelte';
   import Accounts from './screens/Accounts.svelte';
   import MonitorLogs from './screens/MonitorLogs.svelte';
+  import AdminChat from './screens/AdminChat.svelte';
   import Bans from './screens/Bans.svelte';
   import Chat from './screens/Chat.svelte';
   import B3 from './screens/B3.svelte';
@@ -40,6 +41,7 @@
   import { tabsFor } from './lib/roles.js';
   import { permsOf } from './lib/perms.js';
   import { loadInbox } from './lib/inbox.svelte.js';
+  import { loadAdminChat } from './lib/adminchat.svelte.js';
   import { applyAccent } from './lib/brand.js';
   import { currentServer } from './lib/state.svelte.js';
   import { route, go } from './lib/router.svelte.js';
@@ -94,6 +96,15 @@
     if (!sid || !(p.has('reports') || p.has('private'))) return;
     loadInbox(sid);
     const every = setInterval(() => { if (!document.hidden) loadInbox(sid); }, 60000);
+    return () => clearInterval(every);
+  });
+
+  // unread messages of the admins' chat (accounts of the server's staff), for the badge of Modération
+  $effect(() => {
+    const sid = app.serverId;
+    if (!sid || app.me?.noauth || permsOf(app.me, sid).size === 0) return;
+    loadAdminChat(sid);
+    const every = setInterval(() => { if (!document.hidden) loadAdminChat(sid); }, 60000);
     return () => clearInterval(every);
   });
 
@@ -165,6 +176,8 @@
       <Bans />
     {:else if route.name === 'chat'}
       <Chat />
+    {:else if route.name === 'tchat-admins'}
+      <AdminChat />
     {:else if route.name === 'b3'}
       <B3 />
     {:else if route.name === 'contournements'}

@@ -10,6 +10,7 @@
   import { app } from '../lib/state.svelte.js';
   import { permsOf, canAct, isOwner } from '../lib/perms.js';
   import { inbox, loadInbox, dismiss } from '../lib/inbox.svelte.js';
+  import { chatUnread, chatMentions } from '../lib/adminchat.svelte.js';
   import { href } from '../lib/router.svelte.js';
   import { agoText, clean } from '../lib/format.js';
   import { say } from '../lib/toast.svelte.js';
@@ -111,6 +112,7 @@
 
   // the moderation tools this account may open
   const tools = $derived([
+    !app.me?.noauth && ['tchat-admins', 'users', 'Tchat des admins'],
     perms.has('private') && ['chat', 'message', 'Chat'],
     (perms.has('private') || perms.has('rcon')) && ['console', 'terminal', 'Console'],
     perms.has('ban') && ['bans', 'ban', 'Bans'],
@@ -135,7 +137,7 @@
 
 {#if tools.length}
   <nav class="tools" aria-label={t('Outils')}>
-    {#each tools as [name, icon, label] (name)}<a href={href(name)}><Icon name={icon} size={18} />{t(label)}</a>{/each}
+    {#each tools as [name, icon, label] (name)}<a href={href(name)}><Icon name={icon} size={18} />{t(label)}{#if name === 'tchat-admins' && chatUnread(id)}<span class="dot" class:mention={chatMentions(id) > 0}>{chatMentions(id) ? '@' + chatMentions(id) : chatUnread(id)}</span>{/if}</a>{/each}
   </nav>
 {/if}
 
@@ -268,6 +270,8 @@
   .tools { display: flex; gap: 6px; overflow-x: auto; margin: 0 0 12px; padding-bottom: 2px; scrollbar-width: none; }
   .tools a { flex: none; display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 13px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--text); text-decoration: none; font-weight: 700; font-size: 13px; }
   .tools a :global(svg) { color: var(--accent); }
+  .dot { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--surface-2); color: var(--text); font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+  .dot.mention { background: var(--danger); color: #fff; }
   .cmds { font-size: 12px; }
   .chips { display: flex; gap: 6px; overflow-x: auto; margin: 12px 0 0; padding-bottom: 2px; scrollbar-width: none; }
   .chips button { flex: none; height: 36px; padding: 0 12px; border-radius: 18px; border: 1px solid var(--line); background: transparent; color: var(--text-2); font-weight: 700; font-size: 13px; }

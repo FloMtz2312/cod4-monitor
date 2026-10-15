@@ -512,6 +512,7 @@ func Router(cfg Config) *gin.Engine {
 	inboxRoutes(g, st)
 	demoRoutes(g, st)
 	brandRoutes(g, db)
+	adminChatRoutes(g, st, user, cfg.Push)
 	meRoutes(r, st)
 	pushRoutes(r, st, cfg.Push)
 

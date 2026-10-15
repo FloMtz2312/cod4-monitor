@@ -148,6 +148,17 @@ func TestChatCommands(t *testing.T) {
 	if want := `tell 3 "^7Your stats: ^3cod4.example.org/me/` + code + ` ^7(valid 24 h)"`; code == "" || sent[len(sent)-1] != want {
 		t.Fatalf("me: %q, want %q", sent[len(sent)-1], want)
 	}
+	tl.lastCmd = nil
+	link, _ := st.AdminLinkCode("babou", 1, time.Now())
+	tl.command(st, Chat{GUID: "111", NameRaw: "^1Babou", NameClean: "Babou", Message: "!link " + strings.ToLower(link), Slot: 3}, emit)
+	if l, ok, _ := st.AdminLinkOf("babou", 1); !ok || l.GUID != "111" || sent[len(sent)-1] != `tell 3 "^2Linked to the dashboard account ^3babou^2."` {
+		t.Fatalf("link: %v %q", l, sent[len(sent)-1])
+	}
+	tl.lastCmd = nil
+	tl.command(st, Chat{GUID: "222", NameRaw: "Omni", NameClean: "Omni", Message: "!link " + link, Slot: 5}, emit) // used once
+	if l, _, _ := st.AdminLinkOf("babou", 1); l.GUID != "111" || !strings.Contains(sent[len(sent)-1], "Unknown or expired code") {
+		t.Fatalf("code used twice: %v %q", l, sent[len(sent)-1])
+	}
 	if tl.command(st, Chat{Message: "!unknown"}, emit) {
 		t.Fatal("unknown command handled")
 	}
