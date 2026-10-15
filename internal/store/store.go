@@ -172,7 +172,7 @@ func Open(path string) (*Store, error) {
 		}
 	}()
 	db.SetMaxOpenConns(1) // ponytail: one connection serializes everything; fine for a handful of servers.
-	if _, err := db.Exec(schema + telemetrySchema + performanceSchema + demosSchema); err != nil {
+	if _, err := db.Exec(schema + telemetrySchema + performanceSchema + demosSchema + importsSchema); err != nil {
 		return nil, err
 	}
 	for _, c := range columns {

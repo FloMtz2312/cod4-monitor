@@ -72,5 +72,25 @@ export default {
   'Dossier des démos (depuis le dossier des logs)': 'Demo folder (from the log folder)',
   'Place réservée aux démos (Go)': 'Space reserved for demos (GB)',
   'Pense à prévenir les joueurs, par exemple dans les règles ou le message du jour : « Les parties sont enregistrées pour l\'anti-triche ».': 'Remember to tell the players, for example in the rules or the message of the day: "Games are recorded for anti-cheat".',
-  'Enregistrer les réglages des démos': 'Save the demo settings'
+  'Enregistrer les réglages des démos': 'Save the demo settings',
+  // import of old logs
+  'connexion perdue': 'connection lost',
+  '{f} : fichier trop gros ({max} au plus)': '{f}: file too big ({max} at most)',
+  '{f} envoyé, import en cours': '{f} sent, import in progress',
+  '{f} : échec de l\'envoi ({err})': '{f}: upload failed ({err})',
+  'Importer d\'anciens logs': 'Import old logs',
+  'Pour récupérer les données d\'un ancien games_mp.log ou enterleave.log : le fichier mis de côté quand le serveur en a commencé un nouveau, une sauvegarde… Le monitor l\'importe en arrière-plan sans arrêter la lecture en direct, et ignore ce qu\'il a déjà.': 'To recover the data of an old games_mp.log or enterleave.log: the file set aside when the server started a new one, a backup… The monitor imports it in the background without stopping the live reading, and skips what it already has.',
+  'Envoie d\'abord l\'enterleave.log : il sert à dater les lignes du games_mp.log de la même période.': 'Send the enterleave.log first: it dates the lines of the games_mp.log of the same period.',
+  'Import indisponible sur ce monitor.': 'Import not available on this monitor.',
+  'Fichiers de log': 'Log files',
+  'Envoi de {f}': 'Sending {f}',
+  'Envoi de {f} : {a} / {b}': 'Sending {f}: {a} / {b}',
+  '{l} lignes lues · {i} importées · {s} déjà connues': '{l} lines read · {i} imported · {s} already known',
+  '{u} sans date': '{u} without a date',
+  'connexions': 'connections',
+  'parties': 'games',
+  'terminé': 'done',
+  'échec': 'failed',
+  'Démos modifiées': 'Demos changed',
+  'Anciens logs importés': 'Old logs imported'
 };

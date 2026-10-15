@@ -303,22 +303,54 @@ func (t *Tail) importHistory(ctx context.Context, st *store.Store) {
 
 // pastLine stores a line of the history: players, kills, chat, profiles (no rounds, no live side effects).
 func (t *Tail) pastLine(st *store.Store, l string, ts time.Time) {
-	var err error
-	if guid, name, ok := ParseIdentity(l); ok {
-		err = st.SeenName(t.ServerID, ts, guid, name, query.StripColors(name))
-	}
-	if err == nil {
-		if c, ok := ParseChat(l); ok {
-			err = st.AddChat(t.ServerID, ts, c.GUID, c.NameRaw, c.NameClean, c.Message, c.Team)
-		} else if k, ok := ParseKill(l); ok {
-			err = st.AddPastKill(t.ServerID, ts, k.KillerGUID, k.KillerName, query.StripColors(k.KillerName), k.KillerTeam,
-				k.VictimGUID, k.VictimName, query.StripColors(k.VictimName), k.VictimTeam, k.Weapon, k.Cause, k.HitLoc, k.Damage)
-		} else if p, ok := ParseProfile(l); ok {
-			n := p.N
-			err = st.AddProfile(t.ServerID, ts, p.GUID, p.Name, query.StripColors(p.Name), p.PlayerID, n[0], n[1], n[2], n[3], n[4], n[5])
-		}
-	}
-	if err != nil {
+	if _, err := storePast(st, t.ServerID, l, ts, false); err != nil {
 		slog.Error("history: store line", "server_id", t.ServerID, "err", err)
 	}
+}
+
+// pastWindow: an imported event within this many seconds of a stored one with the same players is the same event.
+const pastWindow = 180
+
+// storePast stores a past line of games_mp.log. With dedup, a kill, chat message or profile already stored (read
+// live, or imported before) is skipped: stored=false.
+func storePast(st *store.Store, serverID int64, l string, ts time.Time, dedup bool) (stored bool, err error) {
+	known := func(kind, a, b, c string) bool {
+		if !dedup || err != nil {
+			return false
+		}
+		var k bool
+		k, err = st.PastEventKnown(serverID, kind, ts.Unix(), pastWindow, a, b, c)
+		return k
+	}
+	if guid, name, ok := ParseIdentity(l); ok {
+		if err = st.SeenName(serverID, ts, guid, name, query.StripColors(name)); err != nil {
+			return false, err
+		}
+		stored = true
+	}
+	if c, ok := ParseChat(l); ok {
+		if known("chat", c.NameClean, c.Message, "") {
+			return false, err
+		}
+		return true, st.AddChat(serverID, ts, c.GUID, c.NameRaw, c.NameClean, c.Message, c.Team)
+	}
+	if k, ok := ParseKill(l); ok {
+		killer := ""
+		if k.KillerName != "" {
+			killer = store.PlayerKey(k.KillerGUID, query.StripColors(k.KillerName))
+		}
+		if known("kill", killer, store.PlayerKey(k.VictimGUID, query.StripColors(k.VictimName)), k.Weapon) {
+			return false, err
+		}
+		return true, st.AddPastKill(serverID, ts, k.KillerGUID, k.KillerName, query.StripColors(k.KillerName), k.KillerTeam,
+			k.VictimGUID, k.VictimName, query.StripColors(k.VictimName), k.VictimTeam, k.Weapon, k.Cause, k.HitLoc, k.Damage)
+	}
+	if p, ok := ParseProfile(l); ok {
+		if known("profile", store.PlayerKey(p.GUID, query.StripColors(p.Name)), "", "") {
+			return false, err
+		}
+		n := p.N
+		return true, st.AddProfile(serverID, ts, p.GUID, p.Name, query.StripColors(p.Name), p.PlayerID, n[0], n[1], n[2], n[3], n[4], n[5])
+	}
+	return stored, err
 }

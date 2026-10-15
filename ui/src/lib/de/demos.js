@@ -72,5 +72,25 @@ export default {
   'Dossier des démos (depuis le dossier des logs)': 'Demo-Ordner (ausgehend vom Log-Ordner)',
   'Place réservée aux démos (Go)': 'Für Demos reservierter Platz (GB)',
   'Pense à prévenir les joueurs, par exemple dans les règles ou le message du jour : « Les parties sont enregistrées pour l\'anti-triche ».': 'Denk daran, die Spieler zu informieren, z. B. in den Regeln oder der Nachricht des Tages: „Spiele werden für den Anti-Cheat aufgezeichnet“.',
-  'Enregistrer les réglages des démos': 'Demo-Einstellungen speichern'
+  'Enregistrer les réglages des démos': 'Demo-Einstellungen speichern',
+  // import of old logs
+  'connexion perdue': 'Verbindung verloren',
+  '{f} : fichier trop gros ({max} au plus)': '{f}: Datei zu groß (höchstens {max})',
+  '{f} envoyé, import en cours': '{f} gesendet, Import läuft',
+  '{f} : échec de l\'envoi ({err})': '{f}: Senden fehlgeschlagen ({err})',
+  'Importer d\'anciens logs': 'Alte Logs importieren',
+  'Pour récupérer les données d\'un ancien games_mp.log ou enterleave.log : le fichier mis de côté quand le serveur en a commencé un nouveau, une sauvegarde… Le monitor l\'importe en arrière-plan sans arrêter la lecture en direct, et ignore ce qu\'il a déjà.': 'Um die Daten einer alten games_mp.log oder enterleave.log zurückzuholen: die Datei, die beiseitegelegt wurde, als der Server eine neue angefangen hat, ein Backup… Der Monitor importiert sie im Hintergrund, ohne das Live-Lesen anzuhalten, und überspringt, was er schon hat.',
+  'Envoie d\'abord l\'enterleave.log : il sert à dater les lignes du games_mp.log de la même période.': 'Schick zuerst die enterleave.log: Sie datiert die Zeilen der games_mp.log aus demselben Zeitraum.',
+  'Import indisponible sur ce monitor.': 'Import auf diesem Monitor nicht verfügbar.',
+  'Fichiers de log': 'Log-Dateien',
+  'Envoi de {f}': 'Sende {f}',
+  'Envoi de {f} : {a} / {b}': 'Sende {f}: {a} / {b}',
+  '{l} lignes lues · {i} importées · {s} déjà connues': '{l} Zeilen gelesen · {i} importiert · {s} schon bekannt',
+  '{u} sans date': '{u} ohne Datum',
+  'connexions': 'Verbindungen',
+  'parties': 'Partien',
+  'terminé': 'fertig',
+  'échec': 'Fehler',
+  'Démos modifiées': 'Demos geändert',
+  'Anciens logs importés': 'Alte Logs importiert'
 };

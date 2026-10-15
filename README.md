@@ -261,6 +261,7 @@ SERVERS=My Server|203.0.113.10:55555|ftp://user:password@203.0.113.10:21/mods/my
 | `LOG_POLL_INTERVAL` | `2s` | How often the logs are read over FTP |
 | `LOG_FTP_SESSION` | `60s` | The FTP connection is renewed after this long: some FTP servers show a file as it was when the connection started, so new chat lines only appeared after the server dropped the connection. `0` = never |
 | `HISTORY_FTP_MAX_MB` | `50` | Biggest `games_mp.log` whose past is imported over FTP on first start (it is downloaded twice). `0` = never over FTP |
+| `IMPORT_MAX_MB` | `2048` | Biggest old log file accepted by the import of the server settings |
 | `SERVER_LOG_TZ` | `UTC` | Time zone of the game server's clock |
 | `HTTP_PORT` | `8080` | Port the monitor listens on (on a VPS, Caddy forwards to it) |
 | `HTTP_BIND` | empty (all addresses) | Address the monitor listens on. Forced to `127.0.0.1` when `DASHBOARD_PASSWORD` is empty |
@@ -390,6 +391,8 @@ With the FTP URL of the mod folder as the 3rd field of `SERVERS`, the monitor re
 | `enterleave.log` | Joins and leaves with IP and GUID. The whole history is imported on first start. |
 
 Without FTP, the site still works, but only with the server's public info: players, scores, map.
+
+**Import old logs**: in a server's settings (its owner), send an old `enterleave.log` or `games_mp.log` (the file set aside when the server started a new one, a backup…). The monitor imports it in the background while it keeps reading the live logs, and skips what it already has, so a file can be sent again. Send the `enterleave.log` first: it dates the lines of the `games_mp.log` of the same period. Up to `IMPORT_MAX_MB` (2048) per file.
 
 The **Players** screen lists the connections of `enterleave.log` (with the playtime), completed by the players seen only in `games_mp.log` or by B3 (marked "Seen in the game log" / "Seen by B3", without playtime).
 
