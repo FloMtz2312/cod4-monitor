@@ -180,6 +180,7 @@ type Config struct {
 	DemoStatus     DemoStatusOf    // recording status of the server-side demos; nil = unknown
 	DemoViewer     string          // folder of the cod4-demo viewer (GPL-3.0), served on /demo-viewer/; "" = not installed
 	MonitorLogs    func() []string // last lines of the monitor's own log (secrets masked); nil = not kept
+	Imports        *Imports        // imports of old log files uploaded from the dashboard; nil = off
 }
 
 func init() {
@@ -233,6 +234,7 @@ func Router(cfg Config) *gin.Engine {
 	demoViewerRoutes(r, cfg.DemoViewer)
 	observabilityRoutes(r, st)
 	monitorLogRoutes(r, cfg.MonitorLogs)
+	importRoutes(r, cfg.Imports)
 
 	// accounts only (not in visitorRoutes)
 	r.GET("/api/vps", func(c *gin.Context) {

@@ -261,6 +261,7 @@ SERVERS=My Server|203.0.113.10:55555|ftp://user:password@203.0.113.10:21/mods/my
 | `LOG_POLL_INTERVAL` | `2s` | Wie oft die Logs per FTP gelesen werden |
 | `LOG_FTP_SESSION` | `60s` | Die FTP-Verbindung wird nach dieser Zeit erneuert: Manche FTP-Server zeigen eine Datei so, wie sie beim Öffnen der Verbindung war; der Chat kam dann erst an, wenn der Server die Verbindung trennte. `0` = nie |
 | `HISTORY_FTP_MAX_MB` | `50` | Maximale Größe der `games_mp.log`, deren Vergangenheit beim ersten Start per FTP importiert wird (sie wird zweimal heruntergeladen). `0` = nie per FTP |
+| `IMPORT_MAX_MB` | `2048` | Maximale Größe einer alten Log-Datei, die über den Import der Server-Einstellungen geschickt wird |
 | `SERVER_LOG_TZ` | `UTC` | Zeitzone der Uhr des Spielservers |
 | `HTTP_PORT` | `8080` | Port, auf dem der Monitor lauscht (auf einem VPS leitet Caddy dorthin weiter) |
 | `HTTP_BIND` | leer (alle Adressen) | Adresse, auf der der Monitor lauscht. Wird auf `127.0.0.1` gesetzt, wenn `DASHBOARD_PASSWORD` leer ist |
@@ -390,6 +391,8 @@ Mit der FTP-URL des Mod-Ordners als 3. Feld von `SERVERS` liest der Monitor drei
 | `enterleave.log` | Beitritte und Abgänge mit IP und GUID. Der gesamte Verlauf wird beim ersten Start importiert. |
 
 Ohne FTP funktioniert die Seite trotzdem, aber nur mit den öffentlichen Infos des Servers: Spieler, Scores, Map.
+
+**Alte Logs importieren**: In den Einstellungen eines Servers (sein Besitzer) schickst du eine alte `enterleave.log` oder `games_mp.log` (die Datei, die beiseitegelegt wurde, als der Server eine neue angefangen hat, ein Backup…). Der Monitor importiert sie im Hintergrund, ohne das Live-Lesen anzuhalten, und überspringt, was er schon hat: Eine Datei kann gefahrlos erneut geschickt werden. Schick zuerst die `enterleave.log`: Sie datiert die Zeilen der `games_mp.log` aus demselben Zeitraum. Bis zu `IMPORT_MAX_MB` (2048) pro Datei.
 
 Die Ansicht **Spieler** listet die Verbindungen aus `enterleave.log` (mit Spielzeit), ergänzt um die Spieler, die nur in `games_mp.log` oder von B3 gesehen wurden (markiert mit „Im Spiel-Log gesehen“ / „Von B3 gesehen“, ohne Spielzeit).
 

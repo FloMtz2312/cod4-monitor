@@ -33,6 +33,8 @@ var auditActions = map[string]string{
 	"POST /api/users":                             "Compte créé",
 	"POST /api/serverconf":                        "Serveur ajouté",
 	"PUT /api/serverconf/:sid":                    "Serveur modifié",
+	"PUT /api/serverconf/:sid/demos":              "Démos modifiées",
+	"PUT /api/serverconf/:sid/imports":            "Anciens logs importés",
 	"POST /api/serverconf/:sid/enabled":           "Surveillance d'un serveur activée / arrêtée",
 	"POST /api/users/:name/password":              "Mot de passe réinitialisé",
 	"DELETE /api/users/:name":                     "Compte supprimé",

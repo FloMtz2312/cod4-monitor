@@ -261,6 +261,7 @@ SERVERS=Mon Serveur|203.0.113.10:55555|ftp://user:motdepasse@203.0.113.10:21/mod
 | `LOG_POLL_INTERVAL` | `2s` | Fréquence de lecture des logs par FTP |
 | `LOG_FTP_SESSION` | `60s` | La connexion FTP est renouvelée après cette durée : certains serveurs FTP montrent un fichier tel qu'il était à l'ouverture de la connexion, le chat n'arrivait alors qu'à la coupure de la connexion par le serveur. `0` = jamais |
 | `HISTORY_FTP_MAX_MB` | `50` | Taille maximale du `games_mp.log` dont le passé est importé par FTP au premier démarrage (il est téléchargé deux fois). `0` = jamais par FTP |
+| `IMPORT_MAX_MB` | `2048` | Taille maximale d'un ancien fichier de log envoyé par l'import des réglages du serveur |
 | `SERVER_LOG_TZ` | `UTC` | Fuseau horaire de l'horloge du serveur de jeu |
 | `HTTP_PORT` | `8080` | Port d'écoute du monitor (sur un VPS, Caddy lui transmet les requêtes) |
 | `HTTP_BIND` | vide (toutes les adresses) | Adresse d'écoute du monitor. Forcée à `127.0.0.1` quand `DASHBOARD_PASSWORD` est vide |
@@ -390,6 +391,8 @@ Avec l'URL FTP du dossier du mod en 3e champ de `SERVERS`, le monitor lit trois 
 | `enterleave.log` | Connexions et départs avec IP et GUID. Tout l'historique est importé au premier lancement. |
 
 Sans FTP, le site fonctionne quand même, mais seulement avec les infos publiques du serveur : joueurs, scores, map.
+
+**Importer d'anciens logs** : dans les réglages d'un serveur (son propriétaire), envoie un ancien `enterleave.log` ou `games_mp.log` (le fichier mis de côté quand le serveur en a commencé un nouveau, une sauvegarde…). Le monitor l'importe en arrière-plan sans arrêter la lecture en direct, et ignore ce qu'il a déjà : un fichier peut être renvoyé sans risque. Envoie d'abord l'`enterleave.log` : il sert à dater les lignes du `games_mp.log` de la même période. Jusqu'à `IMPORT_MAX_MB` (2048) par fichier.
 
 L'écran **Joueurs** liste les connexions d'`enterleave.log` (avec le temps de jeu), complétées par les joueurs vus seulement dans `games_mp.log` ou par B3 (marqués « Vu dans le log du jeu » / « Vu par B3 », sans temps de jeu).
 

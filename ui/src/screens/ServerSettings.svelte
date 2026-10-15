@@ -4,6 +4,7 @@
   // sent back: left empty, the saved ones are kept.
   import BackTitle from '../components/BackTitle.svelte';
   import DemoSettings from '../components/DemoSettings.svelte';
+  import ImportLogs from '../components/ImportLogs.svelte';
   import { api, get, post } from '../lib/api.js';
   import { app, loadServers, selectServer } from '../lib/state.svelte.js';
   import { route, back } from '../lib/router.svelte.js';
@@ -244,6 +245,7 @@
     </section>
 
     <DemoSettings serverId={conf.id} />
+    <ImportLogs serverId={conf.id} />
 
     {#if superAdmin && admins}
       <section class="card box">

@@ -242,9 +242,22 @@ func main() {
 		slog.Error("interface", "err", err)
 		os.Exit(1)
 	}
+	// old log files uploaded from the dashboard, imported in the background next to the live reading
+	importMax, _ := strconv.Atoi(env("IMPORT_MAX_MB", "2048"))
+	imports := api.NewImports(st, filepath.Join(filepath.Dir(env("DB_PATH", "monitor.db")), "imports"), int64(max(importMax, 1))<<20,
+		func(id int64) *time.Location {
+			if c, ok, _ := st.ServerConf(id); ok && c.Logs.TZ != "" {
+				if l, err := time.LoadLocation(c.Logs.TZ); err == nil {
+					return l
+				}
+			}
+			return serverLoc
+		})
+	go imports.Run(ctx)
+
 	handler := api.Router(api.Config{
 		Store: st, Hub: hub, UI: uiDist, PollInterval: interval, Rcon: fl.Rcon, ServerLoc: serverLoc, Servers: fl, Push: pusher,
-		DemoStatus: fl.DemoStatus, DemoViewer: os.Getenv("DEMO_VIEWER_DIR"), MonitorLogs: logs.Lines,
+		DemoStatus: fl.DemoStatus, DemoViewer: os.Getenv("DEMO_VIEWER_DIR"), MonitorLogs: logs.Lines, Imports: imports,
 		TrustedProxies: proxies,
 		User:           os.Getenv("DASHBOARD_USER"), Password: os.Getenv("DASHBOARD_PASSWORD"),
 		RecentLogs: func(id int64) []string {
