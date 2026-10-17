@@ -63,7 +63,7 @@
         <span class="res">
           {#if x.score_allies != null}
             <span class="score"><span class="allies">{x.score_allies}</span>–<span class="axis">{x.score_axis}</span></span>
-            <span class="win">{result(x)}</span>
+            <span class="win">{result(x)}{#if x.estimated}<span class="est" title={t('Déduit des kills : le mod n\'écrit pas les résultats des rounds.')}>{' · '}{t('estimé')}</span>{/if}</span>
           {/if}
           {#if x.top_name}<span class="top">{t('Top')} <CodName raw={x.top_name} /> · {x.top_kills}</span>{/if}
         </span>
@@ -90,6 +90,7 @@
   .allies { color: var(--allies); }
   .axis { color: var(--axis); }
   .win { font-size: 12px; color: var(--text-2); font-weight: 700; }
+  .est { font-weight: 600; color: var(--muted); }
   .top { display: flex; gap: 4px; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; max-width: 100%; }
   @media (min-width: 960px) { .list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>

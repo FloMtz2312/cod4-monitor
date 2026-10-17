@@ -88,7 +88,8 @@ func TestMatchesAndAudit(t *testing.T) {
 	if p := mine.Matches[1]["player"].(map[string]any); p["kills"] != 2.0 || p["deaths"] != 1.0 || p["team"] != "allies" || p["result"] != "win" {
 		t.Fatalf("player in crash: %+v", p)
 	}
-	if p := mine.Matches[0]["player"].(map[string]any); p["kills"] != 0.0 || p["deaths"] != 1.0 || p["result"] != "" {
+	// 2nd bog match: no result line, a (allies) killed by c (axis), nobody else seen: the axis win, estimated
+	if p := mine.Matches[0]["player"].(map[string]any); p["kills"] != 0.0 || p["deaths"] != 1.0 || p["result"] != "loss" || mine.Matches[0]["estimated"] != true {
 		t.Fatalf("player in bog: %+v", p)
 	}
 	var one struct {
@@ -181,3 +182,71 @@ func TestMatchesAndAudit(t *testing.T) {
 }
 
 func jsonNum(n int64) string { b, _ := json.Marshal(n); return string(b) }
+
+// A stock mod: S&D logged as one round per map, no result line. The match page finds the rounds and their winners.
+func TestStockSDMatch(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	st, err := store.Open(filepath.Join(t.TempDir(), "t.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	st.UpsertServer("S", "127.0.0.1", 28960)
+	base := time.Now().Add(-2 * time.Hour)
+	at := func(s int) time.Time { return base.Add(time.Duration(s) * time.Second) }
+	kill := func(s int, killer, kteam, victim, vteam string) {
+		if err := st.AddKill(1, at(s), killer, killer, killer, kteam, victim, victim, victim, vteam, "m40a3_mp", "MOD_RIFLE_BULLET", "torso", 100); err != nil {
+			t.Fatal(err)
+		}
+	}
+	st.StartRound(1, at(0), "mp_crash", "sd")
+	kill(10, "x1", "axis", "a1", "allies") // round 1: the allies win
+	kill(20, "a2", "allies", "x1", "axis")
+	kill(30, "a2", "allies", "x2", "axis")
+	kill(60, "x1", "axis", "a2", "allies") // round 2: the axis win
+	kill(70, "x2", "axis", "a1", "allies")
+	kill(100, "x1", "axis", "a1", "allies") // round 3: the axis win
+	kill(110, "x2", "axis", "a2", "allies")
+	st.EndRound(1, at(200))
+
+	r := gin.New()
+	matchRoutes(r.Group("/api/servers/:id"), st.DB)
+	statsRoutes(r.Group("/api/servers/:id"), st.DB)
+	get := func(path string, out any) {
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, httptest.NewRequest("GET", path, nil))
+		if w.Code != 200 {
+			t.Fatalf("%s: %d %s", path, w.Code, w.Body)
+		}
+		json.Unmarshal(w.Body.Bytes(), out)
+	}
+	var ms struct{ Matches []map[string]any }
+	get("/api/servers/1/matches?range=24h", &ms)
+	if len(ms.Matches) != 1 || ms.Matches[0]["winner"] != "axis" || ms.Matches[0]["score_allies"] != 1.0 || ms.Matches[0]["score_axis"] != 2.0 ||
+		ms.Matches[0]["estimated"] != true || ms.Matches[0]["match"].(map[string]any)["rounds"] != 3.0 {
+		t.Fatalf("matches: %+v", ms.Matches)
+	}
+	id := ms.Matches[0]["match"].(map[string]any)["id"].(float64)
+	var one struct {
+		Rounds   []map[string]any
+		Timeline []map[string]any
+		Winner   string
+	}
+	get(fmt.Sprintf("/api/servers/1/match?id=%d", int64(id)), &one)
+	if len(one.Rounds) != 3 || one.Winner != "axis" || one.Rounds[0]["winner"] != "allies" || one.Rounds[2]["winner"] != "axis" ||
+		one.Rounds[2]["score_axis"] != 2.0 || one.Rounds[1]["kills"] != 2.0 || one.Rounds[1]["estimated"] != true {
+		t.Fatalf("rounds: %+v", one.Rounds)
+	}
+	per := map[any]int{}
+	for _, e := range one.Timeline {
+		per[e["round_id"]]++
+	}
+	if per[one.Rounds[0]["id"]] != 3 || per[one.Rounds[1]["id"]] != 2 || per[one.Rounds[2]["id"]] != 2 {
+		t.Fatalf("timeline by round: %v", per)
+	}
+	var rs struct{ Recent, Maps []map[string]any }
+	get("/api/servers/1/rounds?range=24h", &rs)
+	if len(rs.Recent) != 3 || rs.Recent[0]["winner"] != "axis" || rs.Recent[2]["kills"] != 3.0 || len(rs.Maps) != 1 || rs.Maps[0]["rounds"] != 3.0 ||
+		rs.Recent[0]["ended_at"] != float64(at(200).Unix()) {
+		t.Fatalf("rounds: %+v", rs)
+	}
+}

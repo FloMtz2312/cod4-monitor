@@ -11,7 +11,7 @@ import (
 	"cod4monitor/internal/evasion"
 )
 
-// A match is a run of consecutive rounds on the same map and mode (S&D logs an InitGame per round);
+// A match is a run of consecutive rounds on the same map and mode (a round per InitGame or RE line of the mod);
 // a pause of more than 10 minutes also starts a new one. Its id is the id of its first round.
 type match struct {
 	ID         int64   `json:"id"`
@@ -124,22 +124,23 @@ func matchRoutes(g *gin.RouterGroup, db *sql.DB) {
 				byRound[r] = a
 			}
 		}
-		q := `SELECT round_id, ts, killer_key, killer_name, killer_team, victim_key, victim_team, teamkill FROM kills
-			WHERE server_id=? AND ts>=? AND round_id IS NOT NULL`
-		args := []any{id, from}
-		if key != "" { // only the player's kills and deaths (indexed): the list shows their figures, not the top killer
-			q += ` AND (killer_key=? OR victim_key=?)`
-			args = append(args, key, key)
-		}
-		ks, err := rows(db, q, args...)
+		// every kill of the period: the figures of the list, and the rounds and winners when the mod doesn't write them
+		ks, err := rows(db, `SELECT id, round_id, ts, killer_key, killer_name, killer_team, victim_key, victim_team, teamkill FROM kills
+			WHERE server_id=? AND ts>=? AND round_id IS NOT NULL`, id, from)
 		if fail(c, err) {
 			return
 		}
+		killsOf := map[*agg][]roundKill{}
 		for _, k := range ks {
 			a := byRound[k["round_id"].(int64)]
 			if a == nil {
 				continue
 			}
+			rk := roundKill{ID: k["id"].(int64), Round: k["round_id"].(int64), TS: k["ts"].(int64), Victim: k["victim_key"].(string), TK: k["teamkill"].(int64) != 0}
+			rk.KillerName, _ = k["killer_name"].(string)
+			rk.KillerTeam, _ = k["killer_team"].(string)
+			rk.VictimTeam, _ = k["victim_team"].(string)
+			killsOf[a] = append(killsOf[a], rk)
 			a.players[k["victim_key"].(string)] = true
 			if key != "" {
 				team, _ := k["victim_team"].(string)
@@ -158,6 +159,8 @@ func matchRoutes(g *gin.RouterGroup, db *sql.DB) {
 				}
 			}
 			if kk, ok := k["killer_key"].(string); ok {
+				rk.Killer = kk
+				killsOf[a][len(killsOf[a])-1] = rk
 				a.players[kk] = true
 				if k["teamkill"].(int64) == 0 {
 					a.kills[kk]++
@@ -178,11 +181,11 @@ func matchRoutes(g *gin.RouterGroup, db *sql.DB) {
 					top, n = k, v
 				}
 			}
-			w, sa, sx := matchResult(db, m)
+			w, sa, sx, est := matchOutcome(db, m, killsOf[a], nil)
 			item := gin.H{"match": m, "players": len(a.players), "top_key": top, "top_name": a.names[top], "top_kills": n,
-				"winner": w, "score_allies": sa, "score_axis": sx}
+				"winner": w, "score_allies": sa, "score_axis": sx, "estimated": est}
 			if key != "" {
-				item = gin.H{"match": m, "winner": w, "score_allies": sa, "score_axis": sx}
+				item = gin.H{"match": m, "winner": w, "score_allies": sa, "score_axis": sx, "estimated": est}
 				result := ""
 				if (w == "allies" || w == "axis") && a.team != "" {
 					result = map[bool]string{true: "win", false: "loss"}[w == a.team]
@@ -275,24 +278,31 @@ func matchRoutes(g *gin.RouterGroup, db *sql.DB) {
 				}
 			}
 		}
-		rounds, err := rows(db, `SELECT r.id, r.started_at, r.ended_at, COUNT(k.id) AS kills, r.winner, r.score_allies, r.score_axis,
-			(SELECT killer_name FROM kills k3 WHERE k3.round_id=r.id AND killer_key IS NOT NULL AND teamkill=0 ORDER BY id LIMIT 1) AS first_blood,
-			(SELECT group_concat(type||':'||name_raw||':'||COALESCE(value, 0), '|') FROM game_events g WHERE g.round_id=r.id) AS events,
-			(SELECT killer_name FROM kills k2 WHERE k2.round_id=r.id AND killer_key IS NOT NULL AND teamkill=0 GROUP BY killer_key ORDER BY COUNT(*) DESC LIMIT 1) AS top_killer
-			FROM rounds r LEFT JOIN kills k ON k.round_id=r.id WHERE r.id IN (`+in+`) GROUP BY r.id ORDER BY r.started_at`, args[1:]...)
+		kills, events, err := matchKills(db, id, m.Rounds)
 		if fail(c, err) {
 			return
 		}
-		w, sa, sx := matchResult(db, m)
+		rounds := []playedRound{}
+		w, sa, sx, est := matchOutcome(db, m, kills, events, &rounds)
 		timeline, err := matchTimeline(db, id, m.Rounds)
 		if fail(c, err) {
 			return
+		}
+		for _, e := range timeline { // the events of a round found inside a database round go to it
+			rid, _ := e["round_id"].(int64)
+			ts, _ := e["ts"].(int64)
+			for _, r := range rounds {
+				if r.dbRound == rid && (r.ID == rid || r.Start <= ts) {
+					e["round_id"] = r.ID
+				}
+			}
 		}
 		truncated := len(timeline) > 5000
 		if truncated {
 			timeline = timeline[:5000]
 		}
-		c.JSON(200, gin.H{"match": m, "players": players, "rounds": rounds, "winner": w, "score_allies": sa, "score_axis": sx, "timeline": timeline, "timeline_truncated": truncated})
+		c.JSON(200, gin.H{"match": m, "players": players, "rounds": rounds, "winner": w, "score_allies": sa, "score_axis": sx, "estimated": est,
+			"timeline": timeline, "timeline_truncated": truncated})
 	})
 
 	// Badges of the period: the best player of each category (with a minimum of data where a ratio is involved).
@@ -531,14 +541,45 @@ func tagBadge(tag string) string {
 		GROUP BY killer_key ORDER BY value DESC LIMIT 1`
 }
 
-// matchResult: winner and final score of a match: the mod's ME line, else the RE line of its last round with one.
-func matchResult(db *sql.DB, m *match) (winner any, allies, axis any) {
+// matchOutcome: winner and final score of a match: the mod's ME line, else the RE line of its last round with one,
+// else estimated from the kills (estimated=true). The rounds of the match are also found when rounds is not nil, and
+// the match's round count follows them.
+func matchOutcome(db *sql.DB, m *match, kills []roundKill, events []roundEvent, rounds ...*[]playedRound) (winner any, allies, axis any, estimated bool) {
 	in, args := placeholders(m.Rounds)
+	var db_ []playedRound
+	rs, err := db.Query(`SELECT id, started_at, COALESCE(ended_at, started_at), COALESCE(winner, ''), score_allies, score_axis FROM rounds
+		WHERE id IN (`+in+`) ORDER BY started_at, id`, args...)
+	if err == nil {
+		for rs.Next() {
+			var r playedRound
+			var a, x sql.NullInt64
+			if rs.Scan(&r.ID, &r.Start, &r.End, &r.Winner, &a, &x) == nil {
+				if a.Valid && x.Valid {
+					av, xv := int(a.Int64), int(x.Int64)
+					r.ScoreAllies, r.ScoreAxis = &av, &xv
+				}
+				db_ = append(db_, r)
+			}
+		}
+		rs.Close()
+	}
+	played := inferRounds(m.Gametype, db_, kills, events)
+	if len(rounds) > 0 && rounds[0] != nil {
+		*rounds[0] = played
+	}
+	if n := len(played); n > 0 && eliminationMode(m.Gametype) {
+		m.RoundCount = n
+	}
 	if db.QueryRow(`SELECT winner, score_allies, score_axis FROM match_results WHERE round_id IN (`+in+`) ORDER BY id DESC LIMIT 1`, args...).Scan(&winner, &allies, &axis) == nil {
 		return
 	}
-	db.QueryRow(`SELECT winner, score_allies, score_axis FROM rounds WHERE id IN (`+in+`) AND winner IS NOT NULL ORDER BY id DESC LIMIT 1`, args...).Scan(&winner, &allies, &axis)
-	return
+	if db.QueryRow(`SELECT winner, score_allies, score_axis FROM rounds WHERE id IN (`+in+`) AND winner IS NOT NULL ORDER BY id DESC LIMIT 1`, args...).Scan(&winner, &allies, &axis) == nil {
+		return
+	}
+	if w, a, x, ok := estimatedResult(m.Gametype, played, kills); ok {
+		return w, a, x, true
+	}
+	return nil, nil, nil, false
 }
 
 func mustInt(s string) int64 {

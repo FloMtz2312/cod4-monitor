@@ -87,5 +87,8 @@ export default {
   'Aucun joueur sur la période': 'Keine Spieler im Zeitraum',
   'en jeu': 'im Spiel',
   'aussi : {names}': 'auch: {names}',
-  'Afficher plus ({n} sur {total})': 'Mehr anzeigen ({n} von {total})'
+  'Afficher plus ({n} sur {total})': 'Mehr anzeigen ({n} von {total})',
+  'Déduit des kills : le mod n\'écrit pas les résultats des rounds.': 'Aus den Kills abgeleitet: der Mod schreibt die Rundenergebnisse nicht.',
+  'estimé': 'geschätzt',
+  'Résultat estimé d\'après les kills : le mod n\'écrit pas les résultats des rounds.': 'Ergebnis aus den Kills geschätzt: der Mod schreibt die Rundenergebnisse nicht.'
 };

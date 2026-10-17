@@ -117,7 +117,12 @@ func cardRoutes(g *gin.RouterGroup, db *sql.DB) {
 				c.Status(404)
 				return
 			}
-			_, a, x := matchResult(db, found)
+			kills, events, err := matchKills(db, id, found.Rounds)
+			if err != nil {
+				c.Status(500)
+				return
+			}
+			_, a, x, _ := matchOutcome(db, found, kills, events)
 			score := "—"
 			if a != nil && x != nil {
 				score = fmt.Sprintf("%v–%v", a, x)

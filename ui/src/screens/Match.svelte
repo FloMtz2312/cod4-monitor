@@ -103,6 +103,7 @@
         <span class="r"><small>{teamName('axis').toUpperCase()}</small><b class="axis">{d.score_axis}</b></span>
       </div>
       {#if result}<p class="result">{result}</p>{/if}
+      {#if d.estimated}<p class="est">{t('Résultat estimé d\'après les kills : le mod n\'écrit pas les résultats des rounds.')}</p>{/if}
     {/if}
     {#if d.rounds?.some(r => r.winner)}
       <div class="strip" aria-label={t('Vainqueur de chaque round')}>
@@ -184,6 +185,7 @@
 {/if}
 
 <style>
+  .est { margin: 4px 0 0; text-align: center; font-size: 12px; color: var(--muted); }
   .back { display: inline-flex; align-items: center; gap: 4px; height: 40px; padding: 0 10px 0 4px; margin: -4px 0 8px -4px; border: 0; background: transparent; color: var(--text-2); font-weight: 700; }
   .pad { padding: 16px; }
   .hero { overflow: hidden; padding-bottom: 14px; }

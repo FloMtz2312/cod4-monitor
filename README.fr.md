@@ -425,6 +425,8 @@ Le mod `pm_sniper` (dépôt séparé) écrit des lignes supplémentaires dans `g
 
 On les retrouve dans le classement (noscopes, quickscopes, wallbangs, plus long kill, clutchs, premier sang, % de victoires), les records et badges, les matchs (gagnant, score, faits marquants de chaque round), la fiche joueur et **Plus → Stats avancées → Maps** (votes de map). Sans ce mod, ces colonnes et sections sont masquées et tout le reste fonctionne.
 
+**Matchs avec n'importe quel mod** : le jeu de base n'écrit pas le gagnant des rounds dans le log (seulement les kills). Sans les lignes `RE` / `ME`, le monitor le déduit des kills : en S&D, un round se termine quand une équipe est éliminée (ou quand un joueur déjà mort meurt à nouveau, signe d'un nouveau round), et l'équipe encore en vie le gagne ; une bombe désamorcée va à l'équipe du démineur, une bombe posée et pas désamorcée à celle du poseur (lignes `P_P` / `P_D`, écrites par Promod et beaucoup de mods). En match à mort par équipe, l'équipe qui a le plus de kills gagne. Ces résultats sont marqués **estimé** : un joueur qui n'a ni tué ni été tué autour d'un round est inconnu du monitor, et un round gagné au temps reste sans gagnant.
+
 ### Commandes dans le chat du jeu
 
 Avec le `rcon_password` dans `SERVERS`, le monitor répond aux joueurs en message privé (`tell`) :
