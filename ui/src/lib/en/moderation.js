@@ -251,5 +251,8 @@ export default {
   'Message aux admins… @pseudo pour mentionner': 'Message to the admins… @name to mention',
   'Tchat': 'Chat',
   '{n} mentions': '{n} mentions',
-  '{n} non lus': '{n} unread'
+  '{n} non lus': '{n} unread',
+  'Appel admin': 'Admin call',
+  'a tapé !calladmin en jeu': 'typed !calladmin in game',
+  'Voir le joueur': 'See the player'
 };

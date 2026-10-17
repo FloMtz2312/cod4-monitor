@@ -16,6 +16,8 @@ import (
 //   !top           top 5 killers of the last 7 days
 //   !report <name> <reason>  stored for the admins (Admin tab), with a live alert on the dashboard
 //   !me            a short link (or code) to open and pin the sender's profile on the dashboard
+//   !calladmin <reason>  calls the admins: a message in their chat on the dashboard and a push notification (B3's own
+//                  !calladmin, when it has one, answers in game)
 //   !link <code>   links the sender to the dashboard account that showed the code (admins' chat)
 //   !help          (left to B3 when the server has one: its !help lists these commands)
 // Only live lines are answered (not the lines caught up after a monitor restart).
@@ -23,6 +25,7 @@ import (
 const (
 	cmdCooldown    = 3 * time.Second
 	reportCooldown = time.Minute
+	callCooldown   = 2 * time.Minute
 	welcomeDelay   = 30 * time.Second // J is logged on connect, while the player is still loading
 )
 
@@ -51,7 +54,7 @@ func (t *Tail) command(st *store.Store, c Chat, emit func(map[string]any)) bool 
 	name, arg, _ := strings.Cut(strings.TrimSpace(c.Message), " ")
 	name, arg = strings.ToLower(name), strings.TrimSpace(arg)
 	switch name {
-	case "!stats", "!top", "!report", "!me", "!link":
+	case "!stats", "!top", "!report", "!me", "!link", "!calladmin":
 	case "!help":
 		if t.Files.B3DB != "" { // B3 runs on this server: its !help already lists !stats, !top, !report and !me
 			return false
@@ -65,19 +68,29 @@ func (t *Tail) command(st *store.Store, c Chat, emit func(map[string]any)) bool 
 	}
 	key := fmt.Sprint(c.Slot)
 	busy := time.Since(t.lastCmd[key]) < cmdCooldown || name == "!report" && time.Since(t.lastCmd["r"+key]) < reportCooldown
-	if !busy {
+	called := name == "!calladmin" && time.Since(t.lastCmd["c"+key]) < callCooldown
+	if !busy && !called {
 		t.lastCmd[key] = time.Now()
-		if name == "!report" {
+		switch name {
+		case "!report":
 			t.lastCmd["r"+key] = time.Now()
+		case "!calladmin":
+			t.lastCmd["c"+key] = time.Now()
 		}
 	}
 	t.mu.Unlock()
 	if busy {
 		return true
 	}
+	if called {
+		if t.Files.B3DB == "" {
+			t.tell(c.Slot, "^3The admins were already called^7, wait a moment.")
+		}
+		return true
+	}
 	switch name {
 	case "!help":
-		t.tell(c.Slot, "^3!stats^7 [name] your stats  ^3!top^7 best of the week  ^3!report^7 name reason  ^3!me^7 your stats online")
+		t.tell(c.Slot, "^3!stats^7 [name] your stats  ^3!top^7 best of the week  ^3!report^7 name reason  ^3!calladmin^7 reason  ^3!me^7 your stats online")
 	case "!stats":
 		t.tell(c.Slot, statsLine(st.DB, t.ServerID, c, arg))
 	case "!top":
@@ -99,6 +112,13 @@ func (t *Tail) command(st *store.Store, c Chat, emit func(map[string]any)) bool 
 		default:
 			t.tell(c.Slot, "^2Linked to the dashboard account ^3"+user+"^2.")
 			emit(map[string]any{"type": "adminlink"})
+		}
+	case "!calladmin":
+		// the API writes it in the admins' chat and notifies them (it knows who they are)
+		emit(map[string]any{"type": "calladmin", "guid": c.GUID, "key": store.PlayerKey(c.GUID, c.NameClean), "name_raw": c.NameRaw,
+			"reason": arg, "ts": time.Now().Unix()})
+		if t.Files.B3DB == "" { // B3 answers its own !calladmin
+			t.tell(c.Slot, "^2The admins have been called, thanks.")
 		}
 	case "!report":
 		target, reason, _ := strings.Cut(arg, " ")

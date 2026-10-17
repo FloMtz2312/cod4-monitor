@@ -436,6 +436,7 @@ Mit dem `rcon_password` in `SERVERS` antwortet der Monitor den Spielern per priv
 | `!stats` oder `!stats name` | Kills, Tode, K/D, Headshot-%, Noscopes, längster Kill |
 | `!top` | Top 5 der Killer der letzten 7 Tage |
 | `!report name reason` | Meldung an die Admins: Sie erscheint unter **Moderation** (und als Push-Benachrichtigung) |
+| `!calladmin Grund` | Ruft die Admins: eine Nachricht im **Admin-Chat** (alle erwähnt) und eine Benachrichtigung auf ihr Handy; ist niemand im Chat, werden die Konten benachrichtigt, die Meldungen bearbeiten. Einmal alle 2 Minuten pro Spieler. Hat B3 einen eigenen `!calladmin`-Befehl, antwortet B3 im Spiel und der Monitor ergänzt Chat und Benachrichtigungen |
 | `!me` | Ein kurzer Link zum Eintippen auf dem Handy (`your-domain/me/K7QPX`, oder ein Code ohne `DOMAIN`): Er öffnet das Profil des Spielers und pinnt es an (**Das bin ich**). 24 Stunden gültig |
 | `!link CODE` | Verknüpft den Spieler mit dem Dashboard-Konto, das diesen Code angezeigt hat (Admin-Chat, siehe unten). 10 Minuten gültig, einmalig |
 | `!help` | Liste der Befehle (auf einem Server mit B3 antwortet B3: Seine Liste enthält diese Befehle) |

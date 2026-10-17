@@ -436,6 +436,7 @@ Avec le `rcon_password` dans `SERVERS`, le monitor répond aux joueurs en messag
 | `!stats` ou `!stats pseudo` | Kills, morts, K/D, % de headshots, noscopes, plus long kill |
 | `!top` | Les 5 meilleurs tueurs des 7 derniers jours |
 | `!report pseudo raison` | Signalement envoyé aux admins : il apparaît dans **Modération** (et en notification push) |
+| `!calladmin raison` | Appelle les admins : un message dans le **tchat des admins** (tous mentionnés) et une notification sur leur téléphone ; sans admin dans le tchat, les comptes qui traitent les signalements sont prévenus. Une fois toutes les 2 minutes par joueur. Si B3 a sa propre commande `!calladmin`, c'est lui qui répond en jeu, et le monitor ajoute le tchat et les notifications |
 | `!me` | Un lien court à taper sur le téléphone (`ton-domaine/me/K7QPX`, ou un code sans `DOMAIN`) : il ouvre la fiche du joueur et l'épingle (**C'est moi**). Valable 24 heures |
 | `!link CODE` | Relie le joueur au compte du site qui a affiché ce code (tchat des admins, voir plus bas). Valable 10 minutes, une seule fois |
 | `!help` | Liste des commandes (si le serveur a B3, c'est B3 qui répond : sa liste inclut ces commandes) |

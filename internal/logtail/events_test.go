@@ -1,6 +1,7 @@
 package logtail
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -159,6 +160,24 @@ func TestChatCommands(t *testing.T) {
 	if l, _, _ := st.AdminLinkOf("babou", 1); l.GUID != "111" || !strings.Contains(sent[len(sent)-1], "Unknown or expired code") {
 		t.Fatalf("code used twice: %v %q", l, sent[len(sent)-1])
 	}
+	tl.lastCmd, events = nil, nil
+	tl.command(st, Chat{GUID: "222", NameRaw: "Omni", NameClean: "Omni", Message: "!calladmin wallhack on B", Slot: 5}, emit)
+	if len(events) != 1 || events[0]["type"] != "calladmin" || events[0]["reason"] != "wallhack on B" || events[0]["key"] != "222" ||
+		sent[len(sent)-1] != `tell 5 "^2The admins have been called, thanks."` {
+		t.Fatalf("calladmin: %v %q", events, sent[len(sent)-1])
+	}
+	tl.lastCmd[fmt.Sprint(5)] = time.Time{} // the 3 s cooldown is over, not the calladmin one
+	tl.command(st, Chat{GUID: "222", NameRaw: "Omni", NameClean: "Omni", Message: "!calladmin again", Slot: 5}, emit)
+	if len(events) != 1 || !strings.Contains(sent[len(sent)-1], "already called") {
+		t.Fatalf("calladmin twice: %v %q", events, sent[len(sent)-1])
+	}
+	tl.lastCmd, tl.Files.B3DB = nil, "b3.db" // B3 answers its own !calladmin in game
+	n := len(sent)
+	tl.command(st, Chat{GUID: "222", NameRaw: "Omni", NameClean: "Omni", Message: "!calladmin", Slot: 5}, emit)
+	if len(events) != 2 || len(sent) != n {
+		t.Fatalf("calladmin with B3: %v %q", events, sent[n:])
+	}
+	tl.Files.B3DB = ""
 	if tl.command(st, Chat{Message: "!unknown"}, emit) {
 		t.Fatal("unknown command handled")
 	}
