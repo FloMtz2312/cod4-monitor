@@ -155,6 +155,20 @@ func TestAdminChat(t *testing.T) {
 	if code, _ := do("boss", "POST", nb, `{"body":"hello"}`); code != 200 {
 		t.Fatalf("super admin without B3: %d", code)
 	}
+
+	// !calladmin in game: a message of the player in the chat, every admin mentioned
+	if err := callAdmin(st, newChatDirectory(st, "boss"), nil, other, "g9", "^1Cheater^7Hunter", "wallhack B\x07", time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	_, out = do("omni", "GET", nb, "")
+	msgs = out["messages"].([]any)
+	call := msgs[len(msgs)-1].(map[string]any)
+	if call["kind"] != "calladmin" || call["player_key"] != "g9" || call["body"] != "wallhack B" || call["username"] != "" || len(call["mentions"].([]any)) != 2 {
+		t.Fatalf("calladmin message: %v", call)
+	}
+	if _, out := do("pleb", "GET", nb+"/unread", ""); out["mentions"] != float64(1) {
+		t.Fatalf("pleb mentioned by the call: %v", out)
+	}
 }
 
 func TestMentioned(t *testing.T) {

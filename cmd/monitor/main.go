@@ -223,6 +223,7 @@ func main() {
 	if pusher != nil {
 		go api.RunPushScan(ctx, st, hub, pusher)
 	}
+	go api.RunCallAdmin(ctx, st, hub, pusher, os.Getenv("DASHBOARD_USER")) // !calladmin → admins' chat (push when on)
 
 	if dir := os.Getenv("BACKUP_DIR"); dir != "" {
 		keep, _ := strconv.Atoi(env("BACKUP_KEEP", "14"))

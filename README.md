@@ -436,6 +436,7 @@ With the `rcon_password` in `SERVERS`, the monitor answers players with a privat
 | `!stats` or `!stats name` | Kills, deaths, K/D, headshot %, noscopes, longest kill |
 | `!top` | Top 5 killers of the last 7 days |
 | `!report name reason` | Report sent to the admins: it shows up in **Moderation** (and as a push notification) |
+| `!calladmin reason` | Calls the admins: a message in the **admins' chat** (all of them mentioned) and a notification on their phone; with nobody in the chat, the accounts that handle reports are told. Once every 2 minutes per player. If B3 has its own `!calladmin` command, B3 answers in game and the monitor adds the chat and the notifications |
 | `!me` | A short link to type on a phone (`your-domain/me/K7QPX`, or a code without `DOMAIN`): it opens the player's profile and pins it (**It's me**). Valid 24 hours |
 | `!link CODE` | Links the player to the dashboard account that showed this code (admins' chat, see below). Valid 10 minutes, once |
 | `!help` | List of commands (on a server with B3, B3 answers: its list includes these commands) |

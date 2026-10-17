@@ -127,6 +127,9 @@ var columns = []struct{ table, column, def string }{
 	{"servers", "accent", "TEXT"},     // color of the server in the interface (#RRGGBB), empty = default
 	{"servers", "logo", "BLOB"},       // PNG, square, empty = initials
 	{"servers", "logo_ts", "INTEGER"}, // when the logo changed: version of its URL
+	// admins' chat: "calladmin" for a !calladmin typed in game (the player in player_key, name_raw), "" for an admin
+	{"admin_chat", "kind", "TEXT NOT NULL DEFAULT ''"},
+	{"admin_chat", "player_key", "TEXT NOT NULL DEFAULT ''"},
 }
 
 type Store struct {

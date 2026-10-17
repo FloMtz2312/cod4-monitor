@@ -12,6 +12,7 @@
   import { loadAdminChat, chatTab } from '../lib/adminchat.svelte.js';
   import { clean } from '../lib/format.js';
   import { dt } from '../lib/moderation.js';
+  import { href } from '../lib/router.svelte.js';
   import { say } from '../lib/toast.svelte.js';
   import { t } from '../lib/i18n.svelte.js';
 
@@ -235,13 +236,24 @@
     <div class="list" bind:this={list}>
       {#if older}<button class="link oldb" onclick={more}>{t('Messages précédents')}</button>{/if}
       {#each messages as m (m.id)}
-        <div class="msg" class:mine={mine(m)} class:hit={!mine(m) && m.mentions?.includes(info.me)}>
-          <div class="meta">
-            <CodName raw={m.name_raw || m.username} />
-            <span class="muted when">{dt(m.ts)}</span>
+        {#if m.kind === 'calladmin'}
+          <div class="msg call">
+            <div class="meta">
+              <span class="calltag"><Icon name="alert" size={14} />{t('Appel admin')}</span>
+              <span class="muted when">{dt(m.ts)}</span>
+            </div>
+            <p><CodName raw={m.name_raw} /> <span class="muted">{t('a tapé !calladmin en jeu')}</span>{#if m.body}{' : '}« {m.body} »{/if}</p>
+            {#if m.player_key}<a class="btn see" href={href('joueur', m.player_key)}>{t('Voir le joueur')}</a>{/if}
           </div>
-          <p>{#each parts(m.body) as p, j (j)}{#if p.at}<span class="tag" class:me={p.me}>{p.text}</span>{:else}{p.text}{/if}{/each}</p>
-        </div>
+        {:else}
+          <div class="msg" class:mine={mine(m)} class:hit={!mine(m) && m.mentions?.includes(info.me)}>
+            <div class="meta">
+              <CodName raw={m.name_raw || m.username} />
+              <span class="muted when">{dt(m.ts)}</span>
+            </div>
+            <p>{#each parts(m.body) as p, j (j)}{#if p.at}<span class="tag" class:me={p.me}>{p.text}</span>{:else}{p.text}{/if}{/each}</p>
+          </div>
+        {/if}
       {:else}
         <p class="muted empty">{t('Pas encore de message. Écris @ suivi du pseudo d\'un admin pour le prévenir.')}</p>
       {/each}
@@ -282,6 +294,9 @@
   .oldb { align-self: center; margin: 4px 0 8px; }
   .msg { padding: 8px 16px; min-width: 0; }
   .msg.hit { background: var(--accent-soft); }
+  .msg.call { margin: 4px 10px; border-radius: 12px; border: 1px solid rgba(255, 99, 105, .35); background: rgba(255, 99, 105, .08); }
+  .calltag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 800; color: var(--danger-text); text-transform: uppercase; letter-spacing: .3px; }
+  .see { margin-top: 8px; min-height: 36px; padding: 0 12px; font-size: 13px; }
   .meta { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; font-weight: 700; }
   .when { margin-left: auto; font-size: 12px; font-weight: 500; white-space: nowrap; }
   .msg p { margin: 3px 0 0; font-size: 15px; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }

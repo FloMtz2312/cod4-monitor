@@ -136,22 +136,25 @@ func (s *Store) DeleteAdminLink(username string, serverID int64) error {
 	return err
 }
 
-// AdminMessage: one message of the admins' chat. Mentions: the accounts it notified.
+// AdminMessage: one message of the admins' chat. Mentions: the accounts it notified. Kind "calladmin": a player
+// called the admins in game (!calladmin), Username is empty and NameRaw / PlayerKey are the player's.
 type AdminMessage struct {
-	ID       int64    `json:"id"`
-	TS       int64    `json:"ts"`
-	Username string   `json:"username"`
-	NameRaw  string   `json:"name_raw"`
-	B3ID     int64    `json:"b3_id"`
-	Level    int      `json:"level"`
-	Body     string   `json:"body"`
-	Mentions []string `json:"mentions"`
+	ID        int64    `json:"id"`
+	Kind      string   `json:"kind,omitempty"`
+	PlayerKey string   `json:"player_key,omitempty"`
+	TS        int64    `json:"ts"`
+	Username  string   `json:"username"`
+	NameRaw   string   `json:"name_raw"`
+	B3ID      int64    `json:"b3_id"`
+	Level     int      `json:"level"`
+	Body      string   `json:"body"`
+	Mentions  []string `json:"mentions"`
 }
 
 func (s *Store) AddAdminMessage(serverID int64, m AdminMessage) (int64, error) {
 	mentions, _ := json.Marshal(append([]string{}, m.Mentions...))
-	r, err := s.DB.Exec(`INSERT INTO admin_chat(server_id, ts, username, name_raw, b3_id, level, body, mentions) VALUES(?,?,?,?,?,?,?,?)`,
-		serverID, m.TS, m.Username, m.NameRaw, m.B3ID, m.Level, m.Body, string(mentions))
+	r, err := s.DB.Exec(`INSERT INTO admin_chat(server_id, ts, username, name_raw, b3_id, level, body, mentions, kind, player_key) VALUES(?,?,?,?,?,?,?,?,?,?)`,
+		serverID, m.TS, m.Username, m.NameRaw, m.B3ID, m.Level, m.Body, string(mentions), m.Kind, m.PlayerKey)
 	if err != nil {
 		return 0, err
 	}
@@ -163,13 +166,13 @@ func (s *Store) AdminMessages(serverID, after, before int64, limit int) ([]Admin
 	if limit <= 0 || limit > 200 {
 		limit = 100
 	}
-	q := `SELECT id, ts, username, name_raw, b3_id, level, body, mentions FROM admin_chat WHERE server_id=? AND id>? ORDER BY id LIMIT ?`
+	q := `SELECT id, ts, username, name_raw, b3_id, level, body, mentions, kind, player_key FROM admin_chat WHERE server_id=? AND id>? ORDER BY id LIMIT ?`
 	args := []any{serverID, after, limit}
 	if after <= 0 {
 		if before <= 0 {
 			before = 1 << 62
 		}
-		q = `SELECT * FROM (SELECT id, ts, username, name_raw, b3_id, level, body, mentions FROM admin_chat WHERE server_id=? AND id<?
+		q = `SELECT * FROM (SELECT id, ts, username, name_raw, b3_id, level, body, mentions, kind, player_key FROM admin_chat WHERE server_id=? AND id<?
 			ORDER BY id DESC LIMIT ?) ORDER BY id`
 		args = []any{serverID, before, limit}
 	}
@@ -182,7 +185,7 @@ func (s *Store) AdminMessages(serverID, after, before int64, limit int) ([]Admin
 	for rs.Next() {
 		var m AdminMessage
 		var mentions string
-		if err := rs.Scan(&m.ID, &m.TS, &m.Username, &m.NameRaw, &m.B3ID, &m.Level, &m.Body, &mentions); err != nil {
+		if err := rs.Scan(&m.ID, &m.TS, &m.Username, &m.NameRaw, &m.B3ID, &m.Level, &m.Body, &mentions, &m.Kind, &m.PlayerKey); err != nil {
 			return nil, err
 		}
 		json.Unmarshal([]byte(mentions), &m.Mentions)

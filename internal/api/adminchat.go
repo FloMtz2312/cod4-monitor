@@ -1,7 +1,10 @@
 package api
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"log/slog"
 	"regexp"
 	"slices"
 	"strconv"
@@ -119,88 +122,109 @@ func cleanBody(s string) string {
 	return s
 }
 
-func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *push.Sender) {
-	access := Access(st.DB, adminUser, false)
-	member := func(user string, id int64) bool {
-		if user == "" {
-			return false
-		}
-		owner, perms := access(user, id)
-		if owner {
-			return true
-		}
-		for _, ok := range perms {
-			if ok {
-				return true
-			}
-		}
+// chatDirectory: who is in the admins' chat of each server (cached a little: B3 is read at most every 30 s).
+type chatDirectory struct {
+	st     *store.Store
+	access func(user string, id int64) (bool, map[string]bool)
+	mu     sync.Mutex
+	cache  map[int64]chatAdmins
+}
+
+func newChatDirectory(st *store.Store, adminUser string) *chatDirectory {
+	return &chatDirectory{st: st, access: Access(st.DB, adminUser, false), cache: map[int64]chatAdmins{}}
+}
+
+// member: the account owns the server or is in its team.
+func (d *chatDirectory) member(user string, id int64) bool {
+	if user == "" {
 		return false
 	}
-	var mu sync.Mutex
-	cache := map[int64]chatAdmins{}
-	// the admins of the chat: linked accounts that still have access to the server, whose player is a B3 admin; without
-	// B3, the owner and the members of the server
-	admins := func(id int64, fresh bool) (chatAdmins, error) {
-		mu.Lock()
-		cur, ok := cache[id]
-		mu.Unlock()
-		if ok && !fresh && time.Since(cur.at) < adminChatCache {
-			return cur, nil
+	owner, perms := d.access(user, id)
+	if owner {
+		return true
+	}
+	for _, ok := range perms {
+		if ok {
+			return true
 		}
-		cur = chatAdmins{at: time.Now()}
-		conf, found, err := st.ServerConf(id)
+	}
+	return false
+}
+
+func (d *chatDirectory) forget(id int64) {
+	d.mu.Lock()
+	delete(d.cache, id)
+	d.mu.Unlock()
+}
+
+// admins of the chat: linked accounts that still have access to the server, whose player is a B3 admin; without B3,
+// the owner and the members of the server
+func (d *chatDirectory) admins(id int64, fresh bool) (chatAdmins, error) {
+	st, member := d.st, d.member
+	d.mu.Lock()
+	cur, ok := d.cache[id]
+	d.mu.Unlock()
+	if ok && !fresh && time.Since(cur.at) < adminChatCache {
+		return cur, nil
+	}
+	cur = chatAdmins{at: time.Now()}
+	conf, found, err := st.ServerConf(id)
+	if err != nil {
+		return cur, err
+	}
+	if found && conf.Logs.B3DB != "" {
+		cur.b3 = true
+		links, err := st.AdminLinks(id)
 		if err != nil {
 			return cur, err
 		}
-		if found && conf.Logs.B3DB != "" {
-			cur.b3 = true
-			links, err := st.AdminLinks(id)
+		if len(links) > 0 {
+			bdb, err := b3.Open(conf.Logs.B3DB)
 			if err != nil {
 				return cur, err
 			}
-			if len(links) > 0 {
-				d, err := b3.Open(conf.Logs.B3DB)
-				if err != nil {
-					return cur, err
-				}
-				staff, err := d.Admins()
-				d.Close()
-				if err != nil {
-					return cur, err
-				}
-				for _, l := range links {
-					i := slices.IndexFunc(staff, func(c b3.Client) bool { return c.GUID == l.GUID })
-					if i < 0 || staff[i].Group.Level < adminChatLevel || !member(l.Username, id) {
-						continue
-					}
-					name := staff[i].Name
-					if name == "" {
-						name = l.NameRaw
-					}
-					cur.admins = append(cur.admins, ChatAdmin{Username: l.Username, Name: name, B3ID: staff[i].ID, Level: staff[i].Group.Level,
-						Group: staff[i].Group.Name, guid: l.GUID})
-				}
-			}
-		} else if found {
-			team, err := rows(st.DB, `SELECT username, 'team' AS grp FROM server_members WHERE server_id=? UNION SELECT owner, 'owner' FROM servers WHERE id=? AND owner<>''
-				ORDER BY 2, 1`, id, id)
+			staff, err := bdb.Admins()
+			bdb.Close()
 			if err != nil {
 				return cur, err
 			}
-			for _, r := range team { // read before member(): one connection to the database
-				a := ChatAdmin{Username: fmt.Sprint(r["username"]), Group: fmt.Sprint(r["grp"])}
-				if member(a.Username, id) && !slices.ContainsFunc(cur.admins, func(b ChatAdmin) bool { return b.Username == a.Username }) {
-					a.Name = a.Username
-					cur.admins = append(cur.admins, a)
+			for _, l := range links {
+				i := slices.IndexFunc(staff, func(c b3.Client) bool { return c.GUID == l.GUID })
+				if i < 0 || staff[i].Group.Level < adminChatLevel || !member(l.Username, id) {
+					continue
 				}
+				name := staff[i].Name
+				if name == "" {
+					name = l.NameRaw
+				}
+				cur.admins = append(cur.admins, ChatAdmin{Username: l.Username, Name: name, B3ID: staff[i].ID, Level: staff[i].Group.Level,
+					Group: staff[i].Group.Name, guid: l.GUID})
 			}
 		}
-		cur.admins = withTags(cur.admins)
-		mu.Lock()
-		cache[id] = cur
-		mu.Unlock()
-		return cur, nil
+	} else if found {
+		team, err := rows(st.DB, `SELECT username, 'team' AS grp FROM server_members WHERE server_id=? UNION SELECT owner, 'owner' FROM servers WHERE id=? AND owner<>''
+			ORDER BY 2, 1`, id, id)
+		if err != nil {
+			return cur, err
+		}
+		for _, r := range team { // read before member(): one connection to the database
+			a := ChatAdmin{Username: fmt.Sprint(r["username"]), Group: fmt.Sprint(r["grp"])}
+			if member(a.Username, id) && !slices.ContainsFunc(cur.admins, func(b ChatAdmin) bool { return b.Username == a.Username }) {
+				a.Name = a.Username
+				cur.admins = append(cur.admins, a)
+			}
+		}
 	}
+	cur.admins = withTags(cur.admins)
+	d.mu.Lock()
+	d.cache[id] = cur
+	d.mu.Unlock()
+	return cur, nil
+}
+
+func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *push.Sender) {
+	dir := newChatDirectory(st, adminUser)
+	member, admins := dir.member, dir.admins
 	// the account in the chat; without B3 any member of the server (the super administrator is in no team)
 	self := func(list chatAdmins, user string) (ChatAdmin, bool) {
 		i := slices.IndexFunc(list.admins, func(a ChatAdmin) bool { return a.Username == user })
@@ -307,9 +331,7 @@ func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *
 		if fail(c, st.DeleteAdminLink(c.GetString("user"), mustID(c))) {
 			return
 		}
-		mu.Lock()
-		delete(cache, mustID(c))
-		mu.Unlock()
+		dir.forget(mustID(c))
 		c.JSON(200, gin.H{"ok": true})
 	})
 
@@ -376,4 +398,66 @@ func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *
 		}
 		c.JSON(200, gin.H{"message": m})
 	})
+}
+
+// RunCallAdmin writes each !calladmin typed in game in the admins' chat of the server, mentioning all its admins, and
+// pushes it to their phones; without anyone in the chat, to the staff who handle the reports.
+func RunCallAdmin(ctx context.Context, st *store.Store, hub *Hub, ps *push.Sender, adminUser string) {
+	events := hub.sub()
+	defer hub.unsub(events)
+	dir := newChatDirectory(st, adminUser)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case b := <-events:
+			var ev struct {
+				Type     string `json:"type"`
+				ServerID int64  `json:"server_id"`
+				Key      string `json:"key"`
+				NameRaw  string `json:"name_raw"`
+				Reason   string `json:"reason"`
+				TS       int64  `json:"ts"`
+			}
+			if json.Unmarshal(b, &ev) != nil || ev.Type != "calladmin" || ev.ServerID <= 0 {
+				continue
+			}
+			if err := callAdmin(st, dir, ps, ev.ServerID, ev.Key, ev.NameRaw, ev.Reason, time.Unix(ev.TS, 0)); err != nil {
+				slog.Error("calladmin", "server_id", ev.ServerID, "err", err)
+			}
+		}
+	}
+}
+
+func callAdmin(st *store.Store, dir *chatDirectory, ps *push.Sender, id int64, key, nameRaw, reason string, at time.Time) error {
+	list, err := dir.admins(id, true)
+	if err != nil {
+		return err
+	}
+	var to []string
+	for _, a := range list.admins {
+		to = append(to, a.Username)
+	}
+	reason = cleanBody(reason)
+	m := store.AdminMessage{Kind: "calladmin", PlayerKey: key, TS: at.Unix(), NameRaw: nameRaw, Body: reason, Mentions: to}
+	if m.ID, err = st.AddAdminMessage(id, m); err != nil {
+		return err
+	}
+	var server string
+	if conf, found, err := st.ServerConf(id); err == nil && found {
+		server = query.StripColors(conf.Name)
+	}
+	name := strings.TrimSpace(query.StripColors(nameRaw))
+	body, bodyEN := "Sans raison", "No reason"
+	if reason != "" {
+		body, bodyEN = "« "+reason+" »", `"`+reason+`"`
+	}
+	msg := push.Message{Kind: "report", Server: id, Need: []string{"reports", "private"}, Urgent: true, Path: "tchat-admins",
+		Tag: "calladmin-" + strconv.FormatInt(m.ID, 10), Title: "Appel admin : " + name, TitleEN: "Admin call: " + name,
+		Body: body + " · " + server, BodyEN: bodyEN + " · " + server}
+	if len(to) > 0 {
+		msg.Kind, msg.To = "mention", to
+	}
+	ps.Notify(msg)
+	return nil
 }
