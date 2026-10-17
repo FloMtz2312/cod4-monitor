@@ -87,5 +87,8 @@ export default {
   'Aucun joueur sur la période': 'No players in this period',
   'en jeu': 'in game',
   'aussi : {names}': 'also: {names}',
-  'Afficher plus ({n} sur {total})': 'Show more ({n} of {total})'
+  'Afficher plus ({n} sur {total})': 'Show more ({n} of {total})',
+  'Déduit des kills : le mod n\'écrit pas les résultats des rounds.': 'From the kills: the mod doesn\'t write the round results.',
+  'estimé': 'estimated',
+  'Résultat estimé d\'après les kills : le mod n\'écrit pas les résultats des rounds.': 'Result estimated from the kills: the mod doesn\'t write the round results.'
 };

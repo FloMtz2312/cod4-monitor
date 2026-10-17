@@ -425,6 +425,8 @@ Die Mod `pm_sniper` (separates Repository) schreibt zusätzliche Zeilen in `game
 
 Sie erscheinen in der Rangliste (Noscopes, Quickscopes, Wallbangs, längster Kill, Clutches, First Blood, Sieg-%), bei Rekorden und Abzeichen, in den Matches (Sieger, Spielstand, Highlights jeder Runde), im Spielerprofil und unter **Mehr → Erweiterte Stats → Maps** (Map-Abstimmungen). Ohne diese Mod werden diese Spalten und Bereiche ausgeblendet, und alles andere funktioniert.
 
+**Matches mit jeder Mod**: das Basisspiel schreibt den Gewinner der Runden nicht ins Log (nur die Kills). Ohne die Zeilen `RE` / `ME` leitet der Monitor ihn aus den Kills ab: in S&D endet eine Runde, wenn ein Team ausgelöscht ist (oder wenn ein schon toter Spieler erneut stirbt, Zeichen einer neuen Runde), und das Team, das noch lebt, gewinnt sie; eine entschärfte Bombe zählt für das Team des Entschärfers, eine gelegte und nicht entschärfte für das Team des Legers (Zeilen `P_P` / `P_D`, von Promod und vielen Mods geschrieben). Im Team-Deathmatch gewinnt das Team mit den meisten Kills. Diese Ergebnisse sind als **geschätzt** markiert: ein Spieler, der rund um eine Runde weder getötet hat noch getötet wurde, ist dem Monitor unbekannt, und eine auf Zeit gewonnene Runde bleibt ohne Gewinner.
+
 ### Chat-Befehle im Spiel
 
 Mit dem `rcon_password` in `SERVERS` antwortet der Monitor den Spielern per privater Nachricht (`tell`):

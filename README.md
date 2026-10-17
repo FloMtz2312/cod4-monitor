@@ -425,6 +425,8 @@ The `pm_sniper` mod (separate repository) writes extra lines to `games_mp.log`. 
 
 They show up in the ranking (noscopes, quickscopes, wallbangs, longest kill, clutches, first blood, win %), records and badges, matches (winner, score, highlights of every round), the player profile and **More → Advanced stats → Maps** (map votes). Without this mod, those columns and sections are hidden and everything else works.
 
+**Matches with any mod**: the base game doesn't write the winner of the rounds in the log (only the kills). Without the `RE` / `ME` lines, the monitor works it out from the kills: in S&D, a round ends when a team is eliminated (or when a player already dead dies again, the sign of a new round), and the team still alive wins it; a defused bomb goes to the defuser's team, a bomb planted and not defused to the planter's team (`P_P` / `P_D` lines, written by Promod and many mods). In team deathmatch, the team with the most kills wins. These results are marked **estimated**: a player who neither killed nor died around a round is unknown to the monitor, and a round won on time has no winner.
+
 ### In-game chat commands
 
 With the `rcon_password` in `SERVERS`, the monitor answers players with a private message (`tell`):

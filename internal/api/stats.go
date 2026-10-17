@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"sort"
 	"strings"
 	"time"
 
@@ -58,20 +59,83 @@ func statsRoutes(g *gin.RouterGroup, db *sql.DB) {
 		})
 	})
 
-	// S&D logs an InitGame per round. Rounds without kills (empty server) are hidden.
+	// The rounds of the period, newest first, and their averages by map. Rounds without kills (empty server) are hidden;
+	// S&D logged as one round per map is split into its rounds (inferRounds).
 	g.GET("/rounds", func(c *gin.Context) {
 		from, to := span(c, "30d")
-		const r = `WITH r AS (SELECT r.*, COUNT(k.id) AS kills FROM rounds r JOIN kills k ON k.round_id=r.id
-			WHERE r.server_id=?1 AND r.started_at>=?2 AND r.started_at<?3 GROUP BY r.id) `
 		id := c.Param("id")
-		send(c, map[string]sqlQuery{
-			"recent": sq(r+`SELECT id, started_at, ended_at, map, gametype, kills,
-				(SELECT killer_name FROM kills k WHERE k.round_id=r.id AND killer_key IS NOT NULL GROUP BY killer_key ORDER BY COUNT(*) DESC LIMIT 1) AS top_killer,
-				(SELECT COUNT(*) FROM kills k WHERE k.round_id=r.id AND killer_key IS NOT NULL GROUP BY killer_key ORDER BY COUNT(*) DESC LIMIT 1) AS top_kills
-				FROM r ORDER BY started_at DESC LIMIT 100`, id, from, to),
-			"maps": sq(r+`SELECT map, COUNT(*) AS rounds, AVG(ended_at-started_at) AS avg_duration_s, AVG(kills) AS avg_kills
-				FROM r WHERE ended_at IS NOT NULL GROUP BY map ORDER BY rounds DESC`, id, from, to),
-		})
+		ms, err := matchGroups(db, id, from, to)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		type item struct {
+			playedRound
+			Map      string `json:"map"`
+			Gametype string `json:"gametype"`
+			open     bool
+		}
+		var all []item
+		for _, m := range ms {
+			kills, events, err := matchKills(db, id, m.Rounds)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
+			}
+			var played []playedRound
+			matchOutcome(db, m, kills, events, &played)
+			for i, r := range played {
+				if r.Kills == 0 {
+					continue
+				}
+				var ended sql.NullInt64
+				db.QueryRow(`SELECT ended_at FROM rounds WHERE id=?`, r.dbRound).Scan(&ended)
+				// a round found inside a database round ends with its last kill; the last one with the database round
+				last := i+1 == len(played) || played[i+1].dbRound != r.dbRound
+				if last && ended.Valid {
+					r.End = ended.Int64
+				}
+				all = append(all, item{playedRound: r, Map: m.Map, Gametype: m.Gametype, open: last && !ended.Valid})
+			}
+		}
+		sort.SliceStable(all, func(i, j int) bool { return all[i].Start > all[j].Start })
+		type avg struct {
+			Map      string  `json:"map"`
+			Rounds   int     `json:"rounds"`
+			Duration float64 `json:"avg_duration_s"`
+			Kills    float64 `json:"avg_kills"`
+		}
+		byMap := map[string]*avg{}
+		var maps []*avg
+		recent := []gin.H{}
+		for _, r := range all {
+			if len(recent) < 100 {
+				h := gin.H{"id": r.ID, "started_at": r.Start, "ended_at": r.End, "map": r.Map, "gametype": r.Gametype, "kills": r.Kills,
+					"top_killer": r.TopKiller, "top_kills": r.TopKills, "winner": r.Winner, "estimated": r.Estimated}
+				if r.open {
+					h["ended_at"] = nil
+				}
+				recent = append(recent, h)
+			}
+			if r.open {
+				continue
+			}
+			a := byMap[r.Map]
+			if a == nil {
+				a = &avg{Map: r.Map}
+				byMap[r.Map] = a
+				maps = append(maps, a)
+			}
+			a.Rounds++
+			a.Duration += float64(r.End - r.Start)
+			a.Kills += float64(r.Kills)
+		}
+		for _, a := range maps {
+			a.Duration /= float64(a.Rounds)
+			a.Kills /= float64(a.Rounds)
+		}
+		sort.SliceStable(maps, func(i, j int) bool { return maps[i].Rounds > maps[j].Rounds })
+		c.JSON(200, gin.H{"recent": recent, "maps": maps})
 	})
 
 	g.GET("/player", func(c *gin.Context) {
