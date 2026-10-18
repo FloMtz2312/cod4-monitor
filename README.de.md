@@ -425,6 +425,24 @@ Die Mod `pm_sniper` (separates Repository) schreibt zusätzliche Zeilen in `game
 
 Sie erscheinen in der Rangliste (Noscopes, Quickscopes, Wallbangs, längster Kill, Clutches, First Blood, Sieg-%), bei Rekorden und Abzeichen, in den Matches (Sieger, Spielstand, Highlights jeder Runde), im Spielerprofil und unter **Mehr → Erweiterte Stats → Maps** (Map-Abstimmungen). Ohne diese Mod werden diese Spalten und Bereiche ausgeblendet, und alles andere funktioniert.
 
+**Wallbangs mit einer anderen Mod**: das Log des Basisspiels sagt nicht, ob eine Kugel durch eine Wand ging. Die `K`-Zeile eines Kills enthält nur die Waffe, den Schaden des letzten Treffers, das Körperteil und die Schadensart, und CoD4X fügt nichts hinzu. Einen Wallbang am Schaden zu erraten (niedriger als ein direkter Treffer) ist nicht zuverlässig: Perks (Stopping Power, Juggernaut), die Entfernung und der Waffenschaden jeder Mod verfälschen die Rechnung. Der Monitor macht das daher nicht. Für Wallbangs und Kill-Entfernungen mit einer anderen Mod diese Zeilen in `maps/mp/gametypes/_globallogic.gsc` der Mod einfügen, in `Callback_PlayerKilled`, **direkt vor** der Zeile `logPrint( "K;" ...` (der Monitor ordnet die `KE`-Zeile dem folgenden Kill zu):
+
+```c
+// cod4-monitor: wallbang and distance of the kill, just before the K line
+if ( isPlayer( attacker ) && attacker != self && ( isSubStr( sMeansOfDeath, "BULLET" ) || sMeansOfDeath == "MOD_HEAD_SHOT" ) )
+{
+	eye = attacker getEye();
+	wb = !bulletTracePassed( eye, self getTagOrigin( "j_head" ), false, attacker ) && !bulletTracePassed( eye, self getTagOrigin( "j_spine4" ), false, attacker );
+	tags = "";
+	if ( wb )
+		tags = "wb";
+	dm = int( distance( attacker.origin, self.origin ) * 0.254 ); // decimeters
+	logPrint( "KE;" + attacker getGuid() + ";" + attacker getEntityNumber() + ";" + attacker.name + ";" + self getGuid() + ";" + self getEntityNumber() + ";" + self.name + ";" + dm + ";" + tags + ";0;-1\n" );
+}
+```
+
+Wallbangs zählen dann in der Rangliste, bei den Abzeichen und in den Matches, und der längste Kill wird angezeigt. Die Prüfung erfolgt im Moment des Kills, von den Augen des Schützen zu Kopf und Oberkörper des Opfers: sind beide durch eine Wand verdeckt, ist es ein Wallbang. Die Spalten, die nur `pm_sniper` füllt (Noscopes, Quickscopes, Punkte), bleiben auf diesem Server bei 0.
+
 **Matches mit jeder Mod**: das Basisspiel schreibt den Gewinner der Runden nicht ins Log (nur die Kills). Ohne die Zeilen `RE` / `ME` leitet der Monitor ihn aus den Kills ab: in S&D endet eine Runde, wenn ein Team ausgelöscht ist (oder wenn ein schon toter Spieler erneut stirbt, Zeichen einer neuen Runde), und das Team, das noch lebt, gewinnt sie; eine entschärfte Bombe zählt für das Team des Entschärfers, eine gelegte und nicht entschärfte für das Team des Legers (Zeilen `P_P` / `P_D`, von Promod und vielen Mods geschrieben). Im Team-Deathmatch gewinnt das Team mit den meisten Kills. Diese Ergebnisse sind als **geschätzt** markiert: ein Spieler, der rund um eine Runde weder getötet hat noch getötet wurde, ist dem Monitor unbekannt, und eine auf Zeit gewonnene Runde bleibt ohne Gewinner.
 
 ### Chat-Befehle im Spiel
