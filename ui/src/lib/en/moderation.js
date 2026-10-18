@@ -253,5 +253,6 @@ export default {
   '{n} non lus': '{n} unread',
   'Appel admin': 'Admin call',
   'a tapé !calladmin en jeu': 'typed !calladmin in game',
-  'Voir le joueur': 'See the player'
+  'Voir le joueur': 'See the player',
+  'Chat admins': 'Admin chat'
 };

@@ -253,5 +253,6 @@ export default {
   '{n} non lus': '{n} ungelesen',
   'Appel admin': 'Admin-Ruf',
   'a tapé !calladmin en jeu': 'hat im Spiel !calladmin eingegeben',
-  'Voir le joueur': 'Spieler ansehen'
+  'Voir le joueur': 'Spieler ansehen',
+  'Chat admins': 'Admin-Chat'
 };
