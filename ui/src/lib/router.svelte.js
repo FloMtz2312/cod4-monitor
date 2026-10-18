@@ -5,7 +5,7 @@ if (location.pathname === '/login.html' || location.pathname === '/invite.html')
   const to = location.pathname === '/invite.html' ? '#/invitation/' + location.hash.slice(1) : '#/connexion';
   history.replaceState(null, '', '/' + to);
 }
-const OLD = { accueil: 'direct', activite: 'stats', maps: 'stats', combat: 'classements', admin: 'moderation', serveur: 'etat' };
+const OLD = { 'tchat-admins': 'chat-admins', accueil: 'direct', activite: 'stats', maps: 'stats', combat: 'classements', admin: 'moderation', serveur: 'etat' };
 
 function parse() {
   const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent);

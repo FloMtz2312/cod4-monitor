@@ -176,7 +176,7 @@
       <Bans />
     {:else if route.name === 'chat'}
       <Chat />
-    {:else if route.name === 'tchat-admins'}
+    {:else if route.name === 'chat-admins'}
       <AdminChat />
     {:else if route.name === 'b3'}
       <B3 />

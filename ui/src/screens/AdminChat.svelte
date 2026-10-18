@@ -189,10 +189,10 @@
 </script>
 
 {#if chatTab(id)}
-  <h1 class="title">{t('Tchat des admins')}</h1>
+  <h1 class="title">{t('Chat des admins')}</h1>
   {#if srv}<p class="muted srv">{clean(srv.name)}</p>{/if}
 {:else}
-  <BackTitle title={t('Tchat des admins')} sub={srv ? clean(srv.name) : ''} fallback="moderation" />
+  <BackTitle title={t('Chat des admins')} sub={srv ? clean(srv.name) : ''} fallback="moderation" />
 {/if}
 
 {#if error}
@@ -202,7 +202,7 @@
 {:else if info.b3 && !info.linked}
   <section class="card box">
     <h2>{t('Relie ton compte à ton joueur')}</h2>
-    <p class="muted">{t('Le tchat est réservé aux admins B3 de niveau {n} ou plus. Pour savoir quel joueur tu es, tape un code en jeu, une seule fois.', { n: info.level_min })}</p>
+    <p class="muted">{t('Le chat est réservé aux admins B3 de niveau {n} ou plus. Pour savoir quel joueur tu es, tape un code en jeu, une seule fois.', { n: info.level_min })}</p>
     {#if code && left > 0}
       <p class="cmd">!link <b>{code.code}</b></p>
       <p class="muted">{t('Tape cette commande dans le chat du jeu sur ce serveur (valable {n} min). Cette page se met à jour toute seule.', { n: left })}</p>
@@ -224,7 +224,7 @@
     {/if}
   </section>
 {:else}
-  <div class="admins" role="group" aria-label={t('Admins du tchat')}>
+  <div class="admins" role="group" aria-label={t('Admins du chat')}>
     {#each info.admins as a (a.username)}
       <button class="adm" class:me={a.username === info.me} disabled={a.username === info.me} onclick={() => mention(a)} title={t('Mentionner {name}', { name: clean(a.name) })}>
         <CodName raw={a.name} /><span class="muted lvl">{GROUP[a.group] ? t(GROUP[a.group]) : a.group}</span>

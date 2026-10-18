@@ -454,16 +454,16 @@ Avec le `rcon_password` dans `SERVERS`, le monitor répond aux joueurs en messag
 | `!stats` ou `!stats pseudo` | Kills, morts, K/D, % de headshots, noscopes, plus long kill |
 | `!top` | Les 5 meilleurs tueurs des 7 derniers jours |
 | `!report pseudo raison` | Signalement envoyé aux admins : il apparaît dans **Modération** (et en notification push) |
-| `!calladmin raison` | Appelle les admins : un message dans le **tchat des admins** (tous mentionnés) et une notification sur leur téléphone ; sans admin dans le tchat, les comptes qui traitent les signalements sont prévenus. Une fois toutes les 2 minutes par joueur. Si B3 a sa propre commande `!calladmin`, c'est lui qui répond en jeu, et le monitor ajoute le tchat et les notifications |
+| `!calladmin raison` | Appelle les admins : un message dans le **chat des admins** (tous mentionnés) et une notification sur leur téléphone ; sans admin dans le chat, les comptes qui traitent les signalements sont prévenus. Une fois toutes les 2 minutes par joueur. Si B3 a sa propre commande `!calladmin`, c'est lui qui répond en jeu, et le monitor ajoute le chat et les notifications |
 | `!me` | Un lien court à taper sur le téléphone (`ton-domaine/me/K7QPX`, ou un code sans `DOMAIN`) : il ouvre la fiche du joueur et l'épingle (**C'est moi**). Valable 24 heures |
-| `!link CODE` | Relie le joueur au compte du site qui a affiché ce code (tchat des admins, voir plus bas). Valable 10 minutes, une seule fois |
+| `!link CODE` | Relie le joueur au compte du site qui a affiché ce code (chat des admins, voir plus bas). Valable 10 minutes, une seule fois |
 | `!help` | Liste des commandes (si le serveur a B3, c'est B3 qui répond : sa liste inclut ces commandes) |
 
 Une commande toutes les 3 secondes par joueur, un signalement par minute.
 
-### Tchat des admins
+### Chat des admins
 
-**Modération → Tchat des admins** : un tchat entre les admins du serveur, sur le site. Il faut la connexion par compte. **Sans B3**, il est ouvert à toute l'équipe du serveur (propriétaire et modérateurs), sans rien à relier. **Avec B3**, il est réservé aux comptes de l'équipe dont le joueur en jeu est **admin B3 de niveau 20 ou plus** :
+**Modération → Chat des admins** : un chat entre les admins du serveur, sur le site. Il faut la connexion par compte. **Sans B3**, il est ouvert à toute l'équipe du serveur (propriétaire et modérateurs), sans rien à relier. **Avec B3**, il est réservé aux comptes de l'équipe dont le joueur en jeu est **admin B3 de niveau 20 ou plus** :
 
 1. La première fois, *Obtenir un code*, puis taper `!link CODE` dans le chat du jeu sur ce serveur (10 minutes). Le GUID vient du log du serveur : le compte est relié à ce joueur. *Délier* pour changer de joueur.
 2. Le grade est relu dans B3 : un admin rétrogradé sous le niveau 20 perd l'accès.
