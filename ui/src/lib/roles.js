@@ -15,7 +15,7 @@ export const roleLabel = { visitor: 'Visiteur', moderator: 'Modérateur', admin:
 /** Tabs of the bottom bar, in order; `chat`: the account is in the admins' chat of the server (its tab after Modération). */
 export function tabsFor(role, chat = false) {
   if (role === 'visitor') return ['direct', 'classements', 'joueurs', 'matchs', 'plus'];
-  return chat ? ['direct', 'moderation', 'tchat-admins', 'joueurs', 'classements', 'plus'] : ['direct', 'moderation', 'joueurs', 'classements', 'plus'];
+  return chat ? ['direct', 'moderation', 'chat-admins', 'joueurs', 'classements', 'plus'] : ['direct', 'moderation', 'joueurs', 'classements', 'plus'];
 }
 
 export const tabInfo = {
@@ -24,6 +24,6 @@ export const tabInfo = {
   joueurs: { label: 'Joueurs', icon: 'users' },
   matchs: { label: 'Matchs', icon: 'matches' },
   moderation: { label: 'Modération', icon: 'shield' },
-  'tchat-admins': { label: 'Tchat', icon: 'message' },
+  'chat-admins': { label: 'Chat', icon: 'message' },
   plus: { label: 'Plus', icon: 'more' }
 };

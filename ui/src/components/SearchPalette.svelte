@@ -28,7 +28,7 @@
     ['duel', 'Duel', 'users', () => true],
     ['console', 'Console', 'terminal', p => p.has('rcon') || p.has('private')],
     ['chat', 'Chat', 'message', p => p.has('private')],
-    ['tchat-admins', 'Tchat des admins', 'message', p => p.size > 0 && !app.me?.noauth],
+    ['chat-admins', 'Chat des admins', 'message', p => p.size > 0 && !app.me?.noauth],
     ['bans', 'Bans du serveur', 'ban', p => p.has('ban')],
     ['contournements', 'Contournements de ban', 'alert', p => p.has('private')],
     ['comptes-lies', 'Comptes liés', 'link', p => p.has('private')],

@@ -236,7 +236,7 @@ func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *
 	// loginOnly: the chat needs accounts (who wrote, who is mentioned); not on a dashboard without login
 	loginOnly := func(c *gin.Context) bool {
 		if !c.GetBool("loginmode") || c.GetString("user") == "" {
-			c.JSON(403, gin.H{"error": "le tchat des admins demande la connexion par compte (DASHBOARD_PASSWORD)", "login": false})
+			c.JSON(403, gin.H{"error": "le chat des admins demande la connexion par compte (DASHBOARD_PASSWORD)", "login": false})
 			return false
 		}
 		if !member(c.GetString("user"), mustID(c)) {
@@ -393,7 +393,7 @@ func adminChatRoutes(g *gin.RouterGroup, st *store.Store, adminUser string, ps *
 			if name == "" {
 				name = user
 			}
-			ps.Notify(push.Message{Kind: "mention", Server: id, To: m.Mentions, Urgent: true, Path: "tchat-admins", Tag: "adminchat-" + strconv.FormatInt(id, 10),
+			ps.Notify(push.Message{Kind: "mention", Server: id, To: m.Mentions, Urgent: true, Path: "chat-admins", Tag: "adminchat-" + strconv.FormatInt(id, 10),
 				Title: name + " t'a mentionné", TitleEN: name + " mentioned you", Body: body + " · " + server, BodyEN: body + " · " + server})
 		}
 		c.JSON(200, gin.H{"message": m})
@@ -452,7 +452,7 @@ func callAdmin(st *store.Store, dir *chatDirectory, ps *push.Sender, id int64, k
 	if reason != "" {
 		body, bodyEN = "« "+reason+" »", `"`+reason+`"`
 	}
-	msg := push.Message{Kind: "report", Server: id, Need: []string{"reports", "private"}, Urgent: true, Path: "tchat-admins",
+	msg := push.Message{Kind: "report", Server: id, Need: []string{"reports", "private"}, Urgent: true, Path: "chat-admins",
 		Tag: "calladmin-" + strconv.FormatInt(m.ID, 10), Title: "Appel admin : " + name, TitleEN: "Admin call: " + name,
 		Body: body + " · " + server, BodyEN: bodyEN + " · " + server}
 	if len(to) > 0 {

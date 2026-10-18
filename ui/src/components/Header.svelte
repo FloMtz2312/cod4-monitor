@@ -36,7 +36,7 @@
   {#if r === 'visitor'}
     <a class="iconbtn" href="#/connexion" aria-label={t('Se connecter')}><Icon name="user" /></a>
   {:else}
-    <a class="iconbtn bell" href={mentions && todo === mentions ? '#/tchat-admins' : '#/moderation'} aria-label={todo ? t('Modération : {n} à traiter', { n: todo }) : t('Modération')}><Icon name="bell" />{#if todo}<span class="badge">{todo > 9 ? '9+' : todo}</span>{/if}</a>
+    <a class="iconbtn bell" href={mentions && todo === mentions ? '#/chat-admins' : '#/moderation'} aria-label={todo ? t('Modération : {n} à traiter', { n: todo }) : t('Modération')}><Icon name="bell" />{#if todo}<span class="badge">{todo > 9 ? '9+' : todo}</span>{/if}</a>
     <a class="iconbtn account" href="#/plus" aria-label={t('Mon compte')}>{initial}</a>
   {/if}
 </header>

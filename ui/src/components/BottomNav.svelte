@@ -15,7 +15,7 @@
     serveurs: 'plus', personnalisation: 'plus', equipe: 'plus', console: 'plus', programmes: 'plus', journal: 'plus',
     motdepasse: 'plus', etat: 'plus', reglages: 'plus', notifications: 'plus',
     connexion: 'plus', invitation: 'plus', comptes: 'plus', 'logs-monitor': 'plus',
-    bans: 'moderation', chat: 'moderation', 'tchat-admins': 'moderation', b3: 'moderation', contournements: 'moderation', 'comptes-lies': 'moderation', demos: 'moderation'
+    bans: 'moderation', chat: 'moderation', 'chat-admins': 'moderation', b3: 'moderation', contournements: 'moderation', 'comptes-lies': 'moderation', demos: 'moderation'
   };
   // screens linked from several tabs keep lit the tab they were opened from (Stats from Plus lights Plus)
   const from = { stats: ['classements', 'plus'], duel: ['classements', 'joueurs'], matchs: ['classements', 'plus'], match: ['classements', 'plus'] };
@@ -25,7 +25,7 @@
     if (!from[route.name] && tabs.includes(p)) last = p;
   });
   // mentions in the admins' chat: on its tab when it has one, else on Modération
-  const chat = $derived(tabs.includes('tchat-admins'));
+  const chat = $derived(tabs.includes('chat-admins'));
   const todo = $derived(inboxCount(app.serverId) + (chat ? 0 : chatMentions(app.serverId)));
   const mentions = $derived(chatMentions(app.serverId));
   const unread = $derived(chatUnread(app.serverId));
@@ -43,7 +43,7 @@
   <div class="brand"><span>CoD4 Monitor</span></div>
   {#each tabs as tab (tab)}
     <a href={'#/' + tab} class:on={active === tab} aria-current={active === tab ? 'page' : undefined}>
-      <span class="pill"><Icon name={tabInfo[tab].icon} />{#if tab === 'moderation' && todo}<span class="badge" aria-label={t('{n} à traiter', { n: todo })}>{todo > 9 ? '9+' : todo}</span>{/if}{#if tab === 'tchat-admins' && (mentions || unread)}<span class="badge" class:soft={!mentions} aria-label={mentions ? t('{n} mentions', { n: mentions }) : t('{n} non lus', { n: unread })}>{mentions ? '@' + (mentions > 9 ? '9+' : mentions) : unread > 9 ? '9+' : unread}</span>{/if}</span>
+      <span class="pill"><Icon name={tabInfo[tab].icon} />{#if tab === 'moderation' && todo}<span class="badge" aria-label={t('{n} à traiter', { n: todo })}>{todo > 9 ? '9+' : todo}</span>{/if}{#if tab === 'chat-admins' && (mentions || unread)}<span class="badge" class:soft={!mentions} aria-label={mentions ? t('{n} mentions', { n: mentions }) : t('{n} non lus', { n: unread })}>{mentions ? '@' + (mentions > 9 ? '9+' : mentions) : unread > 9 ? '9+' : unread}</span>{/if}</span>
       <span class="lbl">{t(tabInfo[tab].label)}</span>
     </a>
   {/each}

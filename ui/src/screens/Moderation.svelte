@@ -112,7 +112,7 @@
 
   // the moderation tools this account may open
   const tools = $derived([
-    !app.me?.noauth && ['tchat-admins', 'users', 'Tchat des admins'],
+    !app.me?.noauth && ['chat-admins', 'users', 'Chat des admins'],
     perms.has('private') && ['chat', 'message', 'Chat'],
     (perms.has('private') || perms.has('rcon')) && ['console', 'terminal', 'Console'],
     perms.has('ban') && ['bans', 'ban', 'Bans'],
@@ -137,7 +137,7 @@
 
 {#if tools.length}
   <nav class="tools" aria-label={t('Outils')}>
-    {#each tools as [name, icon, label] (name)}<a href={href(name)}><Icon name={icon} size={18} />{t(label)}{#if name === 'tchat-admins' && chatUnread(id)}<span class="dot" class:mention={chatMentions(id) > 0}>{chatMentions(id) ? '@' + chatMentions(id) : chatUnread(id)}</span>{/if}</a>{/each}
+    {#each tools as [name, icon, label] (name)}<a href={href(name)}><Icon name={icon} size={18} />{t(label)}{#if name === 'chat-admins' && chatUnread(id)}<span class="dot" class:mention={chatMentions(id) > 0}>{chatMentions(id) ? '@' + chatMentions(id) : chatUnread(id)}</span>{/if}</a>{/each}
   </nav>
 {/if}
 
