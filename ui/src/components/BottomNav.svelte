@@ -65,7 +65,8 @@
   .badge { position: absolute; top: -4px; right: 4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
   .badge.soft { background: var(--surface-2); color: var(--text); border: 1px solid var(--line); }
   .lbl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  @media (max-width: 959px) { .many a { font-size: 10px; } .many .pill { width: 46px; } } /* six tabs on a phone */
+  /* six tabs on a phone: smaller labels, on two lines when they have two words (Chat admins) */
+  @media (max-width: 959px) { .many a { flex: 1 1 auto; font-size: 9px; letter-spacing: -.2px; padding: 0 1px; } .many .pill { width: 44px; } .many .lbl { white-space: normal; text-align: center; line-height: 1.05; text-overflow: clip; } }
   a.on { color: var(--accent); }
   a.on .pill { background: var(--accent-soft); }
 

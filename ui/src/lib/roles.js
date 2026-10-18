@@ -24,6 +24,6 @@ export const tabInfo = {
   joueurs: { label: 'Joueurs', icon: 'users' },
   matchs: { label: 'Matchs', icon: 'matches' },
   moderation: { label: 'Modération', icon: 'shield' },
-  'chat-admins': { label: 'Chat', icon: 'message' },
+  'chat-admins': { label: 'Chat admins', icon: 'message' },
   plus: { label: 'Plus', icon: 'more' }
 };
